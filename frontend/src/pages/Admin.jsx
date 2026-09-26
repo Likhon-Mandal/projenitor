@@ -50,7 +50,9 @@ const Admin = () => {
     };
 
     const filteredMembers = members.filter(m =>
-        m.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+        (m.full_name && m.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (m.name_bangla && m.name_bangla.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (m.name_english && m.name_english.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     return (
@@ -70,7 +72,7 @@ const Admin = () => {
                     <Search className="text-stone-400" />
                     <input
                         type="text"
-                        placeholder="Search members..."
+                        placeholder="Search members by Bangla or English name..."
                         className="flex-1 outline-none text-stone-700"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -93,7 +95,12 @@ const Admin = () => {
                                 <tr><td colSpan="5" className="p-8 text-center text-stone-500">Loading...</td></tr>
                             ) : filteredMembers.slice(0, 50).map(member => (
                                 <tr key={member.id} className="hover:bg-orange-50/50 transition">
-                                    <td className="p-4 font-medium text-stone-800">{member.full_name}</td>
+                                    <td className="p-4 font-medium text-stone-800">
+                                        <div>{member.name_english || member.full_name}</div>
+                                        {member.name_bangla && member.name_bangla !== (member.name_english || member.full_name) && (
+                                            <div className="text-xs text-orange-800 font-serif font-normal">{member.name_bangla}</div>
+                                        )}
+                                    </td>
                                     <td className="p-4">
                                         <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">
                                             Gen {member.level}

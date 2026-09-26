@@ -1,3 +1,5 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Map, X, Check } from 'lucide-react';
 import LocationSelectionModal from './LocationSelectionModal';
 import api from '../api/api';
 

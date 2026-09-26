@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2, Heart } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FamilyTree from '../components/FamilyTree';
 import LocationTree from '../components/LocationTree';
 import MemberForm from '../components/MemberForm';
 import MemberProfileModal from '../components/MemberProfileModal';
+import SpousesDirectoryModal from '../components/SpousesDirectoryModal';
 
 import LocationForm from '../components/LocationForm';
 import ConfirmModal from '../components/ConfirmModal';
@@ -27,6 +28,8 @@ const Explorer = () => {
     const [addChildContext, setAddChildContext] = useState(null);
     const [selectedDetailMember, setSelectedDetailMember] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isSpousesModalOpen, setIsSpousesModalOpen] = useState(false);
+    const [spouseModalHomeFilter, setSpouseModalHomeFilter] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     const [editingItem, setEditingItem] = useState(null);
@@ -52,17 +55,18 @@ const Explorer = () => {
     };
 
     const handleDeleteMember = (member) => {
+        const displayName = member.name_bangla || member.full_name;
         setConfirmModal({
             isOpen: true,
-            title: `Delete ${member.full_name}?`,
-            message: `WARNING: Are you sure you want to permanently delete ${member.full_name}'s record?`,
+            title: `${displayName} ও তাঁর অধস্তন শাখা মুছে ফেলবেন?`,
+            message: `সতর্কতা: আপনি কি নিশ্চিত যে আপনি ${displayName}-কে মুছে ফেলতে চান? এটি ${displayName}, তাঁর সকল সহধর্মিণী এবং তাঁর অধস্তন বংশলতিকার সকল সন্তান ও পরবর্তী প্রজন্মসমূহ (সম্পূর্ণ সাব-ট্রি) মুছে ফেলবে!`,
             onConfirm: async () => {
                 try {
                     await api.delete(`/members/${member.id}`);
 
                     // Refresh the details view
-                    const homeName = pathSegments[4]; // Index shifted
-                    const village = pathSegments[3]; // Index shifted
+                    const homeName = geoContext.home_name || pathSegments[4];
+                    const village = geoContext.village || pathSegments[3];
                     if (homeName && village) {
                         fetchHouseholdMembers(homeName, village);
                     }
@@ -336,17 +340,30 @@ const Explorer = () => {
         return 'Member';
     };
 
+    const handleEditMemberContext = async (id) => {
+        try {
+            setLoading(true);
+            const res = await api.get(`/members/${id}`);
+            const memberData = res.data;
+            setAddChildContext({ ...memberData, isRoot: !memberData.father_id && !memberData.mother_id });
+        } catch (err) {
+            console.error('Error switching member context:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in relative">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-orange-100 animate-slide-up flex justify-between items-center">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-orange-100 animate-slide-up flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-primary mb-2">Geographic Lineage Explorer</h1>
-                    <p className="text-stone-500">Trace your roots by navigating through the geographical hierarchy.</p>
+                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">Geographic Lineage Explorer</h1>
+                    <p className="text-stone-500 text-sm">Trace roots through the geographical hierarchy.</p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
                     {currentLevel !== 'details' && (
-                        <div className="flex bg-stone-100 p-1 rounded-lg border border-stone-200">
+                        <div className="flex bg-stone-100 p-1 rounded-lg border border-stone-200 shadow-inner">
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-stone-500 hover:text-stone-700'}`}
@@ -489,7 +506,7 @@ const Explorer = () => {
                         </div>
                     ) : (
                         /* Graph View */
-                        <div id="explorer-graph-container" className="bg-[#fffcf5] border border-orange-100 rounded-2xl shadow-inner min-h-[500px] overflow-hidden animate-slide-up relative">
+                        <div id="explorer-graph-container" className="bg-[#fffcf5] border border-orange-100 rounded-2xl shadow-inner min-h-[400px] sm:min-h-[500px] overflow-hidden animate-slide-up relative">
                             {/* Background Pattern */}
                             <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
                                 style={{ backgroundImage: 'linear-gradient(#9a3412 1px, transparent 1px), linear-gradient(90deg, #9a3412 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
@@ -513,10 +530,21 @@ const Explorer = () => {
                 ) : (
                     /* Household Members View - Family Tree Only */
                     <div className="space-y-6 animate-slide-up">
-                        <div className="bg-white p-8 rounded-lg shadow-md border-t-4 border-secondary text-center flex flex-col items-center">
-                            <Home className="h-16 w-16 text-primary mx-auto mb-4" />
-                            <h2 className="text-2xl font-serif font-bold mb-2">{selection}</h2>
-                            <p className="text-stone-600 mb-6">Family Members in this Household</p>
+                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-orange-100 border-t-4 border-t-secondary text-center flex flex-col items-center">
+                            <Home className="h-14 w-14 text-primary mx-auto mb-3" />
+                            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-1">{selection}</h2>
+                            <p className="text-stone-500 text-sm mb-4">Family Members in this Household</p>
+                            
+                            <button
+                                onClick={() => {
+                                    setSpouseModalHomeFilter(selection);
+                                    setIsSpousesModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-2.5 bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white font-serif font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:from-orange-700 hover:to-red-800 transition-all duration-300 active:scale-95 group border border-orange-950/30 text-sm cursor-pointer"
+                            >
+                                <Heart size={16} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-300" />
+                                <span>সহধর্মিণী তালিকা ({selection})</span>
+                            </button>
                         </div>
 
                         <div className="animate-fade-in overflow-x-auto pb-4">
@@ -563,6 +591,7 @@ const Explorer = () => {
                 }}
                 initialData={addChildContext ? { ...geoContext, ...addChildContext } : geoContext}
                 onSuccess={handleMemberAdded}
+                onEditMember={handleEditMemberContext}
             />
 
             <MemberProfileModal
@@ -582,6 +611,15 @@ const Explorer = () => {
                     setSelectedDetailMember(null);
                     handleDeleteMember(member);
                 }}
+                onAddSpouse={(member) => {
+                    setAddChildContext({
+                        spouse_id: member.id,
+                        gender: member.gender === 'Male' ? 'Female' : 'Male',
+                        isRoot: false // Not exactly root if they have a spouse here
+                    });
+                    setIsProfileOpen(false);
+                    setIsFormOpen(true);
+                }}
             />
 
             <LocationForm
@@ -595,6 +633,16 @@ const Explorer = () => {
             <ConfirmModal
                 {...confirmModal}
                 onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
+
+            <SpousesDirectoryModal
+                isOpen={isSpousesModalOpen}
+                onClose={() => {
+                    setIsSpousesModalOpen(false);
+                    setSpouseModalHomeFilter(null);
+                }}
+                currentHome={spouseModalHomeFilter}
+                currentVillage={breadcrumbs && breadcrumbs.length >= 5 ? breadcrumbs[4] : null}
             />
 
         </div >

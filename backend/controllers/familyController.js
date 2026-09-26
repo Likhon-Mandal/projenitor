@@ -306,8 +306,26 @@ exports.getFamilyMembers = async (req, res) => {
 
         // We need to join with homes and villages to filter by their strings
         const query = `
-            SELECT m.*, h.name as home_name, v.name as village, ef.category as eminent_category
+            SELECT m.*, h.name as home_name, v.name as village, ef.category as eminent_category,
+            f.name_bangla as father_name_bangla, f.full_name as father_name, mo.name_bangla as mother_name_bangla, mo.full_name as mother_name,
+            (
+                SELECT json_agg(json_build_object('id', s_inner.id, 'full_name', s_inner.full_name, 'name_bangla', s_inner.name_bangla, 'name_english', s_inner.name_english, 'level', s_inner.level, 'profile_image_url', s_inner.profile_image_url))
+                FROM (
+                    SELECT DISTINCT s.id, s.full_name, s.name_bangla, s.name_english, s.level, s.profile_image_url
+                    FROM members s
+                    WHERE (
+                        s.id IN (SELECT spouse_id FROM member_spouses WHERE member_id = m.id)
+                        OR s.id IN (SELECT member_id FROM member_spouses WHERE spouse_id = m.id)
+                        OR s.spouse_id = m.id 
+                        OR m.spouse_id = s.id
+                    )
+                    AND s.id != m.id
+                    AND s.deleted_at IS NULL
+                ) s_inner
+            ) as spouses
             FROM members m
+            LEFT JOIN members f ON m.father_id = f.id
+            LEFT JOIN members mo ON m.mother_id = mo.id
             JOIN homes h ON m.home_id = h.id
             JOIN villages v ON m.village_id = v.id
             LEFT JOIN eminent_figures ef ON m.id = ef.member_id
@@ -338,9 +356,16 @@ exports.getRelatives = async (req, res) => {
         const parentsQuery = 'SELECT * FROM members WHERE id IN ($1, $2) AND deleted_at IS NULL';
         const parentsResult = await pool.query(parentsQuery, [member.father_id, member.mother_id]);
 
-        // Get Spouse
-        const spouseQuery = 'SELECT * FROM members WHERE id = $1 AND deleted_at IS NULL';
-        const spouseResult = member.spouse_id ? await pool.query(spouseQuery, [member.spouse_id]) : { rows: [] };
+        // Get Spouses
+        const spouseQuery = `
+            SELECT DISTINCT m.* 
+            FROM members m
+            LEFT JOIN member_spouses ms ON m.id = ms.spouse_id
+            WHERE (ms.member_id = $1 OR m.spouse_id = $1)
+            AND m.id != $1
+            AND m.deleted_at IS NULL
+        `;
+        const spouseResult = await pool.query(spouseQuery, [id]);
 
         // Get Children
         const childrenQuery = 'SELECT * FROM members WHERE (father_id = $1 OR mother_id = $1) AND deleted_at IS NULL ORDER BY created_at ASC';
@@ -349,7 +374,7 @@ exports.getRelatives = async (req, res) => {
         const response = {
             self: member,
             parents: parentsResult.rows,
-            spouse: spouseResult.rows[0] || null,
+            spouses: spouseResult.rows,
             children: childrenResult.rows
         };
 
@@ -359,3 +384,126 @@ exports.getRelatives = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+exports.getAllSpouses = async (req, res) => {
+    try {
+        const { home_name, village, generation, search } = req.query;
+
+        let query = `
+            SELECT 
+                m.*,
+                COALESCE(m.level, (
+                    SELECT p.level FROM members p 
+                    JOIN member_spouses ms ON (ms.member_id = p.id AND ms.spouse_id = m.id) OR (ms.spouse_id = p.id AND ms.member_id = m.id)
+                    WHERE p.id != m.id AND p.deleted_at IS NULL LIMIT 1
+                ), 1) as generation_level,
+                (
+                    SELECT json_agg(json_build_object(
+                        'id', p.id,
+                        'full_name', p.full_name,
+                        'name_bangla', p.name_bangla,
+                        'name_english', p.name_english,
+                        'level', p.level
+                    ))
+                    FROM (
+                        SELECT DISTINCT p.id, p.full_name, p.name_bangla, p.name_english, p.level
+                        FROM members p
+                        JOIN member_spouses ms ON (ms.member_id = p.id AND ms.spouse_id = m.id) OR (ms.spouse_id = p.id AND ms.member_id = m.id)
+                        WHERE p.id != m.id AND p.deleted_at IS NULL
+                    ) p
+                ) as partners,
+                COALESCE(h.name, (
+                    SELECT h2.name FROM members p2
+                    JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                    JOIN homes h2 ON p2.home_id = h2.id
+                    WHERE p2.id != m.id AND p2.deleted_at IS NULL LIMIT 1
+                )) as home_name,
+                COALESCE(v.name, (
+                    SELECT v2.name FROM members p2
+                    JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                    JOIN villages v2 ON p2.village_id = v2.id
+                    WHERE p2.id != m.id AND p2.deleted_at IS NULL LIMIT 1
+                )) as village,
+                COALESCE(u.name, (
+                    SELECT u2.name FROM members p2
+                    JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                    JOIN upazilas u2 ON p2.upazila_id = u2.id
+                    WHERE p2.id != m.id AND p2.deleted_at IS NULL LIMIT 1
+                )) as upazila,
+                COALESCE(di.name, (
+                    SELECT di2.name FROM members p2
+                    JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                    JOIN districts di2 ON p2.district_id = di2.id
+                    WHERE p2.id != m.id AND p2.deleted_at IS NULL LIMIT 1
+                )) as district
+            FROM members m
+            LEFT JOIN homes h ON m.home_id = h.id
+            LEFT JOIN villages v ON m.village_id = v.id
+            LEFT JOIN upazilas u ON m.upazila_id = u.id
+            LEFT JOIN districts di ON m.district_id = di.id
+            WHERE m.gender = 'Female' 
+              AND m.deleted_at IS NULL
+              AND (
+                EXISTS (SELECT 1 FROM member_spouses ms WHERE ms.spouse_id = m.id OR ms.member_id = m.id)
+                OR m.spouse_id IS NOT NULL 
+                OR EXISTS (SELECT 1 FROM members x WHERE x.spouse_id = m.id AND x.deleted_at IS NULL)
+              )
+        `;
+
+        const params = [];
+
+        if (home_name) {
+            params.push(home_name);
+            query += ` AND (h.name = $${params.length} OR EXISTS (
+                SELECT 1 FROM members p2
+                JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                JOIN homes h2 ON p2.home_id = h2.id
+                WHERE p2.id != m.id AND h2.name = $${params.length}
+            ))`;
+        }
+
+        if (village) {
+            params.push(village);
+            query += ` AND (v.name = $${params.length} OR EXISTS (
+                SELECT 1 FROM members p2
+                JOIN member_spouses ms2 ON (ms2.member_id = p2.id AND ms2.spouse_id = m.id) OR (ms2.spouse_id = p2.id AND ms2.member_id = m.id)
+                JOIN villages v2 ON p2.village_id = v2.id
+                WHERE p2.id != m.id AND v2.name = $${params.length}
+            ))`;
+        }
+
+        if (search) {
+            params.push(`%${search}%`);
+            query += ` AND (
+                m.full_name ILIKE $${params.length} 
+                OR m.name_bangla ILIKE $${params.length} 
+                OR m.name_english ILIKE $${params.length}
+                OR m.occupation ILIKE $${params.length}
+                OR m.workplace ILIKE $${params.length}
+                OR EXISTS (
+                    SELECT 1 FROM members p3
+                    JOIN member_spouses ms3 ON (ms3.member_id = p3.id AND ms3.spouse_id = m.id) OR (ms3.spouse_id = p3.id AND ms3.member_id = m.id)
+                    WHERE p3.id != m.id AND (p3.full_name ILIKE $${params.length} OR p3.name_bangla ILIKE $${params.length})
+                )
+            )`;
+        }
+
+        query += ` ORDER BY generation_level ASC, m.full_name ASC`;
+
+        const result = await pool.query(query, params);
+
+        let rows = result.rows;
+        if (generation) {
+            const genNum = parseInt(generation, 10);
+            if (!isNaN(genNum)) {
+                rows = rows.filter(r => r.generation_level === genNum);
+            }
+        }
+
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching spouses:', err);
+        res.status(500).json({ error: 'Server error fetching spouses' });
+    }
+};
+

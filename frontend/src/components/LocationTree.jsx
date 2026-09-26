@@ -59,12 +59,12 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
     return (
         <div
             ref={nodeRef}
-            className={`flex flex-row items-center relative ${levelIndex > 1 ? 'pl-8' : 'pl-0'} pr-8 py-2 animate-unfold-h origin-left shrink-0 ${className || ''}`}
+            className={`flex flex-row items-center relative ${levelIndex > 1 ? 'pl-3 sm:pl-8' : 'pl-0'} pr-3 sm:pr-8 py-1 sm:py-2 animate-unfold-h origin-left shrink-0 ${className || ''}`}
             style={staggerStyle}
         >
             {/* Connector Line LEFT - Extends left to meet the vertical bus */}
             {levelIndex > 1 && (
-                <div className="absolute left-0 top-1/2 -translate-y-[1px] h-[2px] w-8 bg-orange-300 origin-left z-0"></div>
+                <div className="absolute left-0 top-1/2 -translate-y-[1px] h-[2px] w-3 sm:w-8 bg-orange-300 origin-left z-0"></div>
             )}
 
             {/* CARD */}
@@ -74,7 +74,7 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                     onClick();
                 }}
                 className={`
-                    relative z-30 flex flex-row items-center justify-between min-w-[220px] px-4 py-4
+                    relative z-30 flex flex-row items-center justify-between min-w-[140px] sm:min-w-[220px] px-2.5 sm:px-4 py-2 sm:py-4
                     bg-white rounded-xl shadow-sm cursor-pointer 
                     transition-all duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)]
                     border
@@ -88,12 +88,12 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
             >
                 {/* Active Indicator Left Strip */}
                 {isActive && levelIndex > 1 && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-orange-500 rounded-r-full"></div>
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 sm:h-8 w-1 bg-orange-500 rounded-r-full"></div>
                 )}
 
                 {/* Location Name Info */}
                 <div className="flex flex-col text-left flex-1 min-w-0 pr-2">
-                    <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider bg-stone-100 w-fit px-2 py-0.5 rounded mb-1">{levelTitles[levelName] || levelName}</span>
+                    <span className="text-[8px] sm:text-[10px] uppercase font-bold text-stone-400 tracking-wider bg-stone-100 w-fit px-1.5 py-0.5 rounded mb-1">{levelTitles[levelName] || levelName}</span>
                     {isEditing ? (
                         <div className="flex items-center gap-1 mt-1 font-serif" onClick={e => e.stopPropagation()}>
                             <input
@@ -106,7 +106,7 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                                         onEditSubmit(node, editValue, () => setIsEditing(false));
                                     }
                                 }}
-                                className="w-[120px] sm:w-[140px] border border-orange-300 rounded px-1.5 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className="w-[100px] sm:w-[140px] border border-orange-300 rounded px-1.5 py-0.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                             <button onClick={e => {
                                 e.stopPropagation();
@@ -114,20 +114,20 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                                     onEditSubmit(node, editValue, () => setIsEditing(false));
                                 }
                             }} className="text-green-600 hover:bg-green-50 p-1 rounded transition-colors shadow-sm border border-stone-100 bg-white">
-                                <Check size={14} />
+                                <Check size={12} />
                             </button>
                             <button onClick={e => {
                                 e.stopPropagation();
                                 setIsEditing(false);
                                 setEditValue(node.name);
                             }} className="text-red-600 hover:bg-red-50 p-1 rounded transition-colors shadow-sm border border-stone-100 bg-white">
-                                <X size={14} />
+                                <X size={12} />
                             </button>
                         </div>
                     ) : (
                         <div className="flex items-center justify-between group">
-                            <span className={`text-base font-serif font-bold truncate ${isActive ? 'text-orange-900' : 'text-stone-800'}`}>{node.name}</span>
-                            <div className="opacity-0 group-hover:opacity-100 flex p-0.5 ml-1 transition-all space-x-1">
+                            <span className={`text-xs sm:text-base font-serif font-bold truncate ${isActive ? 'text-orange-900' : 'text-stone-800'}`}>{node.name}</span>
+                            <div className="opacity-0 group-hover:opacity-100 flex p-0.5 ml-1 transition-all space-x-0.5 sm:space-x-1">
                                 {isAdmin && (
                                     <button
                                         onClick={(e) => {
@@ -135,10 +135,10 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                                             setEditValue(node.name);
                                             setIsEditing(true);
                                         }}
-                                        className="p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded"
+                                        className="p-1 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded"
                                         title="Rename Location"
                                     >
-                                        <Edit2 size={12} />
+                                        <Edit2 size={10} />
                                     </button>
                                 )}
                                 {isAdmin && onDeleteSubmit && (
@@ -147,10 +147,10 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                                             e.stopPropagation();
                                             onDeleteSubmit(node);
                                         }}
-                                        className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded"
                                         title="Delete Location"
                                     >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={10} />
                                     </button>
                                 )}
                             </div>
@@ -159,12 +159,12 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                 </div>
 
                 {/* Dropdown / Arrow Icon */}
-                <div className="ml-4 flex items-center justify-center">
+                <div className="ml-1 sm:ml-4 flex items-center justify-center">
                     <div className={`
-                        w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-300
+                        w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-colors duration-300
                         ${isActive ? 'bg-orange-600 text-white' : 'bg-stone-100 text-stone-400'}
                     `}>
-                        <ChevronRight size={14} strokeWidth={3} className={`transition-transform duration-300`} />
+                        <ChevronRight size={10} strokeWidth={3} className={`sm:size-[14px] transition-transform duration-300`} />
                     </div>
                 </div>
 
@@ -176,10 +176,10 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                             if (onMapSelect) onMapSelect(node);
                         }}
                         className={`
-                            absolute -bottom-3 left-1/2 -translate-x-1/2
-                            h-7 px-4 rounded-full flex items-center justify-center gap-1
+                            absolute -bottom-2.5 left-1/2 -translate-x-1/2
+                            h-6 sm:h-7 px-3 sm:px-4 rounded-full flex items-center justify-center gap-1
                             border-2 border-white shadow-md transition-transform duration-300 hover:scale-105 active:scale-95 whitespace-nowrap
-                            bg-orange-600 text-white text-[10px] font-bold uppercase tracking-wider
+                            bg-orange-600 text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-wider
                         `}
                         title={`Select ${node.name}`}
                     >
@@ -190,7 +190,7 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
 
             {/* Connector Line RIGHT - Extends right to touch the vertical bus of next layer */}
             {isActive && hasChildren && (
-                <div className="absolute right-0 top-1/2 -translate-y-[1px] h-[2px] w-8 bg-orange-400 z-0 animate-draw-h origin-left"></div>
+                <div className="absolute right-0 top-1/2 -translate-y-[1px] h-[2px] w-3 sm:w-8 bg-orange-400 z-0 animate-draw-h origin-left"></div>
             )}
         </div>
     );
@@ -228,7 +228,7 @@ const LocationTree = ({
     const levelsMapKeys = Object.keys(levelTitles);
 
     return (
-        <div className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[500px] hide-scrollbar py-8 px-4 lg:px-12 bg-[#fffcf5]">
+        <div className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] hide-scrollbar py-4 sm:py-8 px-2 sm:px-4 lg:px-12 bg-[#fffcf5]">
             <AnimationStyles />
 
             <div className="flex flex-row items-center gap-0 w-fit h-fit my-auto">
@@ -248,7 +248,7 @@ const LocationTree = ({
                             )}
 
                             {/* Column Container */}
-                            <div className="flex flex-col justify-center gap-y-4 py-8 relative z-10 w-fit">
+                            <div className="flex flex-col justify-center gap-y-3 sm:gap-y-4 py-4 sm:py-8 relative z-10 w-fit">
                                 {layerNodes.map((node, index) => (
                                     <LocationNode
                                         key={`${levelName}-${node.name}`}

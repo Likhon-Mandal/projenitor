@@ -16,6 +16,7 @@ import Help from './pages/Help';
 import Admin from './pages/Admin';
 import FindRelation from './pages/FindRelation';
 import RecycleBin from './pages/RecycleBin';
+import SpousesDirectory from './pages/SpousesDirectory';
 
 // Auth Pages (no Layout wrapper)
 import Login from './pages/Login';
@@ -42,17 +43,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Dashboard pages — standalone (own top bar) */}
-          <Route path="/dashboard/superadmin" element={
-            <ProtectedRoute requiredRole="superadmin">
-              <SuperAdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/admin" element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
+
 
           {/* Main app pages — with Layout (header + footer) */}
           <Route path="/*" element={
@@ -73,9 +64,20 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/relation" element={<FindRelation />} />
+                <Route path="/spouses" element={<SpousesDirectory />} />
                 <Route path="/recycle-bin" element={
                   <ProtectedRoute requiredRole="admin">
                     <RecycleBin />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/superadmin" element={
+                  <ProtectedRoute requiredRole="superadmin">
+                    <SuperAdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/admin" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } />
               </Routes>

@@ -29,6 +29,50 @@ exports.getDashboardStats = async (req, res) => {
     }
 };
 
+// ─── Get Chart Data ───────────────────────────────────────────────────────────
+exports.getChartData = async (req, res) => {
+    try {
+        const [registrations, villages, bloodGroups] = await Promise.all([
+            // Monthly member registrations (limit to last 12 months for better view)
+            pool.query(`
+                SELECT TO_CHAR(created_at, 'Mon') as month, COUNT(*) as count, DATE_TRUNC('month', created_at) as month_date
+                FROM members
+                WHERE deleted_at IS NULL
+                GROUP BY TO_CHAR(created_at, 'Mon'), DATE_TRUNC('month', created_at)
+                ORDER BY DATE_TRUNC('month', created_at) ASC
+                LIMIT 12
+            `),
+            // Top 8 villages by member count
+            pool.query(`
+                SELECT v.name as name, COUNT(m.id) as count
+                FROM members m
+                JOIN villages v ON m.village_id = v.id
+                WHERE m.deleted_at IS NULL
+                GROUP BY v.name
+                ORDER BY count DESC
+                LIMIT 8
+            `),
+            // Blood group distribution
+            pool.query(`
+                SELECT blood_group as name, COUNT(*) as count
+                FROM members
+                WHERE blood_group IS NOT NULL AND deleted_at IS NULL
+                GROUP BY blood_group
+                ORDER BY count DESC
+            `)
+        ]);
+
+        res.json({
+            registrations: registrations.rows.map(r => ({ name: r.month, members: parseInt(r.count) })),
+            villages: villages.rows.map(v => ({ name: v.name, value: parseInt(v.count) })),
+            bloodGroups: bloodGroups.rows.map(b => ({ name: b.name, value: parseInt(b.count) }))
+        });
+    } catch (err) {
+        console.error('Chart data error:', err);
+        res.status(500).json({ error: 'Server error fetching chart data' });
+    }
+};
+
 // ─── Get All Admins (SuperAdmin only) ─────────────────────────────────────────
 exports.getAdmins = async (req, res) => {
     try {

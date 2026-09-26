@@ -1,8 +1,59 @@
 const { pool } = require('../config/db');
 
+// Bilingual synonyms mapping for seamless cross-language search
+const OCCUPATION_SYNONYMS = {
+  'শিক্ষক': ['Teacher', 'Professor'],
+  'teacher': ['শিক্ষক', 'অধ্যাপক'],
+  'ডাক্তার': ['Doctor', 'Physician'],
+  'doctor': ['ডাক্তার', 'চিকিৎসক'],
+  'চিকিৎসক': ['Doctor'],
+  'কৃষক': ['Farmer', 'Agriculture'],
+  'farmer': ['কৃষক'],
+  'প্রকৌশলী': ['Engineer'],
+  'engineer': ['প্রকৌশলী', 'ইঞ্জিনিয়ার'],
+  'ইঞ্জিনিয়ার': ['Engineer', 'প্রকৌশলী'],
+  'আইনজীবী': ['Lawyer', 'Advocate'],
+  'উকিল': ['Lawyer'],
+  'lawyer': ['আইনজীবী', 'উকিল'],
+  'ব্যাংকার': ['Banker'],
+  'banker': ['ব্যাংকার', 'ব্যাংক কর্মকর্তা'],
+  'ব্যবসায়ী': ['Businessman', 'Merchant'],
+  'ব্যবসায়ী': ['Businessman', 'Merchant'],
+  'businessman': ['ব্যবসায়ী', 'ব্যবসায়ী'],
+  'merchant': ['ব্যবসায়ী', 'সওদাগর'],
+  'ছাত্র': ['Student'],
+  'ছাত্রী': ['Student'],
+  'student': ['ছাত্র', 'ছাত্রী'],
+  'গৃহিণী': ['Housewife', 'Homemaker'],
+  'housewife': ['গৃহিণী'],
+  'grihini': ['গৃহিণী', 'Housewife'],
+  'homemaker': ['গৃহিণী', 'Housewife'],
+  'প্রবাসী': ['Expatriate'],
+  'expatriate': ['প্রবাসী'],
+  'পুলিশ': ['Police', 'Police Officer', 'Police inspector'],
+  'police': ['পুলিশ'],
+  'সেনাবাহিনী': ['Soldier', 'Army', 'Military'],
+  'soldier': ['সেনাবাহিনী', 'সৈনিক'],
+  'নার্স': ['Nurse'],
+  'সেবিকা': ['Nurse'],
+  'nurse': ['নার্স', 'সেবিকা'],
+  'পাইলট': ['Pilot'],
+  'pilot': ['পাইলট', 'বৈমানিক'],
+  'শিল্পী': ['Artist'],
+  'artist': ['শিল্পী'],
+  'বিজ্ঞানী': ['Scientist'],
+  'scientist': ['বিজ্ঞানী'],
+  'ছুতার': ['Carpenter'],
+  'কাঠমিস্ত্রী': ['Carpenter'],
+  'carpenter': ['ছুতার', 'কাঠমিস্ত্রী'],
+  'চাকুরীজীবী': ['Civil Servant', 'Service'],
+  'চাকরিজীবী': ['Civil Servant', 'Service'],
+  'civil servant': ['সরকারি চাকরিজীবী', 'চাকুরীজীবী'],
+};
+
 exports.getAllMembers = async (req, res) => {
   try {
-    const { name, workplace, education, blood_group, country, division, district } = req.query;
+    const { name, workplace, education, blood_group, country, division, district, upazila, village } = req.query;
 
     let query = `
         SELECT m.*,
@@ -12,7 +63,20 @@ exports.getAllMembers = async (req, res) => {
       u.name as upazila,
       v.name as village,
       h.name as home_name,
-      ef.category as eminent_category
+      ef.category as eminent_category,
+      f.full_name as father_name,
+      mo.full_name as mother_name,
+      (
+          SELECT json_agg(json_build_object('id', s_inner.id, 'full_name', s_inner.full_name, 'name_bangla', s_inner.name_bangla, 'name_english', s_inner.name_english, 'level', s_inner.level, 'profile_image_url', s_inner.profile_image_url))
+          FROM (
+              SELECT DISTINCT s.id, s.full_name, s.name_bangla, s.name_english, s.level, s.profile_image_url
+              FROM members s
+              LEFT JOIN member_spouses ms ON s.id = ms.spouse_id
+              WHERE (ms.member_id = m.id OR s.spouse_id = m.id OR m.spouse_id = s.id)
+              AND s.id != m.id
+              AND s.deleted_at IS NULL
+          ) s_inner
+      ) as spouses
         FROM members m
         LEFT JOIN countries c ON m.country_id = c.id
         LEFT JOIN divisions d ON m.division_id = d.id
@@ -21,6 +85,8 @@ exports.getAllMembers = async (req, res) => {
         LEFT JOIN villages v ON m.village_id = v.id
         LEFT JOIN homes h ON m.home_id = h.id
         LEFT JOIN eminent_figures ef ON m.id = ef.member_id
+        LEFT JOIN members f ON m.father_id = f.id
+        LEFT JOIN members mo ON m.mother_id = mo.id
         WHERE m.deleted_at IS NULL
     `;
 
@@ -28,11 +94,21 @@ exports.getAllMembers = async (req, res) => {
 
     if (name) {
       params.push(`%${name}%`);
-      query += ` AND m.full_name ILIKE $${params.length}`;
+      query += ` AND (m.full_name ILIKE $${params.length} OR m.name_bangla ILIKE $${params.length} OR m.name_english ILIKE $${params.length})`;
     }
     if (workplace) {
-      params.push(`%${workplace}%`);
-      query += ` AND (m.occupation ILIKE $${params.length} OR m.workplace ILIKE $${params.length})`;
+      const trimmed = workplace.trim();
+      params.push(`%${trimmed}%`);
+      let occConditions = `(m.occupation ILIKE $${params.length} OR m.workplace ILIKE $${params.length})`;
+
+      // Check cross-language synonyms for bilingual search
+      const lower = trimmed.toLowerCase();
+      const synonyms = OCCUPATION_SYNONYMS[lower] || OCCUPATION_SYNONYMS[trimmed] || [];
+      for (const syn of synonyms) {
+        params.push(`%${syn}%`);
+        occConditions += ` OR (m.occupation ILIKE $${params.length} OR m.workplace ILIKE $${params.length})`;
+      }
+      query += ` AND (${occConditions})`;
     }
     if (education) {
       params.push(`%${education}%`);
@@ -54,8 +130,16 @@ exports.getAllMembers = async (req, res) => {
       query += ` AND d.name = $${params.length}`;
     }
     if (district) {
-      params.push(district);
-      query += ` AND di.name = $${params.length}`;
+      params.push(`%${district}%`);
+      query += ` AND di.name ILIKE $${params.length}`;
+    }
+    if (upazila) {
+      params.push(`%${upazila}%`);
+      query += ` AND u.name ILIKE $${params.length}`;
+    }
+    if (village) {
+      params.push(`%${village}%`);
+      query += ` AND v.name ILIKE $${params.length}`;
     }
 
     query += ' LIMIT 100';
@@ -103,13 +187,29 @@ exports.getMemberById = async (req, res) => {
 
     // Fetch children
     const childrenQuery = `
-      SELECT id, full_name, profile_image_url, created_at 
+      SELECT id, full_name, name_bangla, name_english, profile_image_url, created_at 
       FROM members 
       WHERE (father_id = $1 OR mother_id = $1) AND deleted_at IS NULL
       ORDER BY created_at ASC
     `;
     const childrenResult = await pool.query(childrenQuery, [id]);
     member.children = childrenResult.rows;
+
+    // Fetch spouses (ensure distinct and bidirectional)
+    const spousesQuery = `
+      SELECT DISTINCT m.id, m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.gender, m.occupation, m.workplace, m.blood_group, m.contact_number, m.social_media
+      FROM members m
+      WHERE (
+        m.id IN (SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = $1)
+        OR m.id IN (SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = $1)
+        OR m.spouse_id = $1
+        OR (SELECT spouse_id FROM members WHERE id = $1) = m.id
+      )
+      AND m.id != $1
+      AND m.deleted_at IS NULL
+    `;
+    const spousesResult = await pool.query(spousesQuery, [id]);
+    member.spouses = spousesResult.rows;
 
     res.json(member);
   } catch (err) {
@@ -121,7 +221,7 @@ exports.getMemberById = async (req, res) => {
 exports.createMember = async (req, res) => {
   try {
     const {
-      full_name, gender, blood_group, occupation, education,
+      full_name, name_bangla, name_english, gender, blood_group, occupation, education,
       birth_date, death_date, is_alive,
       contact_number, email, present_address, permanent_address,
       country, division, district, upazila, union_ward, village, home_name,
@@ -159,25 +259,29 @@ exports.createMember = async (req, res) => {
 
     // Note: If any ID is missing but name was provided, it means data inconsistency or location not added yet.
 
+    const trimmedBangla = name_bangla?.trim() || null;
+    const trimmedEnglish = name_english?.trim() || null;
+    const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
+
     const query = `
       INSERT INTO members (
-        full_name, gender, blood_group, occupation, education,
+        full_name, name_bangla, name_english, gender, blood_group, occupation, education,
         birth_date, death_date, is_alive,
         contact_number, email, present_address, permanent_address,
         country_id, division_id, district_id, upazila_id, village_id, home_id,
         father_id, mother_id, spouse_id,
         profile_image_url, bio, level, workplace, social_media
       ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8,
-        $9, $10, $11, $12,
-        $13, $14, $15, $16, $17, $18,
-        $19, $20, $21,
-        $22, $23, $24, $25, $26
+        $1, $2, $3, $4, $5, $6, $7,
+        $8, $9, $10,
+        $11, $12, $13, $14,
+        $15, $16, $17, $18, $19, $20,
+        $21, $22, $23,
+        $24, $25, $26, $27, $28
       ) RETURNING *`;
 
     const values = [
-      full_name, gender, blood_group, occupation, education,
+      computedFullName, trimmedBangla, trimmedEnglish, gender, blood_group, occupation, education,
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
@@ -186,7 +290,17 @@ exports.createMember = async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
-    res.status(201).json(result.rows[0]);
+    const newMember = result.rows[0];
+
+    // Handle initial spouse link if provided
+    if (spouse_id) {
+      await pool.query(
+        'INSERT INTO member_spouses (member_id, spouse_id) VALUES ($1, $2), ($2, $1) ON CONFLICT DO NOTHING',
+        [newMember.id, spouse_id]
+      );
+    }
+
+    res.status(201).json(newMember);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error: ' + err.message, stack: err.stack });
@@ -197,7 +311,7 @@ exports.updateMember = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      full_name, gender, blood_group, occupation, education,
+      full_name, name_bangla, name_english, gender, blood_group, occupation, education,
       birth_date, death_date, is_alive,
       contact_number, email, present_address, permanent_address,
       country, division, district, upazila, village, home_name,
@@ -227,19 +341,23 @@ exports.updateMember = async (req, res) => {
     const village_id = await findId('villages', village, 'upazila_id', upazila_id);
     const home_id = await findId('homes', home_name, 'village_id', village_id);
 
+    const trimmedBangla = name_bangla?.trim() || null;
+    const trimmedEnglish = name_english?.trim() || null;
+    const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
+
     const query = `
       UPDATE members SET
-        full_name = $1, gender = $2, blood_group = $3, occupation = $4, education = $5,
-        birth_date = $6, death_date = $7, is_alive = $8,
-        contact_number = $9, email = $10, present_address = $11, permanent_address = $12,
-        country_id = $13, division_id = $14, district_id = $15, upazila_id = $16, village_id = $17, home_id = $18,
-        father_id = $19, mother_id = $20, spouse_id = $21,
-        profile_image_url = $22, bio = $23, level = $24, workplace = $25, social_media = $26,
+        full_name = $1, name_bangla = $2, name_english = $3, gender = $4, blood_group = $5, occupation = $6, education = $7,
+        birth_date = $8, death_date = $9, is_alive = $10,
+        contact_number = $11, email = $12, present_address = $13, permanent_address = $14,
+        country_id = $15, division_id = $16, district_id = $17, upazila_id = $18, village_id = $19, home_id = $20,
+        father_id = $21, mother_id = $22, spouse_id = $23,
+        profile_image_url = $24, bio = $25, level = $26, workplace = $27, social_media = $28,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $27 RETURNING *`;
+      WHERE id = $29 RETURNING *`;
 
     const values = [
-      full_name, gender, blood_group, occupation, education,
+      computedFullName, trimmedBangla, trimmedEnglish, gender, blood_group, occupation, education,
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
@@ -254,6 +372,14 @@ exports.updateMember = async (req, res) => {
       return res.status(404).json({ error: 'Member not found' });
     }
 
+    // Sync spouse if changed/provided
+    if (spouse_id) {
+      await pool.query(
+        'INSERT INTO member_spouses (member_id, spouse_id) VALUES ($1, $2), ($2, $1) ON CONFLICT DO NOTHING',
+        [id, spouse_id]
+      );
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -264,27 +390,165 @@ exports.updateMember = async (req, res) => {
 exports.deleteMember = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = `
-      WITH RECURSIVE descendants AS (
-        SELECT id FROM members WHERE id = $1
-        UNION ALL
-        SELECT m.id FROM members m
-        INNER JOIN descendants d ON m.father_id = d.id OR m.mother_id = d.id
-      )
-      UPDATE members
-      SET deleted_at = CURRENT_TIMESTAMP
-      WHERE id IN (SELECT id FROM descendants)
-      RETURNING *;
-    `;
-    const result = await pool.query(query, [id]);
 
-    if (result.rows.length === 0) {
+    // Check if target member exists
+    const targetCheck = await pool.query(
+      'SELECT id, full_name, gender, father_id, mother_id FROM members WHERE id = $1',
+      [id]
+    );
+
+    if (targetCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    res.json({ message: `Member and ${result.rows.length - 1} descendants deleted successfully`, deleted_count: result.rows.length });
+    const target = targetCheck.rows[0];
+    const isFemaleInMarriedSpouse = target && (target.gender === 'Female' || !target.gender) && !target.father_id && !target.mother_id;
+
+    const query = `
+      WITH RECURSIVE lineage AS (
+        -- 1. Target node
+        SELECT id FROM members WHERE id = $1
+        UNION
+        -- 2. Traverse all biological children, grandchildren, and any children connected via spouses
+        SELECT lat.id
+        FROM lineage l
+        CROSS JOIN LATERAL (
+          SELECT m.id FROM members m WHERE m.father_id = l.id OR m.mother_id = l.id
+          UNION
+          SELECT m.id FROM members m 
+          WHERE m.father_id IN (
+            SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = l.id
+            UNION
+            SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = l.id
+            UNION
+            SELECT s.spouse_id FROM members s WHERE s.id = l.id AND s.spouse_id IS NOT NULL
+            UNION
+            SELECT s.id FROM members s WHERE s.spouse_id = l.id
+          ) OR m.mother_id IN (
+            SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = l.id
+            UNION
+            SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = l.id
+            UNION
+            SELECT s.spouse_id FROM members s WHERE s.id = l.id AND s.spouse_id IS NOT NULL
+            UNION
+            SELECT s.id FROM members s WHERE s.spouse_id = l.id
+          )
+        ) lat
+      ),
+      all_spouses AS (
+        -- 3. All spouses of anyone in lineage (target node and all descendants)
+        SELECT ms.spouse_id AS id 
+        FROM member_spouses ms 
+        JOIN members s ON s.id = ms.spouse_id
+        WHERE ms.member_id IN (SELECT id FROM lineage)
+          AND NOT (ms.member_id = $1 AND s.gender = 'Male' AND $2 = true)
+
+        UNION
+
+        SELECT ms.member_id AS id 
+        FROM member_spouses ms 
+        JOIN members s ON s.id = ms.member_id
+        WHERE ms.spouse_id IN (SELECT id FROM lineage)
+          AND NOT (ms.spouse_id = $1 AND s.gender = 'Male' AND $2 = true)
+
+        UNION
+
+        SELECT m.spouse_id AS id 
+        FROM members m 
+        JOIN members s ON s.id = m.spouse_id
+        WHERE m.id IN (SELECT id FROM lineage) AND m.spouse_id IS NOT NULL
+          AND NOT (m.id = $1 AND s.gender = 'Male' AND $2 = true)
+
+        UNION
+
+        SELECT m.id AS id 
+        FROM members m 
+        JOIN members s ON s.id = m.id
+        WHERE m.spouse_id IN (SELECT id FROM lineage)
+          AND NOT (m.spouse_id = $1 AND s.gender = 'Male' AND $2 = true)
+      ),
+      full_subtree AS (
+        SELECT id FROM lineage
+        UNION
+        SELECT id FROM all_spouses WHERE id IS NOT NULL
+      )
+      UPDATE members
+      SET deleted_at = CURRENT_TIMESTAMP
+      WHERE id IN (SELECT id FROM full_subtree)
+        AND deleted_at IS NULL
+      RETURNING id, full_name, name_bangla;
+    `;
+
+    const result = await pool.query(query, [id, isFemaleInMarriedSpouse]);
+
+    res.json({
+      message: `Member and ${result.rows.length - 1} related member(s) (subtree and spouses) deleted successfully`,
+      deleted_count: result.rows.length,
+      deleted_members: result.rows
+    });
+  } catch (err) {
+    console.error('Error in deleteMember:', err);
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+};
+
+exports.deleteSpouseRelationship = async (req, res) => {
+  try {
+    const { id, spouseId } = req.params;
+
+    // Delete bidirectional entries from member_spouses
+    await pool.query(
+      'DELETE FROM member_spouses WHERE (member_id = $1 AND spouse_id = $2) OR (member_id = $2 AND spouse_id = $1)',
+      [id, spouseId]
+    );
+
+    // Also clear redundant legacy spouse_id columns for both members
+    await pool.query('UPDATE members SET spouse_id = NULL WHERE (id = $1 AND spouse_id = $2) OR (id = $2 AND spouse_id = $1)', [id, spouseId]);
+
+    res.json({ message: 'Spouse relationship removed successfully' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+};
+
+exports.addSpouseRelationship = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { spouseId } = req.body;
+
+    if (!spouseId) {
+      return res.status(400).json({ error: 'Spouse ID is required' });
+    }
+
+    // Add bidirectional entries to member_spouses
+    await pool.query(
+      'INSERT INTO member_spouses (member_id, spouse_id) VALUES ($1, $2), ($2, $1) ON CONFLICT DO NOTHING',
+      [id, spouseId]
+    );
+
+    // Also update redundant legacy spouse_id column for consistency
+    await pool.query('UPDATE members SET spouse_id = $2 WHERE id = $1', [id, spouseId]);
+    await pool.query('UPDATE members SET spouse_id = $1 WHERE id = $2', [id, spouseId]);
+
+    res.json({ message: 'Spouse relationship added successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+};
+
+exports.getOccupations = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT occupation FROM members 
+       WHERE occupation IS NOT NULL AND TRIM(occupation) != '' 
+       ORDER BY occupation ASC`
+    );
+    const occupations = result.rows.map(r => r.occupation.trim()).filter(Boolean);
+    res.json(occupations);
+  } catch (err) {
+    console.error('Error fetching occupations:', err);
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };

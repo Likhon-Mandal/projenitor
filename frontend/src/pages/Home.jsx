@@ -1,3 +1,9 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+    Bell, HelpCircle, Star, ArrowRight, User, Calendar, MapPin,
+    Activity, ChevronRight, AlertCircle, Edit2, Trash2, Users, Home as HomeIcon
+} from 'lucide-react';
 import ImageSlider from '../components/ImageSlider';
 import HelpRequestModal from '../components/HelpRequestModal';
 import api from '../api/api';
@@ -43,10 +49,10 @@ const AnimationStyles = () => (
 
 /* List Item Component */
 const ListItem = ({ icon: Icon, title, date, tag, type, to }) => (
-    <Link to={to || "/board"} className="block group mb-3">
-        <div className="glass-item p-4 rounded-xl flex items-start gap-4 cursor-pointer">
-            <div className={`p-3 rounded-xl shrink-0 ${type === 'alert' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
-                <Icon size={20} />
+    <Link to={to || "/board"} className="block group mb-2">
+        <div className="glass-item p-3 rounded-xl flex items-start gap-3 cursor-pointer">
+            <div className={`p-2 rounded-xl shrink-0 ${type === 'alert' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
+                <Icon size={18} />
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between mb-1">
@@ -92,6 +98,16 @@ const Home = () => {
     const [loadingHelp, setLoadingHelp] = useState(true);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [editingHelp, setEditingHelp] = useState(null);
+    const [publicStats, setPublicStats] = useState({ totalMembers: 0, totalHomes: 0, totalVillages: 0 });
+
+    const fetchPublicStats = async () => {
+        try {
+            const res = await api.get('/system/stats');
+            setPublicStats(res.data);
+        } catch (error) {
+            console.error("Error fetching public stats:", error);
+        }
+    };
 
     const fetchHelpData = async () => {
         try {
@@ -164,6 +180,7 @@ const Home = () => {
         };
         fetchDashboardData();
         fetchHelpData();
+        fetchPublicStats();
     }, []);
 
     const handleDeleteHelp = async (id) => {
@@ -226,17 +243,47 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* SYSTEM OVERVIEW / STATS BAR */}
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-16 -mt-12 relative z-20">
+                <div className="glass-panel rounded-[1.5rem] p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 text-center shadow-xl shadow-orange-900/5">
+                    <div className="relative space-y-1 group">
+                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                            <Users size={18} className="group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{isAdmin ? 'Verified Members' : 'Total Members'}</span>
+                        </div>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalMembers}</p>
+                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                    </div>
+                    <div className="relative space-y-1 group">
+                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                            <HomeIcon size={18} className="group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Village Homes</span>
+                        </div>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalHomes}</p>
+                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                    </div>
+                    <div className="relative space-y-1 group">
+                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                            <MapPin size={18} className="group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Villages</span>
+                        </div>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalVillages}</p>
+                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
             {/* MAIN CONTENT CONTAINER */}
             <div className="max-w-7xl mx-auto px-6 md:px-8">
 
                 {/* NOTICES & HELP DESK SECTION - Grid Layout Below Hero */}
-                <div className="grid lg:grid-cols-2 gap-8 mb-24 mt-12 relative">
+                <div className="grid lg:grid-cols-2 gap-6 mb-16 mt-8 relative">
 
                     {/* Notices Panel */}
-                    <div className="glass-panel rounded-[2rem] p-8 animate-fade-up delay-100">
-                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-200/50">
-                            <h2 className="text-2xl font-serif font-bold text-stone-800 flex items-center gap-3">
-                                <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><Bell size={24} /></div>
+                    <div className="glass-panel rounded-[1.5rem] p-6 animate-fade-up delay-100">
+                        <div className="flex items-center justify-between mb-6 pb-3 border-b border-stone-200/50">
+                            <h2 className="text-xl font-serif font-bold text-stone-800 flex items-center gap-3">
+                                <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><Bell size={20} /></div>
                                 Community Notices
                             </h2>
                             <Link to="/board" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">View All</Link>
@@ -255,10 +302,10 @@ const Home = () => {
                     </div>
 
                     {/* Help Desk Panel */}
-                    <div className="glass-panel rounded-[2rem] p-8 animate-fade-up delay-200">
-                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-200/50">
-                            <h2 className="text-2xl font-serif font-bold text-stone-800 flex items-center gap-3">
-                                <div className="p-2 bg-red-100 rounded-lg text-red-600"><HelpCircle size={24} /></div>
+                    <div className="glass-panel rounded-[1.5rem] p-6 animate-fade-up delay-200">
+                        <div className="flex items-center justify-between mb-6 pb-3 border-b border-stone-200/50">
+                            <h2 className="text-xl font-serif font-bold text-stone-800 flex items-center gap-3">
+                                <div className="p-2 bg-red-100 rounded-lg text-red-600"><HelpCircle size={20} /></div>
                                 Help & Support
                             </h2>
                             <Link to="/help" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">View All</Link>

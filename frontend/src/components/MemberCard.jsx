@@ -14,15 +14,17 @@ const MemberCard = ({ member, onViewProfile }) => {
           )}
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-serif font-bold text-primary group-hover:text-red-900 transition-colors">{member.full_name}</h3>
+          <h3 className="text-lg font-serif font-bold text-primary group-hover:text-red-900 transition-colors">
+            {member.name_bangla || member.full_name}
+          </h3>
           <div className="text-sm text-stone-500 flex items-center mt-1">
-            <MapPin className="h-3 w-3 mr-1" />
-            <span className="truncate">{[member.village, member.upazila].filter(Boolean).join(', ') || 'Unknown Location'}</span>
+            <MapPin className="h-3.5 w-3.5 mr-1 text-orange-600 flex-shrink-0" />
+            <span className="truncate">{[member.village, member.upazila, member.district].filter(Boolean).join(', ') || 'অজানা স্থান'}</span>
           </div>
           {member.occupation && (
             <div className="text-sm text-stone-500 flex items-center mt-0.5">
-              <Briefcase className="h-3 w-3 mr-1 text-secondary" />
-              <span>{member.occupation}</span>
+              <Briefcase className="h-3.5 w-3.5 mr-1 text-secondary flex-shrink-0" />
+              <span className="truncate">{member.occupation}</span>
             </div>
           )}
         </div>
@@ -30,9 +32,9 @@ const MemberCard = ({ member, onViewProfile }) => {
       <div className="mt-4 flex justify-end">
         <button
           onClick={onViewProfile}
-          className="text-sm text-secondary font-medium hover:text-white border border-secondary px-3 py-1 rounded hover:bg-secondary transition duration-300"
+          className="text-sm text-secondary font-medium hover:text-white border border-secondary px-3 py-1 rounded-lg hover:bg-secondary transition duration-300 shadow-sm hover:shadow"
         >
-          View Profile
+          প্রোফাইল দেখুন
         </button>
       </div>
     </div>

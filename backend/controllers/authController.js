@@ -18,7 +18,7 @@ exports.login = async (req, res) => {
     await client.query('BEGIN');
 
     const result = await client.query(
-      'SELECT id, name, email, password_hash, role FROM admin_users WHERE email = $1',
+      'SELECT id, name, name_bangla, name_english, email, password_hash, role, profile_image_url FROM admin_users WHERE email = $1',
       [email.trim().toLowerCase()]
     );
 
@@ -45,7 +45,15 @@ exports.login = async (req, res) => {
 
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user.id,
+        name: user.name,
+        name_bangla: user.name_bangla,
+        name_english: user.name_english,
+        email: user.email,
+        role: user.role,
+        profile_image_url: user.profile_image_url
+      }
     });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -191,6 +199,32 @@ exports.changePassword = async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Change password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ─── Update Profile (Name & Profile Image) ───────────────────────────────────
+exports.updateProfile = async (req, res) => {
+  const { name, name_bangla, name_english, profile_image_url } = req.body;
+  const effectiveName = name?.trim() || (name_bangla && name_english ? `${name_bangla} (${name_english})` : (name_bangla || name_english));
+  if (!effectiveName) return res.status(400).json({ error: 'Name is required' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      'UPDATE admin_users SET name = $1, name_bangla = $2, name_english = $3, profile_image_url = $4 WHERE id = $5 RETURNING id, name, name_bangla, name_english, email, role, profile_image_url',
+      [effectiveName, name_bangla?.trim() || null, name_english?.trim() || null, profile_image_url || null, req.user.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ message: 'Profile updated successfully', user: result.rows[0] });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Update profile error:', err);
     res.status(500).json({ error: 'Server error' });
   } finally {
     client.release();

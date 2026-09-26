@@ -1,4 +1,6 @@
-import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/api';
 
@@ -104,7 +106,9 @@ const Profile = ({ memberId, onClose }) => {
               </div>
             </div>
 
-            <h1 className="text-3xl font-serif font-bold text-stone-800 mb-1 text-center">{member.full_name.replace(' (Root)', '')}</h1>
+            <h1 className="text-3xl font-serif font-bold text-stone-800 mb-1 text-center">
+              {(member.name_bangla || member.full_name).replace(' (Root)', '')}
+            </h1>
             <div className="flex items-center text-stone-500 justify-center">
               <MapPin className="h-4 w-4 mr-1" />
               <span>{[member.village, member.upazila, member.district].filter(Boolean).join(', ') || 'Unknown Location'}</span>
@@ -175,12 +179,43 @@ const Profile = ({ memberId, onClose }) => {
                 </div>
               </div>
 
+              {member.spouses && member.spouses.length > 0 && (
+                <div className="flex items-start group hover:bg-orange-50 p-2 rounded transition-colors">
+                  <Heart className="h-5 w-5 text-red-500 mr-3 mt-0.5 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <span className="block text-xs uppercase tracking-wider text-stone-400 font-bold">Spouses</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {member.spouses.filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).map(s => (
+                        <div key={s.id} className="flex items-center gap-2 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full">
+                          <div className="w-5 h-5 rounded-full overflow-hidden bg-white">
+                            {s.profile_image_url ? (
+                              <img src={s.profile_image_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <User size={12} className="m-auto text-orange-200" />
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-orange-900">{s.name_bangla || s.full_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start group hover:bg-orange-50 p-2 rounded transition-colors">
                 <User className="h-5 w-5 text-secondary mr-3 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
-                  <span className="block text-sm text-stone-500">Father</span>
-                  {/* Placeholder for link */}
-                  <span className="font-medium hover:text-primary cursor-pointer transition-colors">{member.father_name?.trim() || member.father_id || 'Unknown'}</span>
+                  <span className="block text-xs uppercase tracking-wider text-stone-400 font-bold">Parents</span>
+                  <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">Father</span>
+                      <span className="font-medium text-stone-700">{member.father_name_bangla || member.father_name || 'Unknown'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-pink-50 text-pink-600 px-1.5 py-0.5 rounded font-bold">Mother</span>
+                      <span className="font-medium text-stone-700">{member.mother_name_bangla || member.mother_name || 'Unknown'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -199,7 +234,7 @@ const Profile = ({ memberId, onClose }) => {
                               <User className="h-4 w-4" />
                             )}
                           </div>
-                          <span className="font-medium text-sm hover:text-primary cursor-pointer transition-colors">{child.full_name}</span>
+                          <span className="font-medium text-sm hover:text-primary cursor-pointer transition-colors">{child.name_bangla || child.full_name}</span>
                         </div>
                       ))}
                     </div>

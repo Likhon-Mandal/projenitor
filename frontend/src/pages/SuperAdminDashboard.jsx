@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Home, MapPin, Calendar, Bell, Star, Shield, Plus, Pencil, Trash2, X, Eye, EyeOff, LogOut, Key, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
+import ProfileTab from '../components/ProfileTab';
+import DashboardCharts from '../components/DashboardCharts';
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className={`bg-white rounded-xl shadow-sm border border-orange-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow group`}>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
-            <Icon className="w-6 h-6 text-white" />
+    <div className={`bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3 hover:shadow-md transition-shadow group`}>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
+            <Icon className="w-5 h-5 text-white" />
         </div>
         <div>
-            <p className="text-sm text-stone-500 font-sans">{label}</p>
-            <p className="text-2xl font-bold text-stone-800 font-serif">{value ?? '—'}</p>
+            <p className="text-[11px] text-stone-500 font-sans uppercase tracking-wider">{label}</p>
+            <p className="text-xl font-bold text-stone-800 font-serif">{value ?? '—'}</p>
         </div>
     </div>
 );
@@ -106,6 +108,7 @@ const SuperAdminDashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
+    const [chartData, setChartData] = useState(null);
     const [admins, setAdmins] = useState([]);
     const [statsLoading, setStatsLoading] = useState(true);
     const [adminsLoading, setAdminsLoading] = useState(false);
@@ -115,8 +118,11 @@ const SuperAdminDashboard = () => {
     const fetchStats = async () => {
         setStatsLoading(true);
         try {
-            const res = await api.get('/admin/stats');
-            setStats(res.data);
+            // Fetch stats and chart data independently
+            const statsPromise = api.get('/admin/stats').then(res => setStats(res.data)).catch(err => console.error('Stats fetch error:', err));
+            const chartPromise = api.get('/admin/chart-data').then(res => setChartData(res.data)).catch(err => console.error('Chart fetch error:', err));
+
+            await Promise.all([statsPromise, chartPromise]);
         } catch (err) {
             console.error('Stats error:', err);
         } finally {
@@ -163,27 +169,7 @@ const SuperAdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-orange-50">
-            {/* Top Bar */}
-            <div className="bg-orange-800 text-white px-6 py-4 flex items-center justify-between shadow-lg sticky top-0 z-40">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-orange-900" />
-                    </div>
-                    <div>
-                        <p className="font-serif font-bold text-lg">Projenitor Admin</p>
-                        <p className="text-xs text-orange-200">SuperAdmin Portal</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <span className="hidden sm:block text-sm text-orange-200">{user?.name}</span>
-                    <button onClick={() => navigate('/change-password')} className="flex items-center gap-1.5 text-sm bg-orange-700 hover:bg-orange-600 px-3 py-1.5 rounded-lg transition-colors">
-                        <Key className="w-4 h-4" /> <span className="hidden sm:inline">Change Password</span>
-                    </button>
-                    <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors">
-                        <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Logout</span>
-                    </button>
-                </div>
-            </div>
+
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Welcome */}
@@ -194,9 +180,9 @@ const SuperAdminDashboard = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 bg-white border border-orange-100 rounded-xl p-1.5 shadow-sm w-fit">
-                    {['overview', 'admins'].map((tab) => (
+                    {['overview', 'admins', 'profile'].map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all capitalize ${activeTab === tab ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'}`}>
-                            {tab === 'admins' ? 'Admin Management' : 'Overview'}
+                            {tab === 'admins' ? 'Admin Management' : tab}
                         </button>
                     ))}
                 </div>
@@ -219,6 +205,8 @@ const SuperAdminDashboard = () => {
                                 {statCards.map((card) => <StatCard key={card.label} {...card} />)}
                             </div>
                         )}
+
+                        <DashboardCharts data={chartData} />
                     </div>
                 )}
 
@@ -279,6 +267,11 @@ const SuperAdminDashboard = () => {
                             </div>
                         )}
                     </div>
+                )}
+
+                {/* Profile Tab */}
+                {activeTab === 'profile' && (
+                    <ProfileTab />
                 )}
             </div>
 

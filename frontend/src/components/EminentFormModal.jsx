@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import MemberSelector from './MemberSelector';
 import api from '../api/api';
 
@@ -41,7 +43,7 @@ const EminentFormModal = ({ isOpen, onClose, onSuccess, initialData, categories,
 
         try {
             if (initialData) {
-                await api.put(`/eminent/${initialData.id}`, payload);
+                await api.put(`/ eminent / ${initialData.id} `, payload);
             } else {
                 await api.post('/eminent', payload);
             }

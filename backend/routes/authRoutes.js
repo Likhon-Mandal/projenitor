@@ -10,6 +10,7 @@ router.post('/reset-password', authController.resetPassword);
 
 // Protected routes
 router.post('/change-password', authenticate, authController.changePassword);
+router.put('/update-profile', authenticate, authController.updateProfile);
 router.get('/me', authenticate, authController.getMe);
 
 module.exports = router;

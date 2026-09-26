@@ -16,7 +16,7 @@ const authenticate = async (req, res, next) => {
 
         // Verify user still exists in DB
         const result = await pool.query(
-            'SELECT id, name, email, role FROM admin_users WHERE id = $1',
+            'SELECT id, name, name_bangla, name_english, email, role, profile_image_url FROM admin_users WHERE id = $1',
             [decoded.id]
         );
 

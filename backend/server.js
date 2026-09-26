@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { pool } = require('./config/db');
 const { seedSuperAdmin } = require('./seedSuperAdmin');
+const encryptionMiddleware = require('./middleware/encryptionMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Global API Obfuscation Middleware
+app.use(encryptionMiddleware);
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));

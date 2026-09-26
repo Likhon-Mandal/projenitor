@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home as HomeIcon, Map, Search, Users, Calendar, UsersRound,
-    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard
+    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard, Heart
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,7 @@ const navItems = [
     { to: '/', label: 'Home', icon: HomeIcon },
     { to: '/explorer', label: 'Lineage Explorer', icon: Map },
     { to: '/directory', label: 'Search Members', icon: Search },
+    { to: '/spouses', label: 'সহধর্মিণী তালিকা', icon: Heart },
     { to: '/relation', label: 'Find Relation', icon: Users },
     { to: '/board', label: 'Events & Notices', icon: Calendar },
     { to: '/committee', label: 'Committee Board', icon: UsersRound },

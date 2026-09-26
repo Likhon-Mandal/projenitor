@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronRight, Map, Home, X } from 'lucide-react';
 import api from '../api/api';
 
@@ -160,33 +162,74 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember }) => {
                                 <h3 className="text-2xl font-serif font-bold text-stone-800">{pathSegments[pathSegments.length - 1]} Household</h3>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="space-y-6">
                                 {members.length > 0 ? (
-                                    members.map((member) => (
-                                        <button
-                                            key={member.id}
-                                            onClick={() => handleMemberSelect(member)}
-                                            className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm hover:border-orange-400 hover:ring-2 hover:ring-orange-100 transition-all flex items-center gap-4 text-left group"
-                                        >
-                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-100 shrink-0 border border-orange-200">
-                                                {member.profile_image_url ? (
-                                                    <img src={member.profile_image_url} alt={member.full_name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-orange-800 font-bold font-serif text-lg">
-                                                        {member.full_name.charAt(0)}
-                                                    </div>
-                                                )}
+                                    Object.keys(members.reduce((acc, member) => {
+                                        const hasParentsInHousehold = members.some(m => m.id === member.father_id || m.id === member.mother_id);
+                                        let level = member.level || 'Unknown';
+                                        
+                                        // If a member has no parents in this household and is not the root (Level 1), classify them as Spouses
+                                        if (!hasParentsInHousehold && parseInt(member.level) !== 1) {
+                                            level = 'Spouses';
+                                        }
+
+                                        if (!acc[level]) acc[level] = [];
+                                        acc[level].push(member);
+                                        return acc;
+                                    }, {})).sort((a, b) => {
+                                        if (a === 'Spouses') return 1;
+                                        if (b === 'Spouses') return -1;
+                                        if (a === 'Unknown') return 1;
+                                        if (b === 'Unknown') return -1;
+                                        return parseInt(a) - parseInt(b);
+                                    }).map(level => {
+                                        const levelMembers = members.filter(member => {
+                                            const hasParentsInHousehold = members.some(m => m.id === member.father_id || m.id === member.mother_id);
+                                            let memberLevel = member.level || 'Unknown';
+                                            if (!hasParentsInHousehold && parseInt(member.level) !== 1) {
+                                                memberLevel = 'Spouses';
+                                            }
+                                            return memberLevel.toString() === level;
+                                        });
+                                        return (
+                                            <div key={level} className="mb-2">
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className="h-px flex-1 bg-orange-200"></div>
+                                                    <h4 className="text-orange-900 font-bold uppercase tracking-widest text-sm">
+                                                        {level === 'Spouses' ? 'Spouses' : (level === 'Unknown' ? 'Unknown Generation' : `Generation ${level}`)}
+                                                    </h4>
+                                                    <div className="h-px flex-1 bg-orange-200"></div>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                                    {levelMembers.map(member => (
+                                                        <button
+                                                            key={member.id}
+                                                            onClick={() => handleMemberSelect(member)}
+                                                            className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm hover:border-orange-400 hover:ring-2 hover:ring-orange-100 transition-all flex items-center gap-4 text-left group"
+                                                        >
+                                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-100 shrink-0 border border-orange-200">
+                                                                {member.profile_image_url ? (
+                                                                    <img src={member.profile_image_url} alt={member.full_name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-orange-800 font-bold font-serif text-lg">
+                                                                        {member.full_name.charAt(0)}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors">{member.full_name}</h4>
+                                                                <p className="text-xs text-stone-500 uppercase tracking-widest mt-1 opacity-70">
+                                                                    Level {member.level}
+                                                                </p>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors">{member.full_name}</h4>
-                                                <p className="text-xs text-stone-500 uppercase tracking-widest mt-1 opacity-70">
-                                                    Level {member.level}
-                                                </p>
-                                            </div>
-                                        </button>
-                                    ))
+                                        );
+                                    })
                                 ) : (
-                                    <div className="col-span-full text-center py-10 text-stone-400 bg-white rounded-lg border border-dashed border-stone-200">
+                                    <div className="text-center py-10 text-stone-400 bg-white rounded-lg border border-dashed border-stone-200">
                                         এই বাড়িতে কোন সদস্য পাওয়া যায়নি।
                                     </div>
                                 )}

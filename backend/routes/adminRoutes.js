@@ -8,6 +8,7 @@ router.use(authenticate);
 
 // Dashboard stats — admin and superadmin
 router.get('/stats', requireAdmin, adminController.getDashboardStats);
+router.get('/chart-data', requireAdmin, adminController.getChartData);
 
 // Admin management — superadmin only
 router.get('/admins', requireSuperAdmin, adminController.getAdmins);

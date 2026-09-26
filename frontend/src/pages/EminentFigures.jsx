@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/api';
 
 const categories = [
-    { id: 'কৃতি শিক্ষার্থী', label: 'কৃতি শিক্ষার্থী', icon: GraduationCap, bg: 'from-blue-600 to-indigo-800', badge: 'bg-blue-100 text-blue-800', textMain: 'text-white', textSub: 'text-white/80', tagBadge: 'bg-white/20 border-white/30 text-white' },
+    { id: 'কৃতি শিক্ষার্থী', label: 'কৃতি শিক্ষার্থী', icon: GraduationCap, bg: 'from-blue-50 to-indigo-100', badge: 'bg-blue-200 text-blue-900', textMain: 'text-blue-950', textSub: 'text-blue-800', tagBadge: 'bg-blue-900/10 border-blue-900/20 text-blue-900' },
     { id: 'মরণোত্তর জ্ঞাতি', label: 'মরণোত্তর জ্ঞাতি', icon: Flame, bg: 'from-green-100 to-emerald-200', badge: 'bg-emerald-200 text-emerald-900', textMain: 'text-emerald-950', textSub: 'text-emerald-800', tagBadge: 'bg-emerald-900/10 border-emerald-900/20 text-emerald-900' },
     { id: 'আজীবন জ্ঞাতি', label: 'আজীবন জ্ঞাতি', icon: Star, bg: 'from-amber-500 to-orange-700', badge: 'bg-amber-100 text-amber-800', textMain: 'text-white', textSub: 'text-white/80', tagBadge: 'bg-white/20 border-white/30 text-white' }
 ];

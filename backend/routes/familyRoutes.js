@@ -7,6 +7,8 @@ router.post('/location', familyController.addLocationItem);
 router.put('/location', familyController.editLocationItem);
 router.delete('/location', familyController.deleteLocationItem);
 router.get('/household', familyController.getFamilyMembers);
+router.get('/spouses', familyController.getAllSpouses);
 router.get('/relatives/:id', familyController.getRelatives);
 
 module.exports = router;
+
