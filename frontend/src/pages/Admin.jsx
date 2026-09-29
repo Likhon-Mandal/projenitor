@@ -1,7 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import MemberForm from '../components/MemberForm';
 import api from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const Admin = () => {
+    const { formatName } = useLanguage();
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +33,14 @@ const Admin = () => {
     };
 
     const handleEdit = (member) => {
-        setInitialFormData(member);
+        const isSpouse = member.gender === 'Female' && (!member.father_id || member.spouse_id);
+        const isMaleRoot = member.gender === 'Male' && !member.father_id;
+        setInitialFormData({
+            ...member,
+            isSpouseFlag: isSpouse,
+            role: isSpouse ? 'spouse' : member.role,
+            isRoot: isMaleRoot
+        });
         setIsFormOpen(true);
     };
 
@@ -96,10 +106,7 @@ const Admin = () => {
                             ) : filteredMembers.slice(0, 50).map(member => (
                                 <tr key={member.id} className="hover:bg-orange-50/50 transition">
                                     <td className="p-4 font-medium text-stone-800">
-                                        <div>{member.name_english || member.full_name}</div>
-                                        {member.name_bangla && member.name_bangla !== (member.name_english || member.full_name) && (
-                                            <div className="text-xs text-orange-800 font-serif font-normal">{member.name_bangla}</div>
-                                        )}
+                                        <div>{formatName(member)}</div>
                                     </td>
                                     <td className="p-4">
                                         <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">
@@ -107,7 +114,7 @@ const Admin = () => {
                                         </span>
                                     </td>
                                     <td className="p-4 text-stone-500 text-sm">
-                                        {members.find(m => m.id === member.father_id)?.full_name || '-'}
+                                        {formatName(members.find(m => m.id === member.father_id)) || '-'}
                                     </td>
                                     <td className="p-4 text-stone-500 text-sm">{member.home_name}</td>
                                     <td className="p-4 flex gap-3">

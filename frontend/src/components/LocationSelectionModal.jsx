@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, Map, Home, X } from 'lucide-react';
+import { ChevronRight, Map, Home, X, MapPin, ExternalLink } from 'lucide-react';
 import api from '../api/api';
 
 const LocationSelectionModal = ({ isOpen, onClose, onSelectMember }) => {
@@ -161,6 +161,21 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember }) => {
                                 <Home className="h-8 w-8 text-orange-600" />
                                 <h3 className="text-2xl font-serif font-bold text-stone-800">{pathSegments[pathSegments.length - 1]} Household</h3>
                             </div>
+
+                            {members.length > 0 && members[0].home_map_link && (
+                                <div className="flex justify-center -mt-4 mb-5">
+                                    <a
+                                        href={members[0].home_map_link.startsWith('http') ? members[0].home_map_link : `https://${members[0].home_map_link}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 shadow-2xs transition-colors"
+                                    >
+                                        <MapPin size={13} className="text-emerald-600" />
+                                        <span>Google Map</span>
+                                        <ExternalLink size={11} className="text-emerald-500" />
+                                    </a>
+                                </div>
+                            )}
 
                             <div className="space-y-6">
                                 {members.length > 0 ? (

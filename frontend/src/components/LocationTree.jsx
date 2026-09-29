@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ChevronRight, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { ChevronRight, Edit2, Check, X, Trash2, MapPin } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
@@ -32,14 +33,15 @@ const AnimationStyles = () => (
 );
 
 const levelTitles = {
-    'country': 'World / Country',
-    'district': 'District',
-    'upazila': 'Upazila',
-    'village': 'Village',
-    'home': 'Home'
+    'country': { bn: 'দেশ', en: 'Country' },
+    'district': { bn: 'জেলা', en: 'District' },
+    'upazila': { bn: 'উপজেলা', en: 'Upazila' },
+    'village': { bn: 'গ্রাম', en: 'Village' },
+    'home': { bn: 'বাড়ি', en: 'Home' }
 };
 
 const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSubmit, onDeleteSubmit, levelName, index, className, isAdmin }) => {
+    const { t, isBn } = useLanguage();
     const nodeRef = useRef(null);
     const hasChildren = node.children && node.children.length > 0;
 
@@ -91,9 +93,43 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 sm:h-8 w-1 bg-orange-500 rounded-r-full"></div>
                 )}
 
+                {/* Always-visible Admin Actions - lifted very close to the upper line of the box, shifted left */}
+                {isAdmin && !isEditing && (
+                    <div className="absolute top-1 sm:top-1.5 right-6 sm:right-8 z-20 flex items-center space-x-0.5 sm:space-x-1">
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setEditValue(node.name);
+                                setIsEditing(true);
+                            }}
+                            className="p-1 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                            title={t('নাম পরিবর্তন করুন', 'Rename Location')}
+                        >
+                            <Edit2 size={10} />
+                        </button>
+                        {onDeleteSubmit && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteSubmit(node);
+                                }}
+                                className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title={t('মুছে ফেলুন', 'Delete Location')}
+                            >
+                                <Trash2 size={10} />
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* Location Name Info */}
                 <div className="flex flex-col text-left flex-1 min-w-0 pr-2">
-                    <span className="text-[8px] sm:text-[10px] uppercase font-bold text-stone-400 tracking-wider bg-stone-100 w-fit px-1.5 py-0.5 rounded mb-1">{levelTitles[levelName] || levelName}</span>
+                    <span className="text-[8px] sm:text-[10px] uppercase font-bold text-stone-400 tracking-wider bg-stone-100 w-fit px-1.5 py-0.5 rounded mb-1">
+                        {levelTitles[levelName] ? (isBn ? levelTitles[levelName].bn : levelTitles[levelName].en) : levelName}
+                    </span>
+
                     {isEditing ? (
                         <div className="flex items-center gap-1 mt-1 font-serif" onClick={e => e.stopPropagation()}>
                             <input
@@ -125,35 +161,20 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-1.5 min-w-0">
                             <span className={`text-xs sm:text-base font-serif font-bold truncate ${isActive ? 'text-orange-900' : 'text-stone-800'}`}>{node.name}</span>
-                            <div className="opacity-0 group-hover:opacity-100 flex p-0.5 ml-1 transition-all space-x-0.5 sm:space-x-1">
-                                {isAdmin && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditValue(node.name);
-                                            setIsEditing(true);
-                                        }}
-                                        className="p-1 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded"
-                                        title="Rename Location"
-                                    >
-                                        <Edit2 size={10} />
-                                    </button>
-                                )}
-                                {isAdmin && onDeleteSubmit && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDeleteSubmit(node);
-                                        }}
-                                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                        title="Delete Location"
-                                    >
-                                        <Trash2 size={10} />
-                                    </button>
-                                )}
-                            </div>
+                            {levelName === 'home' && node.map_link && (
+                                <a
+                                    href={node.map_link.startsWith('http') ? node.map_link : `https://${node.map_link}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    title={t('গুগল ম্যাপে দেখুন', 'Open in Google Maps')}
+                                    className="text-emerald-600 hover:text-emerald-800 p-0.5 rounded transition-transform hover:scale-125"
+                                >
+                                    <MapPin size={13} />
+                                </a>
+                            )}
                         </div>
                     )}
                 </div>

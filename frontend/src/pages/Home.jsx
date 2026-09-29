@@ -8,6 +8,7 @@ import ImageSlider from '../components/ImageSlider';
 import HelpRequestModal from '../components/HelpRequestModal';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
@@ -90,6 +91,7 @@ const PillarCard = ({ member }) => (
 );
 
 const Home = () => {
+    const { t, isBn, formatNumber } = useLanguage();
     const [announcements, setAnnouncements] = useState([]);
     const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
 
@@ -195,8 +197,18 @@ const Home = () => {
     };
 
     const featuredMembers = [
-        { id: 1, name: 'Dr. Anupam Barai', role: 'Cardiologist', achievement: 'National Healthcare Award 2025 Recipient' },
-        { id: 2, name: 'Shubra Barai', role: 'Educator', achievement: 'District Best Teacher Award' }
+        { 
+            id: 1, 
+            name: isBn ? 'ডাঃ অনুপম বাড়ৈ' : 'Dr. Anupam Barai', 
+            role: isBn ? 'হৃদরোগ বিশেষজ্ঞ' : 'Cardiologist', 
+            achievement: isBn ? 'জাতীয় স্বাস্থ্যসেবা পুরস্কার ২০২৫ প্রাপক' : 'National Healthcare Award 2025 Recipient' 
+        },
+        { 
+            id: 2, 
+            name: isBn ? 'শুভ্রা বাড়ৈ' : 'Shubra Barai', 
+            role: isBn ? 'শিক্ষাবিদ' : 'Educator', 
+            achievement: isBn ? 'জেলা শ্রেষ্ঠ শিক্ষক পদক' : 'District Best Teacher Award' 
+        }
     ];
 
     return (
@@ -217,26 +229,24 @@ const Home = () => {
 
                     <div className="space-y-4 max-w-4xl mx-auto animate-fade-up relative z-10">
 
-
-                        <h1 className="text-5xl   md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
                             বাড়ৈ বংশের
                         </h1>
 
-                        <h1 className="text-5xl p-2  md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
+                        <h1 className="text-5xl p-2 md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-red-700"> ইতিবৃত্ত</span>
                         </h1>
 
-
-                        <p className="text-xl text-stone-400 font-light leading-relaxed max-w-2xl mx-auto">
-                            Connecting 8+ generations. Preserving our shared history, stories, and bloodline for the future.
+                        <p className="text-xl text-stone-500 font-light leading-relaxed max-w-2xl mx-auto">
+                            {t('৮+ প্রজন্মের সংযোগ। ভবিষ্যৎ প্রজন্মের জন্য আমাদের ঐতিহ্য, গল্প ও রক্তের বন্ধন সংরক্ষণ।', 'Connecting 8+ generations. Preserving our shared history, stories, and bloodline for the future.')}
                         </p>
 
                         <div className="flex flex-wrap items-center justify-center gap-5 pt-2">
                             <Link to="/explorer" className="px-10 py-4 bg-orange-700 hover:bg-orange-800 text-white rounded-full font-bold shadow-lg shadow-orange-900/10 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 text-sm uppercase tracking-wider">
-                                জ্ঞাতিবর্গদের খুজুন  <ArrowRight size={18} />
+                                {t('জ্ঞাতিবর্গদের খুঁজুন', 'Find Relatives')} <ArrowRight size={18} />
                             </Link>
                             <Link to="/history" className="px-10 py-4 bg-white hover:bg-orange-50 text-stone-800 border-2 border-orange-100/50 rounded-full font-bold transition-all duration-300 text-sm uppercase tracking-wider hover:border-orange-200 shadow-sm hover:shadow-md">
-                                ইতিহাস জানুন
+                                {t('ইতিহাস জানুন', 'Explore History')}
                             </Link>
                         </div>
                     </div>
@@ -249,25 +259,25 @@ const Home = () => {
                     <div className="relative space-y-1 group">
                         <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
                             <Users size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{isAdmin ? 'Verified Members' : 'Total Members'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{isAdmin ? t('যাচাইকৃত সদস্য', 'Verified Members') : t('মোট সদস্য', 'Total Members')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalMembers}</p>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalMembers)}</p>
                         <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                     <div className="relative space-y-1 group">
                         <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
                             <HomeIcon size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Village Homes</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('গ্রামের বাড়ি', 'Village Homes')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalHomes}</p>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalHomes)}</p>
                         <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                     <div className="relative space-y-1 group">
                         <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
                             <MapPin size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Villages</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('গ্রামসমূহ', 'Villages')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{publicStats.totalVillages}</p>
+                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalVillages)}</p>
                         <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                 </div>
@@ -284,19 +294,25 @@ const Home = () => {
                         <div className="flex items-center justify-between mb-6 pb-3 border-b border-stone-200/50">
                             <h2 className="text-xl font-serif font-bold text-stone-800 flex items-center gap-3">
                                 <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><Bell size={20} /></div>
-                                Community Notices
+                                {t('বিজ্ঞপ্তি ও আয়োজন', 'Community Notices')}
                             </h2>
-                            <Link to="/board" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">View All</Link>
+                            <Link to="/board" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">
+                                {t('সব দেখুন', 'View All')}
+                            </Link>
                         </div>
                         <div className="space-y-2">
                             {loadingAnnouncements ? (
-                                <div className="text-center p-4 text-sm text-stone-400 font-medium">Loading latest updates...</div>
+                                <div className="text-center p-4 text-sm text-stone-400 font-medium">
+                                    {t('সর্বশেষ তথ্য লোড হচ্ছে...', 'Loading latest updates...')}
+                                </div>
                             ) : announcements.length > 0 ? (
                                 announcements.map(item => (
                                     <ListItem key={item.id} icon={Calendar} to="/board" {...item} />
                                 ))
                             ) : (
-                                <div className="text-center p-4 text-sm text-stone-400 font-medium">No recent announcements.</div>
+                                <div className="text-center p-4 text-sm text-stone-400 font-medium">
+                                    {t('কোনো সাম্প্রতিক বিজ্ঞপ্তি নেই।', 'No recent announcements.')}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -306,13 +322,17 @@ const Home = () => {
                         <div className="flex items-center justify-between mb-6 pb-3 border-b border-stone-200/50">
                             <h2 className="text-xl font-serif font-bold text-stone-800 flex items-center gap-3">
                                 <div className="p-2 bg-red-100 rounded-lg text-red-600"><HelpCircle size={20} /></div>
-                                Help & Support
+                                {t('সহায়তা কেন্দ্র', 'Help & Support')}
                             </h2>
-                            <Link to="/help" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">View All</Link>
+                            <Link to="/help" className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-orange-600 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100">
+                                {t('সব দেখুন', 'View All')}
+                            </Link>
                         </div>
                         <div className="space-y-2">
                             {loadingHelp ? (
-                                <div className="text-center p-4 text-sm text-stone-400 font-medium">Loading requests...</div>
+                                <div className="text-center p-4 text-sm text-stone-400 font-medium">
+                                    {t('অনুরোধ লোড হচ্ছে...', 'Loading requests...')}
+                                </div>
                             ) : helpRequests.length > 0 ? (
                                 helpRequests.map(item => (
                                     <div key={item.id} className="relative group/helpitem">
@@ -322,14 +342,14 @@ const Home = () => {
                                                 <button
                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingHelp(item); setIsHelpModalOpen(true); }}
                                                     className="p-1.5 text-stone-300 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                                    title="Edit Request"
+                                                    title={t('আবেদন সম্পাদনা', 'Edit Request')}
                                                 >
                                                     <Edit2 size={14} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteHelp(item.id); }}
                                                     className="p-1.5 text-stone-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete Request"
+                                                    title={t('আবেদন মুছুন', 'Delete Request')}
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -338,7 +358,9 @@ const Home = () => {
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center p-4 text-sm text-stone-400 font-medium">No active help requests.</div>
+                                <div className="text-center p-4 text-sm text-stone-400 font-medium">
+                                    {t('কোনো সক্রিয় সহায়তার আবেদন নেই।', 'No active help requests.')}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -348,10 +370,10 @@ const Home = () => {
                 <section className="mb-24">
                     <div className="text-center mb-16">
                         <div className="inline-block px-4 py-1.5 rounded-full bg-stone-100 text-stone-500 text-[11px] font-bold uppercase tracking-[0.2em] mb-4 border border-stone-200">
-                            Hall of Fame
+                            {t('স্মরণীয় ব্যক্তিত্ব', 'Hall of Fame')}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-4">Community Pillars</h2>
-                        <p className="text-stone-500 max-w-xl mx-auto text-lg">Celebrating those who uphold our values and lead by example.</p>
+                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-4">{t('বংশের আলোকবর্তিকা', 'Community Pillars')}</h2>
+                        <p className="text-stone-500 max-w-xl mx-auto text-lg">{t('যাঁরা আমাদের আদর্শকে ধারণ করেন এবং উজ্জ্বল দৃষ্টান্ত স্থাপন করেছেন।', 'Celebrating those who uphold our values and lead by example.')}</p>
                     </div>
                     <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                         {featuredMembers.map(member => (
@@ -362,8 +384,8 @@ const Home = () => {
 
                 {/* Simple Footer/Quote */}
                 <div className="text-center max-w-3xl mx-auto pb-12 border-t border-stone-200/50 pt-16">
-                    <p className="font-serif text-3xl text-stone-300 leading-tight italic">
-                        "United by blood, connected by heart."
+                    <p className="font-serif text-3xl text-stone-400 leading-tight italic">
+                        "{t('রক্তের বাঁধনে এক, হৃদয়ের স্পন্দনে যুক্ত।', 'United by blood, connected by heart.')}"
                     </p>
                 </div>
 

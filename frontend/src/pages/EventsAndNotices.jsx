@@ -3,10 +3,12 @@ import { Calendar, HelpCircle, Plus, Trash2, Edit2, Megaphone, ChevronDown, Chev
 import NoticeFormModal from '../components/NoticeFormModal';
 import EventFormModal from '../components/EventFormModal';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
 const EventsAndNotices = () => {
     const { isAdmin } = useAuth();
+    const { t, isBn } = useLanguage();
     // ---- NOTICES LOGIC ----
     const [notices, setNotices] = useState([]);
     const [loadingNotices, setLoadingNotices] = useState(true);
@@ -35,7 +37,7 @@ const EventsAndNotices = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to remove this notice?")) return;
+        if (!window.confirm(t("আপনি কি নিশ্চিতভাবে এই বিজ্ঞপ্তিটি মুছে ফেলতে চান?", "Are you sure you want to remove this notice?"))) return;
         try {
             await api.delete(`/notices/${id}`);
             fetchNotices();
@@ -80,7 +82,7 @@ const EventsAndNotices = () => {
     }, []);
 
     const handleDeleteEvent = async (id) => {
-        if (!window.confirm("Are you sure you want to remove this event?")) return;
+        if (!window.confirm(t("আপনি কি নিশ্চিতভাবে এই অনুষ্ঠানটি মুছে ফেলতে চান?", "Are you sure you want to remove this event?"))) return;
         try {
             await api.delete(`/events/${id}`);
             fetchEvents();
@@ -99,8 +101,8 @@ const EventsAndNotices = () => {
                         <Megaphone className="h-6 w-6 text-orange-600" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-serif font-bold text-stone-800">Events & Announcements</h1>
-                        <p className="text-stone-500 text-sm">Official updates, gatherings, and community news.</p>
+                        <h1 className="text-2xl font-serif font-bold text-stone-800">{t('অনুষ্ঠান ও নোটিশবোর্ড', 'Events & Announcements')}</h1>
+                        <p className="text-stone-500 text-sm">{t('বংশের অফিশিয়াল বিজ্ঞপ্তি, অনুষ্ঠান ও মিলনমেলার খবর।', 'Official updates, gatherings, and community news.')}</p>
                     </div>
                 </div>
             </div>
@@ -111,14 +113,14 @@ const EventsAndNotices = () => {
                     <div className="flex justify-between items-center border-b border-stone-200 pb-2 mb-4">
                         <div className="flex items-center gap-2">
                             <Calendar className="text-orange-700 h-5 w-5" />
-                            <h2 className="text-xl font-serif font-bold text-stone-800">Upcoming Events</h2>
+                            <h2 className="text-xl font-serif font-bold text-stone-800">{t('আসন্ন অনুষ্ঠানসমূহ', 'Upcoming Events')}</h2>
                         </div>
                         {isAdmin && (
                             <button
                                 onClick={() => { setEditingEvent(null); setIsEventModalOpen(true); }}
                                 className="flex items-center gap-1.5 bg-orange-100 hover:bg-orange-200 text-orange-800 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
                             >
-                                <Plus size={16} /> Create Event
+                                <Plus size={16} /> {t('অনুষ্ঠান তৈরি করুন', 'Create Event')}
                             </button>
                         )}
                     </div>
@@ -126,7 +128,7 @@ const EventsAndNotices = () => {
                     <div className="grid gap-6">
                         {loadingEvents ? (
                             <div className="bg-white p-8 rounded-2xl text-center shadow-sm border border-stone-100 text-stone-400 animate-pulse font-medium text-sm">
-                                Loading events...
+                                {t('অনুষ্ঠান লোড হচ্ছে...', 'Loading events...')}
                             </div>
                         ) : events.length > 0 ? (
                             events.map((event, index) => (
@@ -140,14 +142,14 @@ const EventsAndNotices = () => {
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setEditingEvent(event); setIsEventModalOpen(true); }}
                                                 className="p-1.5 text-stone-300 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors md:opacity-0 group-hover:opacity-100"
-                                                title="Edit Event"
+                                                title={t('অনুষ্ঠান সম্পাদনা', 'Edit Event')}
                                             >
                                                 <Edit2 size={16} />
                                             </button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}
                                                 className="p-1.5 text-stone-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 group-hover:opacity-100"
-                                                title="Delete Event"
+                                                title={t('অনুষ্ঠান মুছুন', 'Delete Event')}
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -180,8 +182,8 @@ const EventsAndNotices = () => {
                         ) : (
                             <div className="bg-white p-8 rounded-2xl text-center shadow-sm border border-stone-100 flex flex-col items-center">
                                 <Calendar size={32} className="text-stone-200 mb-3" />
-                                <h3 className="text-[15px] font-bold text-stone-600 mb-1">No Upcoming Events</h3>
-                                <p className="text-stone-400 text-xs">There are no events scheduled at this time.</p>
+                                <h3 className="text-[15px] font-bold text-stone-600 mb-1">{t('কোনো আসন্ন অনুষ্ঠান নেই', 'No Upcoming Events')}</h3>
+                                <p className="text-stone-400 text-xs">{t('এই মুহূর্তে কোনো অনুষ্ঠানের সূচি নেই।', 'There are no events scheduled at this time.')}</p>
                             </div>
                         )}
                     </div>
@@ -193,14 +195,14 @@ const EventsAndNotices = () => {
                     <div className="flex justify-between items-center border-b border-stone-200 pb-2 mb-4">
                         <div className="flex items-center gap-2">
                             <Megaphone className="text-orange-700 h-5 w-5" />
-                            <h2 className="text-xl font-serif font-bold text-stone-800">Notice Board</h2>
+                            <h2 className="text-xl font-serif font-bold text-stone-800">{t('বিজ্ঞপ্তি ও নোটিশ', 'Notice Board')}</h2>
                         </div>
                         {isAdmin && (
                             <button
                                 onClick={() => { setEditingNotice(null); setIsModalOpen(true); }}
                                 className="flex items-center gap-1.5 bg-orange-700 hover:bg-orange-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
                             >
-                                <Plus size={16} /> Add Notice
+                                <Plus size={16} /> {t('বিজ্ঞপ্তি দিন', 'Add Notice')}
                             </button>
                         )}
                     </div>
@@ -208,7 +210,7 @@ const EventsAndNotices = () => {
                     <div className="space-y-4">
                         {loadingNotices ? (
                             <div className="bg-white p-8 rounded-2xl text-center shadow-sm border border-stone-100 text-stone-400 animate-pulse font-medium text-sm">
-                                Loading latest announcements...
+                                {t('বিজ্ঞপ্তি লোড হচ্ছে...', 'Loading latest announcements...')}
                             </div>
                         ) : notices.length > 0 ? (
                             notices.map((notice) => (
@@ -235,14 +237,14 @@ const EventsAndNotices = () => {
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setEditingNotice(notice); setIsModalOpen(true); }}
                                                         className="p-1.5 text-stone-300 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors opacity-0 group-hover/title:opacity-100"
-                                                        title="Edit Notice"
+                                                        title={t('বিজ্ঞপ্তি সম্পাদনা', 'Edit Notice')}
                                                     >
                                                         <Edit2 size={14} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDelete(notice.id); }}
                                                         className="p-1.5 text-stone-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover/title:opacity-100"
-                                                        title="Delete Notice"
+                                                        title={t('বিজ্ঞপ্তি মুছুন', 'Delete Notice')}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -259,7 +261,7 @@ const EventsAndNotices = () => {
                                             <p className="text-stone-600 mb-4 text-sm leading-relaxed whitespace-pre-wrap">{notice.content}</p>
 
                                             <div className="text-xs font-medium text-stone-400 border-t border-stone-100 pt-3 flex justify-between">
-                                                <span>Posted by <span className="text-stone-600 font-bold">{notice.posted_by}</span></span>
+                                                <span>{t('প্রকাশক: ', 'Posted by ')}<span className="text-stone-600 font-bold">{notice.posted_by}</span></span>
                                             </div>
                                         </div>
                                     )}
@@ -268,8 +270,8 @@ const EventsAndNotices = () => {
                         ) : (
                             <div className="bg-white p-8 rounded-2xl text-center shadow-sm border border-stone-100 flex flex-col items-center">
                                 <Megaphone size={32} className="text-stone-200 mb-3" />
-                                <h3 className="text-[15px] font-bold text-stone-600 mb-1">No Announcements</h3>
-                                <p className="text-stone-400 text-xs">There are currently no active notices.</p>
+                                <h3 className="text-[15px] font-bold text-stone-600 mb-1">{t('কোনো বিজ্ঞপ্তি নেই', 'No Announcements')}</h3>
+                                <p className="text-stone-400 text-xs">{t('বর্তমানে কোনো সক্রিয় বিজ্ঞপ্তি নেই।', 'There are currently no active notices.')}</p>
                             </div>
                         )}
                     </div>

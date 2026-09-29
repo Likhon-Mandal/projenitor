@@ -12,7 +12,7 @@ exports.getEminentFigures = async (req, res) => {
     try {
         const query = `
             SELECT ef.id, ef.category, ef.title, ef.member_id,
-                   m.full_name, m.profile_image_url, m.education, m.occupation
+                   m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.education, m.occupation
             FROM eminent_figures ef
             JOIN members m ON ef.member_id = m.id
             ORDER BY ef.created_at DESC

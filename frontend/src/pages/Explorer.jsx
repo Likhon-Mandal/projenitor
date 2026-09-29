@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2, Heart } from 'lucide-react';
+import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2, Heart, MapPin, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FamilyTree from '../components/FamilyTree';
 import LocationTree from '../components/LocationTree';
 import MemberForm from '../components/MemberForm';
 import MemberProfileModal from '../components/MemberProfileModal';
 import SpousesDirectoryModal from '../components/SpousesDirectoryModal';
+import BariMapModal from '../components/BariMapModal';
 
 import LocationForm from '../components/LocationForm';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
 const Explorer = () => {
     const { isAdmin } = useAuth();
+    const { t, isBn, formatName } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -31,6 +34,10 @@ const Explorer = () => {
     const [isSpousesModalOpen, setIsSpousesModalOpen] = useState(false);
     const [spouseModalHomeFilter, setSpouseModalHomeFilter] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+    const [homeMapLink, setHomeMapLink] = useState('');
+    const [isBariMapModalOpen, setIsBariMapModalOpen] = useState(false);
+    const [mapModalTarget, setMapModalTarget] = useState({ homeName: '', villageName: '', currentLink: '' });
 
     const [editingItem, setEditingItem] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -55,11 +62,13 @@ const Explorer = () => {
     };
 
     const handleDeleteMember = (member) => {
-        const displayName = member.name_bangla || member.full_name;
+        const displayName = formatName(member);
         setConfirmModal({
             isOpen: true,
-            title: `${displayName} ও তাঁর অধস্তন শাখা মুছে ফেলবেন?`,
-            message: `সতর্কতা: আপনি কি নিশ্চিত যে আপনি ${displayName}-কে মুছে ফেলতে চান? এটি ${displayName}, তাঁর সকল সহধর্মিণী এবং তাঁর অধস্তন বংশলতিকার সকল সন্তান ও পরবর্তী প্রজন্মসমূহ (সম্পূর্ণ সাব-ট্রি) মুছে ফেলবে!`,
+            title: isBn ? `${displayName} ও তাঁর অধস্তন শাখা মুছে ফেলবেন?` : `Delete ${displayName} and descendants?`,
+            message: isBn
+                ? `সতর্কতা: আপনি কি নিশ্চিত যে আপনি ${displayName}-কে মুছে ফেলতে চান? এটি ${displayName}, তাঁর সকল সহধর্মিণী এবং তাঁর অধস্তন বংশলতিকার সকল সন্তান ও পরবর্তী প্রজন্মসমূহ (সম্পূর্ণ সাব-ট্রি) মুছে ফেলবে!`
+                : `WARNING: Are you sure you want to delete ${displayName}? This will remove ${displayName}, spouses, and the entire descendant subtree!`,
             onConfirm: async () => {
                 try {
                     await api.delete(`/members/${member.id}`);
@@ -81,8 +90,10 @@ const Explorer = () => {
     const handleDeleteLocation = (level, name) => {
         setConfirmModal({
             isOpen: true,
-            title: `Delete ${name}?`,
-            message: `WARNING: Are you sure you want to delete ${name}? This will PERMANENTLY delete all sub-locations and family members within this location!`,
+            title: isBn ? `${name} মুছে ফেলবেন?` : `Delete ${name}?`,
+            message: isBn
+                ? `সতর্কতা: আপনি কি নিশ্চিত যে আপনি ${name} মুছে ফেলতে চান? এটি এর অন্তর্ভুক্ত সকল উপ-অঞ্চল এবং সদস্যদের স্থায়ীভাবে মুছে ফেলবে!`
+                : `WARNING: Are you sure you want to delete ${name}? This will permanently delete all sub-locations and family members within this location!`,
             onConfirm: async () => {
                 try {
                     const parentName = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
@@ -131,8 +142,10 @@ const Explorer = () => {
             const village = pathSegments[3]; // Index shifted
             if (homeName && village) {
                 fetchHouseholdMembers(homeName, village);
+                fetchHomeDetails(homeName, village);
             }
         } else {
+            setHomeMapLink('');
             const parent = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
             fetchOptions(currentLevel, parent);
 
@@ -143,11 +156,27 @@ const Explorer = () => {
         }
     }, [location.pathname, viewMode]); // Re-run whenever URL or view changes
 
+    const fetchHomeDetails = async (homeName, village) => {
+        try {
+            const res = await api.get('/family/home-details', {
+                params: { home_name: homeName, village }
+            });
+            if (res.data) {
+                setHomeMapLink(res.data.map_link || '');
+            }
+        } catch (error) {
+            console.error('Error fetching home details:', error);
+        }
+    };
+
     const fetchOptions = async (level, parent) => {
         try {
             setLoading(true);
+            const params = { level };
+            if (parent) params.parent = parent;
+            if (level === 'home') params.include_details = 'true';
             const res = await api.get('/family/hierarchy', {
-                params: { level, parent }
+                params
             });
             setOptions(res.data);
         } catch (error) {
@@ -214,6 +243,9 @@ const Explorer = () => {
                 params: { home_name: homeName, village }
             });
             setMembers(res.data);
+            if (res.data && res.data.length > 0 && res.data[0].home_map_link) {
+                setHomeMapLink(res.data[0].home_map_link);
+            }
         } catch (error) {
             console.error('Error fetching members:', error);
             setMembers([]);
@@ -331,21 +363,27 @@ const Explorer = () => {
 
     // Helper to get readable level name
     const getNextLevelName = () => {
-        if (currentLevel === 'country') return 'Country';
-        if (currentLevel === 'district') return 'District';
-        if (currentLevel === 'upazila') return 'Upazila';
-        // Union removed
-        if (currentLevel === 'village') return 'Village';
-        if (currentLevel === 'home') return 'Home';
-        return 'Member';
+        if (currentLevel === 'country') return t('দেশ', 'Country');
+        if (currentLevel === 'district') return t('জেলা', 'District');
+        if (currentLevel === 'upazila') return t('উপজেলা', 'Upazila');
+        if (currentLevel === 'village') return t('গ্রাম', 'Village');
+        if (currentLevel === 'home') return t('বাড়ি', 'Home');
+        return t('সদস্য', 'Member');
+    };
+
+    // Helper to get name of previous location level to return to
+    const getParentReturnTarget = () => {
+        if (pathSegments.length === 0) return null;
+        if (pathSegments.length === 1) return t('সকল দেশ', 'All Countries');
+        return pathSegments[pathSegments.length - 2];
     };
 
     const handleEditMemberContext = async (id) => {
         try {
             setLoading(true);
             const res = await api.get(`/members/${id}`);
-            const memberData = res.data;
-            setAddChildContext({ ...memberData, isRoot: !memberData.father_id && !memberData.mother_id });
+            const isMaleRoot = memberData.gender === 'Male' && !memberData.father_id && !memberData.mother_id && memberData.role !== 'spouse';
+            setAddChildContext({ ...memberData, isRoot: isMaleRoot });
         } catch (err) {
             console.error('Error switching member context:', err);
         } finally {
@@ -357,8 +395,8 @@ const Explorer = () => {
         <div className="space-y-6 animate-fade-in relative">
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-orange-100 animate-slide-up flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">Geographic Lineage Explorer</h1>
-                    <p className="text-stone-500 text-sm">Trace roots through the geographical hierarchy.</p>
+                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">{t('ভৌগোলিক বংশধারা পরিভ্রমণ', 'Geographic Lineage Explorer')}</h1>
+                    <p className="text-stone-500 text-sm">{t('ভৌগোলিক কাঠামোর মাধ্যমে পূর্বপুরুষ ও আত্মীয়দের সন্ধান করুন।', 'Trace roots through the geographical hierarchy.')}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
@@ -366,15 +404,15 @@ const Explorer = () => {
                         <div className="flex bg-stone-100 p-1 rounded-lg border border-stone-200 shadow-inner">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-stone-500 hover:text-stone-700'}`}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary font-bold' : 'text-stone-500 hover:text-stone-700'}`}
                             >
-                                Grid View
+                                {t('গ্রিড ভিউ', 'Grid View')}
                             </button>
                             <button
                                 onClick={() => setViewMode('graph')}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'graph' ? 'bg-white shadow-sm text-primary' : 'text-stone-500 hover:text-stone-700'}`}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'graph' ? 'bg-white shadow-sm text-primary font-bold' : 'text-stone-500 hover:text-stone-700'}`}
                             >
-                                Graph View
+                                {t('গ্রাফ ভিউ', 'Graph View')}
                             </button>
                         </div>
                     )}
@@ -384,7 +422,7 @@ const Explorer = () => {
                             onClick={() => navigate('/recycle-bin')}
                             className="flex items-center gap-2 bg-stone-100 text-stone-700 font-medium px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition shadow-sm border border-stone-200"
                         >
-                            <Trash2 size={18} /> Recycle Bin
+                            <Trash2 size={18} /> {t('রিসাইকেল বিন', 'Recycle Bin')}
                         </button>
                     )}
 
@@ -393,25 +431,55 @@ const Explorer = () => {
                             onClick={handleAddClick}
                             className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition shadow-sm"
                         >
-                            <Plus size={20} /> Add {getNextLevelName()}
+                            <Plus size={20} /> {isBn ? `${getNextLevelName()} যুক্ত করুন` : `Add ${getNextLevelName()}`}
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Breadcrumbs */}
-            <div className="flex flex-wrap items-center gap-2 text-sm animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                {breadcrumbs.map((item, index) => (
-                    <React.Fragment key={index}>
+            {/* Breadcrumbs & Visual Back Navigation Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm animate-slide-up bg-white p-3 sm:p-3.5 rounded-xl border border-orange-100 shadow-2xs" style={{ animationDelay: '0.1s' }}>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    {pathSegments.length > 0 && (
                         <button
-                            onClick={() => resetToLevel(index)}
-                            className={`hover:text-primary font-medium transition-colors duration-200 ${index === breadcrumbs.length - 1 ? 'text-primary font-bold' : 'text-stone-500'}`}
+                            onClick={() => resetToLevel(pathSegments.length - 1)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all duration-200 active:scale-95 group cursor-pointer"
+                            title={t('পূর্ববর্তী ভৌগোলিক স্তরে ফিরে যান', 'Go back to previous geographic level')}
                         >
-                            {item}
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                            <span>{t('পেছনে যান', 'Go Back')}</span>
+                            {getParentReturnTarget() && (
+                                <span className="text-orange-200 font-normal hidden md:inline max-w-[140px] truncate">
+                                    ({getParentReturnTarget()})
+                                </span>
+                            )}
                         </button>
-                        {index < breadcrumbs.length - 1 && <ChevronRight className="h-4 w-4 text-stone-400" />}
-                    </React.Fragment>
-                ))}
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm">
+                        {breadcrumbs.map((item, index) => (
+                            <React.Fragment key={index}>
+                                <button
+                                    onClick={() => resetToLevel(index)}
+                                    className={`px-2 py-1 rounded-md transition-colors duration-200 font-medium ${
+                                        index === breadcrumbs.length - 1
+                                            ? 'text-primary font-bold bg-orange-50'
+                                            : 'text-stone-600 hover:text-primary hover:bg-stone-50'
+                                    }`}
+                                >
+                                    {item}
+                                </button>
+                                {index < breadcrumbs.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-stone-400 shrink-0" />}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                </div>
+
+                {pathSegments.length > 0 && (
+                    <div className="text-xs font-medium text-stone-500 bg-stone-50 px-3 py-1 rounded-full border border-stone-200 hidden sm:block">
+                        {t('বর্তমান স্তর', 'Current Level')}: <span className="font-bold text-orange-800">{getNextLevelName()}</span>
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}
@@ -421,15 +489,41 @@ const Explorer = () => {
                     viewMode === 'grid' ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             {loading ? (
-                                <div className="col-span-full py-10 flex justify-center text-stone-400 animate-pulse">Loading data...</div>
-                            ) : options.length > 0 ? (
-                                options.map((item, idx) => (
+                                <div className="col-span-full py-10 flex justify-center text-stone-400 animate-pulse">{t('তথ্য লোড হচ্ছে...', 'Loading data...')}</div>
+                            ) : (
+                                <>
+                                    {/* Quick Return to Previous Level Card in Grid */}
+                                    {pathSegments.length > 0 && (
+                                        <div
+                                            onClick={() => resetToLevel(pathSegments.length - 1)}
+                                            className="bg-orange-50/60 hover:bg-orange-100/80 p-6 rounded-xl border-2 border-dashed border-orange-200 hover:border-orange-400 hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-2 cursor-pointer group select-none relative"
+                                            title={t('পূর্ববর্তী স্তরে ফিরে যান', 'Go back to previous level')}
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-white shadow-2xs border border-orange-200 flex items-center justify-center text-orange-700 group-hover:bg-orange-800 group-hover:text-white group-hover:border-orange-800 transition-all duration-200">
+                                                <ArrowLeft size={22} className="group-hover:-translate-x-1.5 transition-transform" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-sm sm:text-base text-orange-950 font-serif">
+                                                    {t('পূর্ববর্তী স্তরে ফিরে যান', 'Back to Previous Level')}
+                                                </div>
+                                                <div className="text-xs text-orange-750 font-medium mt-0.5 font-sans">
+                                                    {getParentReturnTarget() ? `← ${getParentReturnTarget()}` : t('পূর্ববর্তী স্তর', 'Previous Level')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {options.length > 0 ? (
+                                        options.map((item, idx) => {
+                                    const itemName = typeof item === 'object' ? item.name : item;
+                                    const itemMapLink = typeof item === 'object' ? item.map_link : null;
+                                    return (
                                     <div
                                         key={idx}
                                         className="bg-white p-6 rounded-lg shadow-sm border border-orange-100 hover:shadow-md hover:border-accent hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-3 group relative"
                                         style={{ animationDelay: `${0.05 * idx}s` }}
                                     >
-                                        {editingItem === item ? (
+                                        {editingItem === itemName ? (
                                             <div className="w-full flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <input
                                                     autoFocus
@@ -439,7 +533,7 @@ const Explorer = () => {
                                                     onKeyDown={async (e) => {
                                                         if (e.key === 'Enter') {
                                                             const parent = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
-                                                            const success = await handleEditSubmit(currentLevel, item, editValue, parent);
+                                                            const success = await handleEditSubmit(currentLevel, itemName, editValue, parent);
                                                             if (success) setEditingItem(null);
                                                         }
                                                     }}
@@ -448,7 +542,7 @@ const Explorer = () => {
                                                 <button onClick={async (e) => {
                                                     e.stopPropagation();
                                                     const parent = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
-                                                    const success = await handleEditSubmit(currentLevel, item, editValue, parent);
+                                                    const success = await handleEditSubmit(currentLevel, itemName, editValue, parent);
                                                     if (success) setEditingItem(null);
                                                 }} className="p-1 text-green-600 hover:bg-green-50 rounded">
                                                     <Check size={16} />
@@ -461,48 +555,115 @@ const Explorer = () => {
                                             <>
                                                 {/* Edit & Delete Buttons */}
                                                 {isAdmin && (
-                                                    <div className="absolute top-2 right-2 flex opacity-0 group-hover:opacity-100 transition-opacity space-x-1">
+                                                    <div className="absolute top-1 sm:top-1.5 right-3 sm:right-4 flex space-x-1">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                setEditingItem(item);
-                                                                setEditValue(item);
+                                                                setEditingItem(itemName);
+                                                                setEditValue(itemName);
                                                             }}
                                                             className="p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded-md"
-                                                            title="Rename"
+                                                            title={t('নাম পরিবর্তন', 'Rename')}
                                                         >
                                                             <Edit2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleDeleteLocation(currentLevel, item);
+                                                                handleDeleteLocation(currentLevel, itemName);
                                                             }}
                                                             className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                                                            title="Delete"
+                                                            title={t('মুছুন', 'Delete')}
                                                         >
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </div>
                                                 )}
 
-                                                <div onClick={() => handleSelect(item)} className="cursor-pointer flex flex-col items-center w-full mt-4">
+                                                <div onClick={() => handleSelect(itemName)} className="cursor-pointer flex flex-col items-center w-full mt-4">
                                                     {currentLevel === 'home' ? (
                                                         <Home className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform duration-300 mb-3" />
                                                     ) : (
                                                         <Map className="h-8 w-8 text-accent group-hover:scale-110 transition-transform duration-300 mb-3" />
                                                     )}
-                                                    <span className="font-serif font-medium text-lg text-stone-800 group-hover:text-primary transition-colors hover:underline underline-offset-4">{item}</span>
+                                                    <span className="font-serif font-medium text-lg text-stone-800 group-hover:text-primary transition-colors hover:underline underline-offset-4">{itemName}</span>
                                                 </div>
+
+                                                {/* In every Bari card, show Google Map Option */}
+                                                {currentLevel === 'home' && (itemMapLink || isAdmin) && (
+                                                    <div className="w-full pt-2 border-t border-orange-100/60 mt-1 flex items-center justify-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                        {itemMapLink ? (
+                                                            <div className="inline-flex items-center gap-1">
+                                                                <a
+                                                                    href={itemMapLink}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 border border-emerald-200 transition-all active:scale-95 shadow-2xs group"
+                                                                    title={t('গুগল ম্যাপে দেখুন', 'Open in Google Maps')}
+                                                                >
+                                                                    <MapPin size={12} className="text-emerald-600 group-hover:scale-110 transition-transform" />
+                                                                    <span>{t('গুগল ম্যাপ', 'Google Map')}</span>
+                                                                    <ExternalLink size={10} className="text-emerald-500 opacity-70" />
+                                                                </a>
+                                                                {isAdmin && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setMapModalTarget({
+                                                                                homeName: itemName,
+                                                                                villageName: pathSegments[pathSegments.length - 1] || '',
+                                                                                currentLink: itemMapLink
+                                                                            });
+                                                                            setIsBariMapModalOpen(true);
+                                                                        }}
+                                                                        className="p-1 text-stone-400 hover:text-orange-700 hover:bg-orange-50 rounded-md transition-colors"
+                                                                        title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
+                                                                    >
+                                                                        <Edit2 size={11} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            isAdmin && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setMapModalTarget({
+                                                                            homeName: itemName,
+                                                                            villageName: pathSegments[pathSegments.length - 1] || '',
+                                                                            currentLink: ''
+                                                                        });
+                                                                        setIsBariMapModalOpen(true);
+                                                                    }}
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-stone-500 hover:text-orange-800 hover:bg-orange-50 border border-dashed border-stone-300 hover:border-orange-300 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                                                                    title={t('গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map Link')}
+                                                                >
+                                                                    <MapPin size={11} className="text-orange-600" />
+                                                                    <span>+ {t('ম্যাপ লিংক', 'Map Link')}</span>
+                                                                </button>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                )}
                                             </>
                                         )}
                                     </div>
-                                ))
+                                    );
+                                })
                             ) : (
-                                <div className="col-span-full text-center py-10 text-stone-400 bg-white rounded-lg border border-dashed border-stone-200">
-                                    No data available for this region.
+                                <div className="col-span-full text-center py-10 px-4 text-stone-400 bg-white rounded-xl border border-dashed border-stone-200 flex flex-col items-center justify-center">
+                                    <p className="mb-4">{t('এই অঞ্চলের জন্য কোনো তথ্য নেই।', 'No data available for this region.')}</p>
+                                    {pathSegments.length > 0 && (
+                                        <button
+                                            onClick={() => resetToLevel(pathSegments.length - 1)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-xl font-bold text-sm transition-all duration-200 hover:shadow-sm active:scale-95 cursor-pointer"
+                                        >
+                                            <ArrowLeft size={16} />
+                                            <span>{t('পূর্ববর্তী স্তরে ফিরে যান', 'Go Back to Previous Level')}</span>
+                                        </button>
+                                    )}
                                 </div>
                             )}
+                        </>
+                    )}
                         </div>
                     ) : (
                         /* Graph View */
@@ -513,7 +674,7 @@ const Explorer = () => {
                             </div>
 
                             {loading ? (
-                                <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 animate-pulse text-stone-500">Loading hierarchy...</div>
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 animate-pulse text-stone-500">{t('কাঠামো লোড হচ্ছে...', 'Loading hierarchy...')}</div>
                             ) : null}
 
                             <LocationTree
@@ -530,11 +691,81 @@ const Explorer = () => {
                 ) : (
                     /* Household Members View - Family Tree Only */
                     <div className="space-y-6 animate-slide-up">
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-orange-100 border-t-4 border-t-secondary text-center flex flex-col items-center">
+                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-orange-100 border-t-4 border-t-secondary text-center flex flex-col items-center relative">
+                            {/* Visual Back Navigation to Village / Baris */}
+                            <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-orange-100">
+                                <button
+                                    onClick={() => resetToLevel(pathSegments.length - 1)}
+                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 hover:shadow-2xs active:scale-95 group cursor-pointer"
+                                    title={t('গ্রামের বাড়ি তালিকায় ফিরে যান', 'Back to Village bari list')}
+                                >
+                                    <ArrowLeft size={16} className="text-orange-700 group-hover:-translate-x-1 transition-transform" />
+                                    <span>{isBn ? `${geoContext.village || 'গ্রামে'} ফিরে যান (বাড়ি তালিকা)` : `Back to ${geoContext.village || 'Village'} (Baris)`}</span>
+                                </button>
+                                <span className="text-xs text-stone-500 font-medium">
+                                    {[geoContext.village, geoContext.upazila, geoContext.district].filter(Boolean).join(' • ')}
+                                </span>
+                            </div>
+
                             <Home className="h-14 w-14 text-primary mx-auto mb-3" />
                             <h2 className="text-2xl font-serif font-bold text-stone-900 mb-1">{selection}</h2>
-                            <p className="text-stone-500 text-sm mb-4">Family Members in this Household</p>
+                            <p className="text-stone-500 text-sm mb-3">{t('এই বাড়ির সদস্যবৃন্দ', 'Family Members in this Household')}</p>
                             
+                            {/* Google Map Link Option for this Bari */}
+                            {(homeMapLink || isAdmin) && (
+                                <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                                    {homeMapLink ? (
+                                        <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
+                                            <a
+                                                href={homeMapLink.startsWith('http') ? homeMapLink : `https://${homeMapLink}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-850 hover:text-emerald-950 transition-colors group"
+                                                title={t('গুগল ম্যাপে বাড়িটির অবস্থান দেখুন', 'View home location on Google Maps')}
+                                            >
+                                                <MapPin size={16} className="text-emerald-600 group-hover:scale-110 transition-transform" />
+                                                <span>{t('গুগল ম্যাপে অবস্থান', 'View on Google Maps')}</span>
+                                                <ExternalLink size={13} className="text-emerald-600/70 group-hover:text-emerald-800" />
+                                            </a>
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={() => {
+                                                        setMapModalTarget({
+                                                            homeName: selection,
+                                                            villageName: geoContext.village || pathSegments[3] || '',
+                                                            currentLink: homeMapLink
+                                                        });
+                                                        setIsBariMapModalOpen(true);
+                                                    }}
+                                                    className="p-1 text-stone-400 hover:text-orange-800 hover:bg-white rounded-lg transition-colors ml-1 border border-transparent hover:border-orange-200 cursor-pointer"
+                                                    title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
+                                                >
+                                                    <Edit2 size={13} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        isAdmin && (
+                                            <button
+                                                onClick={() => {
+                                                    setMapModalTarget({
+                                                        homeName: selection,
+                                                        villageName: geoContext.village || pathSegments[3] || '',
+                                                        currentLink: ''
+                                                    });
+                                                    setIsBariMapModalOpen(true);
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-900 border border-dashed border-stone-300 hover:border-orange-300 transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs group"
+                                                title={t('এই বাড়ির গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map link for this Bari')}
+                                            >
+                                                <MapPin size={14} className="text-orange-600 group-hover:scale-110 transition-transform" />
+                                                <span>+ {t('গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map Link')}</span>
+                                            </button>
+                                        )
+                                    )}
+                                </div>
+                            )}
+
                             <button
                                 onClick={() => {
                                     setSpouseModalHomeFilter(selection);
@@ -543,7 +774,7 @@ const Explorer = () => {
                                 className="inline-flex items-center gap-2.5 bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white font-serif font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:from-orange-700 hover:to-red-800 transition-all duration-300 active:scale-95 group border border-orange-950/30 text-sm cursor-pointer"
                             >
                                 <Heart size={16} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-300" />
-                                <span>সহধর্মিণী তালিকা ({selection})</span>
+                                <span>{isBn ? `সহধর্মিণী তালিকা` : `Spouses Directory`}</span>
                             </button>
                         </div>
 
@@ -563,7 +794,8 @@ const Explorer = () => {
                                     setIsProfileOpen(true);
                                 }}
                                 onEditNode={(member) => {
-                                    setAddChildContext({ ...member, isRoot: !member.father_id && !member.mother_id });
+                                    const isMaleRoot = member.gender === 'Male' && !member.father_id && !member.mother_id && !member.isSpouseFlag && member.role !== 'spouse';
+                                    setAddChildContext({ ...member, isRoot: isMaleRoot });
                                     setIsFormOpen(true);
                                 }}
                                 onDeleteNode={handleDeleteMember}
@@ -597,13 +829,15 @@ const Explorer = () => {
             <MemberProfileModal
                 isOpen={isProfileOpen}
                 member={selectedDetailMember}
+                relationType={selectedDetailMember?.gender === 'Male' ? 'son' : selectedDetailMember?.gender === 'Female' ? 'daughter' : null}
                 onClose={() => {
                     setIsProfileOpen(false);
                     setSelectedDetailMember(null);
                 }}
                 onEdit={(member) => {
                     // Close profile, open form with member data for editing
-                    setAddChildContext({ ...member, isRoot: !member.father_id && !member.mother_id });
+                    const isMaleRoot = member.gender === 'Male' && !member.father_id && !member.mother_id && !member.isSpouseFlag && member.role !== 'spouse';
+                    setAddChildContext({ ...member, isRoot: isMaleRoot });
                     setIsFormOpen(true);
                 }}
                 onDelete={(member) => {
@@ -643,6 +877,31 @@ const Explorer = () => {
                 }}
                 currentHome={spouseModalHomeFilter}
                 currentVillage={breadcrumbs && breadcrumbs.length >= 5 ? breadcrumbs[4] : null}
+                onEdit={(member) => {
+                    setIsSpousesModalOpen(false);
+                    setAddChildContext({ ...member, isSpouseFlag: true, role: 'spouse', isRoot: false });
+                    setIsFormOpen(true);
+                }}
+            />
+
+            <BariMapModal
+                isOpen={isBariMapModalOpen}
+                onClose={() => setIsBariMapModalOpen(false)}
+                homeName={mapModalTarget.homeName}
+                villageName={mapModalTarget.villageName}
+                currentLink={mapModalTarget.currentLink}
+                onSaved={(newLink) => {
+                    if (mapModalTarget.homeName === selection) {
+                        setHomeMapLink(newLink);
+                    }
+                    setOptions(prev => prev.map(opt => {
+                        const optName = typeof opt === 'object' ? opt.name : opt;
+                        if (optName === mapModalTarget.homeName) {
+                            return typeof opt === 'object' ? { ...opt, map_link: newLink } : { name: opt, map_link: newLink };
+                        }
+                        return opt;
+                    }));
+                }}
             />
 
         </div >

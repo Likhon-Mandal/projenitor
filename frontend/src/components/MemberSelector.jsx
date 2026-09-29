@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Map, X, Check } from 'lucide-react';
 import LocationSelectionModal from './LocationSelectionModal';
 import api from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const MemberSelector = ({ label, onSelect, selectedMember }) => {
+    const { formatName } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -48,8 +50,15 @@ const MemberSelector = ({ label, onSelect, selectedMember }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleSelect = (member) => {
-        onSelect(member);
+    const handleSelect = async (member) => {
+        try {
+            // Fetch full member data (includes children, siblings, spouses with father_id/mother_id)
+            const response = await api.get(`/members/${member.id}`);
+            onSelect(response.data);
+        } catch (error) {
+            console.error('Failed to fetch full member details:', error);
+            onSelect(member); // fallback to partial data
+        }
         setSearchQuery('');
         setIsDropdownOpen(false);
     };
@@ -76,7 +85,7 @@ const MemberSelector = ({ label, onSelect, selectedMember }) => {
                         </div>
                         <div>
                             <h3 className="font-bold text-lg text-stone-900">
-                                {selectedMember.full_name.replace(' (Root)', '')}
+                                {formatName(selectedMember)}
                             </h3>
                             <p className="text-sm text-stone-500 flex items-center gap-1">
                                 <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
@@ -141,7 +150,7 @@ const MemberSelector = ({ label, onSelect, selectedMember }) => {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-semibold text-stone-800 truncate">
-                                                    {result.full_name.replace(' (Root)', '')}
+                                                    {formatName(result)}
                                                 </p>
                                                 <p className="text-xs text-stone-500 truncate">{result.home_name}, {result.village}, {result.district}</p>
                                             </div>

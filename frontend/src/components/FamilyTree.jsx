@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles } from 'lucide-react';
+import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Edit, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles } from 'lucide-react';
 import api from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
@@ -71,19 +74,51 @@ const InfoItem = ({ icon, label, value, highlight, color = 'orange' }) => {
 };
 
 /* DETAILS MODAL COMPONENT */
-const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewDetails, memberMap }) => {
+const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDeleteNode, onViewDetails, memberMap, isAdmin: propIsAdmin }) => {
+    const { t, isBn, formatOccupation, formatName } = useLanguage();
+    const { isAdmin: authIsAdmin } = useAuth();
+    const isAdmin = propIsAdmin !== undefined ? propIsAdmin : authIsAdmin;
+    const [person, setPerson] = useState(initialPerson);
     const [activeSpouse, setActiveSpouse] = useState(null);
     const [spouseData, setSpouseData] = useState(null);
     const [loadingSpouse, setLoadingSpouse] = useState(false);
 
     useEffect(() => {
+        setPerson(initialPerson);
         setActiveSpouse(null);
         setSpouseData(null);
-    }, [person]);
+        if (initialPerson?.id) {
+            api.get(`/members/${initialPerson.id}`)
+                .then(res => {
+                    if (res.data) setPerson(res.data);
+                })
+                .catch(err => console.error('Error fetching member details in modal:', err));
+        }
+    }, [initialPerson]);
 
     if (!person) return null;
 
+    // Identity-based theming for son/daughter only (spouse card unchanged)
+    const _identity = getMemberIdentity(person);
+    const _useTheme = _identity === 'son' || _identity === 'daughter';
+    const _theme = MEMBER_THEMES[_useTheme ? _identity : 'default'];
+
+    // Header gradient classes per identity
+    const headerGradient = _identity === 'son'
+        ? 'bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-900'
+        : _identity === 'daughter'
+            ? 'bg-gradient-to-br from-rose-700 via-pink-700 to-rose-900'
+            : 'bg-gradient-to-br from-orange-700 to-orange-900';
+
+    // Gen badge text color
+    const genBadgeText = _identity === 'son'
+        ? 'text-sky-900'
+        : _identity === 'daughter'
+            ? 'text-rose-900'
+            : 'text-orange-900';
+
     const handleOpenSpouse = async (s) => {
+        if (!s) return;
         setActiveSpouse(s);
         const cached = memberMap && memberMap[String(s.id)];
         setSpouseData(cached || s);
@@ -102,15 +137,23 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-stone-950/80 backdrop-blur-md" onClick={onClose}>
-            <div
-                className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-modal relative max-h-[90vh] md:h-[620px] flex flex-col md:flex-row"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Main Card Content (Blurred when activeSpouse is open) */}
-                <div className={`w-full h-full flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden transition-all duration-300 ${activeSpouse ? 'filter blur-[6px] opacity-30 pointer-events-none select-none scale-[0.98]' : ''}`}>
-                <div className="md:w-1/3 bg-gradient-to-br from-orange-700 to-orange-900 p-5 sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0">
+        <React.Fragment>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-stone-950/80 backdrop-blur-md" onClick={onClose}>
+                <div
+                    className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-modal relative max-h-[90vh] md:h-[620px] flex flex-col md:flex-row"
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Main Card Content (Blurred when activeSpouse is open) */}
+                    <div className={`w-full h-full flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden transition-all duration-300 ${activeSpouse ? 'filter blur-[6px] opacity-30 pointer-events-none select-none scale-[0.98]' : ''}`}>
+                <div className={`md:w-1/3 ${headerGradient} p-5 sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
+                    {/* Identity badge pill */}
+                    {_useTheme && (
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-white/90 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">
+                            <span>{_theme.symbol}</span>
+                            <span>{isBn ? _theme.labelBn : _theme.labelEn}</span>
+                        </div>
+                    )}
                     <div className="relative mb-4 sm:mb-6 flex flex-col items-center">
                         {person.eminent_category && (
                             <div className="mb-3 sm:mb-4 z-20 flex items-center gap-1.5 bg-green-100 text-green-800 border-2 border-white rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap">
@@ -128,19 +171,19 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                     )}
                                 </div>
                             </div>
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white text-orange-900 text-[8px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap">
+                            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white ${genBadgeText} text-[8px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap`}>
                                 Gen {person.level}
                             </div>
                         </div>
                     </div>
                     <div className="text-center relative z-10">
                         <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 text-white leading-tight">
-                            {person.name_bangla || person.full_name}
+                            {formatName(person)}
                         </h2>
                         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-6">
-                            <div className="h-px w-4 sm:w-6 bg-orange-300/50"></div>
-                            <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] text-orange-200">ID: {person.id}</p>
-                            <div className="h-px w-4 sm:w-6 bg-orange-300/50"></div>
+                            <div className="h-px w-4 sm:w-6 bg-white/30"></div>
+                            <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] text-white/70">ID: {person.id}</p>
+                            <div className="h-px w-4 sm:w-6 bg-white/30"></div>
                         </div>
                     </div>
                 </div>
@@ -153,30 +196,30 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                     <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3.5 sm:gap-y-4 mt-2 sm:mt-4 overflow-y-auto pr-2 custom-scrollbar">
                         {/* Left Column: Personal Info */}
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">Personal Info</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h4>
                             <div className="grid grid-cols-1 gap-3">
-                                <InfoItem icon={<Calendar size={14} />} label="Birth Date" value={
+                                <InfoItem icon={<Calendar size={14} />} label={t('জন্ম তারিখ', 'Birth Date')} value={
                                     <React.Fragment>
-                                        {person.birth_date ? new Date(person.birth_date).toLocaleDateString() : 'Unknown'}
+                                        {person.birth_date ? new Date(person.birth_date).toLocaleDateString() : t('অজানা', 'Unknown')}
                                         {person.alive === false && person.death_date && (
                                             <span className="text-stone-400 font-normal"> — {new Date(person.death_date).toLocaleDateString()}</span>
                                         )}
                                     </React.Fragment>
                                 } color="orange" />
-                                <InfoItem icon={<Briefcase size={14} />} label="Current Occupation" value={person.occupation} color="orange" />
-                                <InfoItem icon={<Building size={14} />} label="Workplace" value={person.workplace} color="orange" />
-                                <InfoItem icon={<GraduationCap size={14} />} label="Educational background" value={person.education} color="orange" />
-                                <InfoItem icon={<Droplet size={14} />} label="Blood Group" value={person.blood_group} highlight color="red" />
-                                <InfoItem icon={<MapPin size={14} />} label="Ancestral Village" value={person.village || person.location} color="orange" />
-                                <InfoItem icon={<MapPin size={14} />} label="Current Location" value={person.present_address} color="orange" />
+                                <InfoItem icon={<Briefcase size={14} />} label={t('পেশা', 'Occupation')} value={formatOccupation(person.occupation)} color="orange" />
+                                <InfoItem icon={<Building size={14} />} label={t('কর্মস্থল', 'Workplace')} value={person.workplace} color="orange" />
+                                <InfoItem icon={<GraduationCap size={14} />} label={t('শিক্ষাগত যোগ্যতা', 'Educational Background')} value={person.education} color="orange" />
+                                <InfoItem icon={<Droplet size={14} />} label={t('রক্তের গ্রুপ', 'Blood Group')} value={person.blood_group} highlight color="red" />
+                                <InfoItem icon={<MapPin size={14} />} label={t('আদি গ্রাম', 'Ancestral Village')} value={person.village || person.location} color="orange" />
+                                <InfoItem icon={<MapPin size={14} />} label={t('বর্তমান ঠিকানা', 'Current Location')} value={person.present_address} color="orange" />
                             </div>
                         </div>
 
                         {/* Right Column: Contact & Family */}
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">Contact & Family</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h4>
                             <div className="grid grid-cols-1 gap-3">
-                                <InfoItem icon={<Phone size={14} />} label="Contact Number" value={person.contact_number} color="yellow" />
+                                <InfoItem icon={<Phone size={14} />} label={t('যোগাযোগ নম্বর', 'Contact Number')} value={person.contact_number} color="yellow" />
                                 {person.social_media ? (
                                     <InfoItem
                                         color="yellow"
@@ -187,17 +230,17 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                                         person.social_media.toLowerCase().includes('linkedin') ? <Linkedin size={14} /> :
                                                             <Globe size={14} />
                                         }
-                                        label="Social Media"
-                                        value={<a href={person.social_media.startsWith('http') ? person.social_media : `https://${person.social_media}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">Visit Profile</a>}
+                                        label={t('সামাজিক যোগাযোগ', 'Social Media')}
+                                        value={<a href={person.social_media.startsWith('http') ? person.social_media : `https://${person.social_media}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">{t('প্রোফাইল দেখুন', 'Visit Profile')}</a>}
                                     />
                                 ) : (
-                                    <InfoItem icon={<Link size={14} />} label="Social Media" value="N/A" color="yellow" />
+                                    <InfoItem icon={<Link size={14} />} label={t('সামাজিক যোগাযোগ', 'Social Media')} value="N/A" color="yellow" />
                                 )}
 
                                 {/* Spouse Field */}
                                 <InfoItem
                                     icon={<Heart size={14} />}
-                                    label="Spouse"
+                                    label={t('সহধর্মিণী', 'Spouse')}
                                     color="pink"
                                     value={
                                         person.spouses && person.spouses.length > 0 ? (
@@ -205,8 +248,12 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                                 {person.spouses.filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).map(s => (
                                                     <button
                                                         key={s.id}
-                                                        onClick={() => handleOpenSpouse(s)}
-                                                        className="text-pink-700 hover:text-pink-900 font-bold hover:underline bg-pink-50 border border-pink-100 hover:border-pink-300 px-2 py-0.5 rounded-lg text-[9px] transition-all flex items-center gap-1 active:scale-95 shadow-2xs hover:shadow-xs"
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenSpouse(s);
+                                                        }}
+                                                        className="text-pink-700 hover:text-pink-900 font-bold hover:underline bg-pink-50 border border-pink-100 hover:border-pink-300 px-2 py-0.5 rounded-lg text-[9px] transition-all flex items-center gap-1 active:scale-95 shadow-2xs hover:shadow-xs cursor-pointer"
                                                     >
                                                         <div className="w-4 h-4 rounded-full overflow-hidden bg-white shrink-0 ring-1 ring-pink-300">
                                                             {s.profile_image_url ? (
@@ -215,7 +262,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                                                 <User size={8} className="m-auto opacity-30 text-pink-500" />
                                                             )}
                                                         </div>
-                                                        <span>{s.name_bangla || s.full_name}</span>
+                                                        <span>{formatName(s)}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -225,20 +272,36 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
 
                                 <InfoItem
                                     icon={<User size={14} />}
-                                    label="Parents"
+                                    label={t('পিতা-মাতা', 'Parents')}
                                     color="stone"
                                     value={
                                         <div className="flex flex-col gap-1.5 mt-0.5">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black shrink-0">F</span>
+                                                <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black shrink-0">{isBn ? 'পিতা' : 'F'}</span>
                                                 <span className="truncate text-stone-700">
-                                                    {(person.father_id && memberMap && memberMap[String(person.father_id)]?.name_bangla) || person.father_name_bangla || (person.father_id && memberMap && memberMap[String(person.father_id)]?.full_name) || person.father_name || 'Unknown'}
+                                                    {formatName((person.father_id && memberMap && memberMap[String(person.father_id)]) || { full_name: person.father_name, name_bangla: person.father_name_bangla }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-[8px] bg-pink-100 text-pink-700 px-1 rounded font-black shrink-0">M</span>
+                                                <span className="text-[8px] bg-pink-100 text-pink-700 px-1 rounded font-black shrink-0">{isBn ? 'মাতা' : 'M'}</span>
                                                 <span className="truncate text-stone-700">
-                                                    {(person.mother_id && memberMap && memberMap[String(person.mother_id)]?.name_bangla) || person.mother_name_bangla || (person.mother_id && memberMap && memberMap[String(person.mother_id)]?.full_name) || person.mother_name || 'Unknown'}
+                                                    {(() => {
+                                                        if (person.mother_id && memberMap && memberMap[String(person.mother_id)]) {
+                                                            return formatName(memberMap[String(person.mother_id)]);
+                                                        }
+                                                        if (person.mother_name || person.mother_name_bangla) {
+                                                            return formatName({ full_name: person.mother_name, name_bangla: person.mother_name_bangla });
+                                                        }
+                                                        if (person.father_id && memberMap && memberMap[String(person.father_id)]) {
+                                                            const fatherSpouses = memberMap[String(person.father_id)].spouses || [];
+                                                            if (fatherSpouses.length === 1) {
+                                                                return formatName(fatherSpouses[0]);
+                                                            } else if (fatherSpouses.length > 1) {
+                                                                return t('একাধিক মাতা সম্ভাব্য (আপডেট করুন)', 'Multiple Possible (Update Required)');
+                                                            }
+                                                        }
+                                                        return t('অজানা', 'Unknown');
+                                                    })()}
                                                 </span>
                                             </div>
                                         </div>
@@ -249,13 +312,15 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-                {/* Overlaid Cute Female Spouse Profile Card */}
-                {activeSpouse && (
-                    <div
-                        className="fixed inset-0 z-[120] bg-stone-950/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
-                        onClick={() => setActiveSpouse(null)}
-                    >
+    {/* Overlaid Cute Female Spouse Profile Card */}
+        {activeSpouse && (
+            <div
+                className="fixed inset-0 z-[140] bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+                onClick={() => setActiveSpouse(null)}
+            >
                         <div
                             className="w-full max-w-sm sm:max-w-md bg-gradient-to-b from-[#fff6f7] via-white to-[#fff0f3] rounded-3xl shadow-2xl border-2 border-pink-200 p-4 sm:p-6 relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar"
                             onClick={e => e.stopPropagation()}
@@ -299,10 +364,10 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 <div className="min-w-0 flex-1 pr-6">
                                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-pink-100/80 border border-pink-200 text-rose-700 text-[10px] font-bold tracking-wide mb-1">
                                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                        <span>সহধর্মিণী / Spouse</span>
+                                        <span>{t('সহধর্মিণী', 'Spouse')}</span>
                                     </div>
                                     <h3 className="text-xl font-serif font-bold text-stone-900 leading-tight truncate">
-                                        {spouseData?.name_bangla || activeSpouse.name_bangla || spouseData?.full_name || activeSpouse.full_name}
+                                        {formatName(spouseData || activeSpouse)}
                                     </h3>
                                 </div>
                             </div>
@@ -313,19 +378,19 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div className="bg-white/90 p-2.5 rounded-2xl border border-pink-100 shadow-2xs">
                                         <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider flex items-center gap-1 mb-0.5">
-                                            <Briefcase size={11} className="text-rose-500" /> পেশা
+                                            <Briefcase size={11} className="text-rose-500" /> {t('পেশা', 'Occupation')}
                                         </span>
                                         <p className="font-bold text-stone-800 truncate" title={spouseData?.occupation || 'N/A'}>
-                                            {loadingSpouse && !spouseData ? 'Loading...' : (spouseData?.occupation || 'গৃহিণী / Housewife')}
+                                            {loadingSpouse && !spouseData ? (isBn ? 'লোড হচ্ছে...' : 'Loading...') : (spouseData?.occupation ? formatOccupation(spouseData.occupation) : t('গৃহিণী', 'Housewife'))}
                                         </p>
                                     </div>
 
                                     <div className="bg-white/90 p-2.5 rounded-2xl border border-pink-100 shadow-2xs">
                                         <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider flex items-center gap-1 mb-0.5">
-                                            <Building size={11} className="text-rose-500" /> কর্মস্থল
+                                            <Building size={11} className="text-rose-500" /> {t('কর্মস্থল', 'Workplace')}
                                         </span>
                                         <p className="font-bold text-stone-800 truncate" title={spouseData?.workplace || 'N/A'}>
-                                            {loadingSpouse && !spouseData ? 'Loading...' : (spouseData?.workplace || 'N/A')}
+                                            {loadingSpouse && !spouseData ? (isBn ? 'লোড হচ্ছে...' : 'Loading...') : (spouseData?.workplace || 'N/A')}
                                         </p>
                                     </div>
                                 </div>
@@ -334,7 +399,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div className="bg-white/90 p-2.5 rounded-2xl border border-pink-100 shadow-2xs">
                                         <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider flex items-center gap-1 mb-0.5">
-                                            <Phone size={11} className="text-rose-500" /> যোগাযোগ
+                                            <Phone size={11} className="text-rose-500" /> {t('যোগাযোগ', 'Contact')}
                                         </span>
                                         {spouseData?.contact_number ? (
                                             <a href={`tel:${spouseData.contact_number}`} className="font-bold text-rose-700 hover:underline truncate block">
@@ -347,7 +412,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
 
                                     <div className="bg-white/90 p-2.5 rounded-2xl border border-pink-100 shadow-2xs">
                                         <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider flex items-center gap-1 mb-0.5">
-                                            <Globe size={11} className="text-rose-500" /> সোশ্যাল মিডিয়া
+                                            <Globe size={11} className="text-rose-500" /> {t('সামাজিক যোগাযোগ', 'Social Media')}
                                         </span>
                                         {spouseData?.social_media ? (
                                             <a
@@ -356,7 +421,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                                 rel="noopener noreferrer"
                                                 className="font-bold text-rose-700 hover:text-rose-900 hover:underline truncate block"
                                             >
-                                                Visit Profile
+                                                {t('প্রোফাইল দেখুন', 'Visit Profile')}
                                             </a>
                                         ) : (
                                             <p className="text-stone-400 font-medium">N/A</p>
@@ -368,7 +433,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 <div className="grid grid-cols-3 gap-2 text-xs">
                                     <div className="bg-white/90 p-2 rounded-2xl border border-pink-100 shadow-2xs text-center">
                                         <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider block mb-0.5">
-                                            Blood
+                                            {t('রক্তের গ্রুপ', 'Blood')}
                                         </span>
                                         <span className="font-extrabold text-rose-700 text-xs">
                                             {spouseData?.blood_group || 'N/A'}
@@ -377,7 +442,7 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
 
                                     <div className="bg-white/90 p-2 rounded-2xl border border-pink-100 shadow-2xs text-center">
                                         <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider block mb-0.5">
-                                            Education
+                                            {t('শিক্ষাগত যোগ্যতা', 'Education')}
                                         </span>
                                         <span className="font-bold text-stone-800 text-[11px] truncate block" title={spouseData?.education || 'N/A'}>
                                             {spouseData?.education || 'N/A'}
@@ -386,10 +451,10 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
 
                                     <div className="bg-white/90 p-2 rounded-2xl border border-pink-100 shadow-2xs text-center">
                                         <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider block mb-0.5">
-                                            Birth Date
+                                            {t('জন্ম তারিখ', 'Birth Date')}
                                         </span>
                                         <span className="font-bold text-stone-700 text-[10px] truncate block">
-                                            {spouseData?.birth_date ? new Date(spouseData.birth_date).toLocaleDateString() : 'Unknown'}
+                                            {spouseData?.birth_date ? new Date(spouseData.birth_date).toLocaleDateString() : t('অজানা', 'Unknown')}
                                         </span>
                                     </div>
                                 </div>
@@ -408,19 +473,19 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 {(spouseData?.father_name || spouseData?.mother_name || (spouseData?.father_id && memberMap) || (spouseData?.mother_id && memberMap)) && (
                                     <div className="bg-white/90 p-2.5 rounded-2xl border border-pink-100 shadow-2xs text-xs">
                                         <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider block mb-1">
-                                            পিতা-মাতা / Parents
+                                            {t('পিতা-মাতা', 'Parents')}
                                         </span>
                                         <div className="flex flex-col gap-1 text-[11px] text-stone-700">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-bold">F</span>
+                                                <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-bold">{isBn ? 'পিতা' : 'F'}</span>
                                                 <span className="truncate font-medium">
-                                                    {spouseData.father_name || memberMap?.[String(spouseData.father_id)]?.full_name || 'Unknown'}
+                                                    {formatName((spouseData.father_id && memberMap && memberMap[String(spouseData.father_id)]) || { full_name: spouseData.father_name, name_bangla: spouseData.father_name_bangla }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[8px] bg-pink-100 text-pink-700 px-1 rounded font-bold">M</span>
+                                                <span className="text-[8px] bg-pink-100 text-pink-700 px-1 rounded font-bold">{isBn ? 'মাতা' : 'M'}</span>
                                                 <span className="truncate font-medium">
-                                                    {spouseData.mother_name || memberMap?.[String(spouseData.mother_id)]?.full_name || 'Unknown'}
+                                                    {formatName((spouseData.mother_id && memberMap && memberMap[String(spouseData.mother_id)]) || { full_name: spouseData.mother_name, name_bangla: spouseData.mother_name_bangla }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                         </div>
@@ -433,11 +498,25 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                 <button
                                     type="button"
                                     onClick={() => setActiveSpouse(null)}
-                                    className="px-3.5 py-1.5 bg-pink-50 hover:bg-pink-100 text-rose-800 text-xs font-bold rounded-xl transition active:scale-95 flex items-center gap-1 border border-pink-200"
+                                    className="px-3.5 py-1.5 bg-pink-50 hover:bg-pink-100 text-rose-800 text-xs font-bold rounded-xl transition active:scale-95 flex items-center gap-1 border border-pink-200 cursor-pointer"
                                 >
                                     <X size={13} />
-                                    <span>Close</span>
+                                    <span>{t('বন্ধ করুন', 'Close')}</span>
                                 </button>
+                                {isAdmin && onEditNode && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const sp = spouseData || activeSpouse;
+                                            setActiveSpouse(null);
+                                            onEditNode({ ...sp, isSpouseFlag: true, role: 'spouse', husband: person });
+                                        }}
+                                        className="px-3 py-1.5 bg-stone-100 hover:bg-orange-100 text-stone-600 hover:text-orange-700 text-xs font-bold rounded-xl transition active:scale-95 flex items-center gap-1 border border-stone-200 cursor-pointer"
+                                    >
+                                        <Edit size={12} />
+                                        <span>{t('সম্পাদনা', 'Edit')}</span>
+                                    </button>
+                                )}
                                 {onViewDetails && (
                                     <button
                                         type="button"
@@ -446,9 +525,9 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                                             setActiveSpouse(null);
                                             onViewDetails(sp);
                                         }}
-                                        className="px-3.5 py-1.5 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 hover:from-rose-700 hover:to-pink-800 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-900/10 active:scale-95 flex items-center gap-1.5"
+                                        className="px-3.5 py-1.5 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 hover:from-rose-700 hover:to-pink-800 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-900/10 active:scale-95 flex items-center gap-1.5 cursor-pointer ml-auto"
                                     >
-                                        <span>Full Profile</span>
+                                        <span>{t('সম্পূর্ণ প্রোফাইল', 'Full Profile')}</span>
                                         <Sparkles size={12} />
                                     </button>
                                 )}
@@ -456,13 +535,13 @@ const PersonDetailsModal = ({ person, onClose, onEditNode, onDeleteNode, onViewD
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+        </React.Fragment>
     );
 };
 
 /* SPOUSE DETAILS MODAL (Screenshot Style) */
 const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onViewDetails, memberMap }) => {
+    const { t, isBn, formatOccupation, formatName } = useLanguage();
     const [person, setPerson] = useState(initialPerson);
     const [loading, setLoading] = useState(false);
 
@@ -488,8 +567,15 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
     if (!person) return null;
 
-    const fatherName = person.father_id && memberMap ? memberMap[String(person.father_id)]?.full_name : person.father_name;
-    const motherName = person.mother_id && memberMap ? memberMap[String(person.mother_id)]?.full_name : person.mother_name;
+    const fatherName = formatName(
+        (person.father_id && memberMap && memberMap[String(person.father_id)]) ||
+        { full_name: person.father_name, name_bangla: person.father_name_bangla }
+    );
+
+    const motherName = formatName(
+        (person.mother_id && memberMap && memberMap[String(person.mother_id)]) ||
+        { full_name: person.mother_name, name_bangla: person.mother_name_bangla }
+    );
 
     const SpouseInfoItem = ({ icon, label, value, onClick }) => (
         <div className={`flex items-start gap-4 mb-6 ${onClick ? 'cursor-pointer group' : ''}`} onClick={onClick}>
@@ -499,7 +585,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
             <div>
                 <p className="text-stone-400 text-xs font-semibold mb-0.5">{label}</p>
                 <p className={`text-stone-800 font-bold text-sm leading-tight ${onClick ? 'group-hover:text-[#9a3412]' : ''}`}>
-                    {value || (loading ? 'Loading...' : 'N/A')}
+                    {value || (loading ? (isBn ? 'লোড হচ্ছে...' : 'Loading...') : 'N/A')}
                 </p>
             </div>
         </div>
@@ -510,14 +596,14 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="bg-[#9a3412] h-28 relative">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors cursor-pointer">
                         <X size={24} />
                     </button>
                     <button
                         onClick={() => onViewTree(person)}
-                        className="absolute top-4 right-14 bg-white text-[#9a3412] px-3 py-1 rounded-full text-[10px] font-bold shadow-md hover:bg-orange-50 transition-colors uppercase tracking-wider"
+                        className="absolute top-4 right-14 bg-white text-[#9a3412] px-3 py-1 rounded-full text-[10px] font-bold shadow-md hover:bg-orange-50 transition-colors uppercase tracking-wider cursor-pointer"
                     >
-                        View Tree
+                        {t('ট্রি দেখুন', 'View Tree')}
                     </button>
                     <div className="absolute top-10 left-1/2 -translate-x-1/2">
                         <div className="w-28 h-28 rounded-full border-4 border-white overflow-hidden bg-orange-100 shadow-xl">
@@ -534,7 +620,9 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
                 {/* Name and Location */}
                 <div className="mt-14 text-center px-6">
-                    <h2 className="text-2xl font-serif font-bold text-[#9a3412]">{person.name_bangla || person.full_name}</h2>
+                    <h2 className="text-2xl font-serif font-bold text-[#9a3412]">
+                        {formatName(person)}
+                    </h2>
                     <div className="flex items-center justify-center gap-1.5 text-stone-500 text-sm mt-1">
                         <MapPin size={14} className="text-[#9a3412]" />
                         <span>{person.village || person.location || 'N/A'}</span>
@@ -545,23 +633,23 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                 <div className="p-8 grid grid-cols-2 gap-8 mt-4">
                     {/* Left Column: Personal Info */}
                     <div>
-                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">Personal Info</h3>
-                        <SpouseInfoItem icon={<Briefcase size={18} />} label="Occupation" value={person.occupation} />
-                        <SpouseInfoItem icon={<Building size={18} />} label="Workplace" value={person.workplace} />
-                        <SpouseInfoItem icon={<GraduationCap size={18} />} label="Education" value={person.education} />
-                        <SpouseInfoItem icon={<Droplet size={18} />} label="Blood Group" value={person.blood_group} />
-                        <SpouseInfoItem icon={<Calendar size={18} />} label="Birth Date" value={person.dob || person.birth_date} />
+                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h3>
+                        <SpouseInfoItem icon={<Briefcase size={18} />} label={t('পেশা', 'Occupation')} value={formatOccupation(person.occupation)} />
+                        <SpouseInfoItem icon={<Building size={18} />} label={t('কর্মস্থল', 'Workplace')} value={person.workplace} />
+                        <SpouseInfoItem icon={<GraduationCap size={18} />} label={t('শিক্ষাগত যোগ্যতা', 'Education')} value={person.education} />
+                        <SpouseInfoItem icon={<Droplet size={18} />} label={t('রক্তের গ্রুপ', 'Blood Group')} value={person.blood_group} />
+                        <SpouseInfoItem icon={<Calendar size={18} />} label={t('জন্ম তারিখ', 'Birth Date')} value={person.dob || person.birth_date} />
                     </div>
 
                     {/* Right Column: Contact & Family */}
                     <div>
-                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">Contact & Family</h3>
-                        <SpouseInfoItem icon={<Phone size={18} />} label="Phone" value={person.contact_number} />
-                        <SpouseInfoItem icon={<MapPin size={18} />} label="Address" value={person.present_address} />
+                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h3>
+                        <SpouseInfoItem icon={<Phone size={18} />} label={t('যোগাযোগ নম্বর', 'Phone')} value={person.contact_number} />
+                        <SpouseInfoItem icon={<MapPin size={18} />} label={t('বর্তমান ঠিকানা', 'Address')} value={person.present_address} />
                         {person.social_media && (
                             <SpouseInfoItem
                                 icon={<Globe size={18} />}
-                                label="Social Media"
+                                label={t('সামাজিক যোগাযোগ', 'Social Media')}
                                 value={
                                     <a
                                         href={person.social_media.startsWith('http') ? person.social_media : `https://${person.social_media}`}
@@ -569,7 +657,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                                         rel="noopener noreferrer"
                                         className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                                     >
-                                        Visit Profile
+                                        {t('প্রোফাইল দেখুন', 'Visit Profile')}
                                     </a>
                                 }
                             />
@@ -577,7 +665,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                         {/* Partner Link */}
                         {person.spouses && person.spouses.length > 0 && (
                             <div className="mb-6">
-                                <p className="text-stone-400 text-xs font-semibold mb-2 uppercase tracking-wider">Partner</p>
+                                <p className="text-stone-400 text-xs font-semibold mb-2 uppercase tracking-wider">{t('জীবনসঙ্গী', 'Partner')}</p>
                                 <div className="flex flex-wrap gap-2">
                                     {person.spouses.filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).map(s => (
                                         <button
@@ -586,7 +674,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                                                 const fullPartner = memberMap && memberMap[String(s.id)];
                                                 onViewDetails(fullPartner || s, 'member');
                                             }}
-                                            className="flex items-center gap-2 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-all group"
+                                            className="flex items-center gap-2 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-all group cursor-pointer"
                                         >
                                             <div className="w-5 h-5 rounded-full overflow-hidden bg-white shrink-0 group-hover:scale-110 transition-transform">
                                                 {s.profile_image_url ? (
@@ -595,7 +683,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                                                     <User size={12} className="m-auto opacity-30" />
                                                 )}
                                             </div>
-                                            <span className="text-xs font-bold text-orange-900">{s.full_name}</span>
+                                            <span className="text-xs font-bold text-orange-900">{formatName(s)}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -604,16 +692,16 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
                         <SpouseInfoItem
                             icon={<User size={18} />}
-                            label="Parents"
+                            label={t('পিতা-মাতা', 'Parents')}
                             value={
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[9px] bg-blue-50 text-blue-600 px-1 rounded font-black shrink-0">Father</span>
-                                        <span className="truncate">{fatherName || 'Unknown'}</span>
+                                        <span className="text-[9px] bg-blue-50 text-blue-600 px-1 rounded font-black shrink-0">{isBn ? 'পিতা' : 'Father'}</span>
+                                        <span className="truncate">{fatherName || t('অজানা', 'Unknown')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[9px] bg-pink-50 text-pink-600 px-1 rounded font-black shrink-0">Mother</span>
-                                        <span className="truncate">{motherName || 'Unknown'}</span>
+                                        <span className="text-[9px] bg-pink-50 text-pink-600 px-1 rounded font-black shrink-0">{isBn ? 'মাতা' : 'Mother'}</span>
+                                        <span className="truncate">{motherName || t('অজানা', 'Unknown')}</span>
                                     </div>
                                 </div>
                             }
@@ -626,10 +714,16 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 };
 
 /* TreeNode Component */
-const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails, onEditNode, onDeleteNode, level, index, className, isAdmin }) => {
+const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails, onEditNode, onDeleteNode, level, layerIndex, index, className, isAdmin }) => {
+    const { t, isBn, formatNumber, formatName } = useLanguage();
     const nodeRef = useRef(null);
     const hasChildren = node.children && node.children.length > 0;
     const childrenCount = node.children ? node.children.length : 0;
+
+    // Identity theming: son = sky-blue, daughter = rose-pink. Spouse nodes untouched.
+    const _identity = getMemberIdentity(node);
+    const _useTheme = _identity === 'son' || _identity === 'daughter';
+    const _theme = MEMBER_THEMES[_useTheme ? _identity : 'default'];
 
     useEffect(() => {
         if (isActive && nodeRef.current) {
@@ -647,11 +741,11 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
     return (
         <div
             ref={nodeRef}
-            className={`flex flex-col items-center relative ${level > 1 ? 'pt-12' : 'pt-2'} pb-6 animate-unfold origin-top shrink-0 ${className || ''}`}
+            className={`flex flex-col items-center relative ${layerIndex > 0 ? 'pt-12' : 'pt-2'} pb-6 animate-unfold origin-top shrink-0 ${className || ''}`}
             style={staggerStyle}
         >
             {/* Connector Line UP - Extends up to meet the horizontal bus */}
-            {level > 1 && (
+            {layerIndex > 0 && (
                 <div className="absolute top-0 left-1/2 -translate-x-[1px] w-[2px] h-full bg-orange-300 origin-top z-0 max-h-8 sm:max-h-12"></div>
             )}
 
@@ -667,10 +761,18 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                     transition-all duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)]
                     border mb-0
                     ${isActive
-                        ? 'border-orange-500 ring-4 ring-orange-500/10 shadow-xl -translate-y-2 scale-105 z-50'
+                        ? (_identity === 'son'
+                            ? 'border-sky-400 ring-4 ring-sky-400/15 shadow-xl shadow-sky-100/60 -translate-y-2 scale-105 z-50'
+                            : _identity === 'daughter'
+                                ? 'border-rose-400 ring-4 ring-rose-400/15 shadow-xl shadow-rose-100/60 -translate-y-2 scale-105 z-50'
+                                : 'border-orange-500 ring-4 ring-orange-500/10 shadow-xl -translate-y-2 scale-105 z-50')
                         : isDimmed
                             ? 'border-stone-200 opacity-50 scale-95 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-100'
-                            : 'border-stone-200 shadow-sm hover:border-orange-300 hover:shadow-md hover:-translate-y-1'
+                            : _identity === 'son'
+                                ? 'border-sky-100 shadow-sm hover:border-sky-300 hover:shadow-md hover:shadow-sky-100/50 hover:-translate-y-1'
+                                : _identity === 'daughter'
+                                    ? 'border-rose-100 shadow-sm hover:border-rose-300 hover:shadow-md hover:shadow-rose-100/50 hover:-translate-y-1'
+                                    : 'border-stone-200 shadow-sm hover:border-orange-300 hover:shadow-md hover:-translate-y-1'
                     }
                 `}
             >
@@ -687,8 +789,8 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                                 e.stopPropagation();
                                 onDeleteNode(node);
                             }}
-                            className="p-1 sm:p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                            title="Delete Member"
+                            className="p-1 sm:p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                            title={t('সদস্য মুছুন', 'Delete Member')}
                         >
                             <Trash2 size={12} className="sm:size-[14px]" />
                         </button>
@@ -699,8 +801,8 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                                 e.stopPropagation();
                                 onEditNode(node);
                             }}
-                            className="p-1 sm:p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
-                            title="Edit Member"
+                            className="p-1 sm:p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
+                            title={t('সদস্য সম্পাদনা', 'Edit Member')}
                         >
                             <Edit2 size={12} className="sm:size-[14px]" />
                         </button>
@@ -717,13 +819,24 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                 >
                     <div className={`
                         relative w-10 h-10 sm:w-16 sm:h-16 rounded-full p-1 transition-all duration-500
-                        ${isActive ? 'bg-gradient-to-tr from-orange-500 to-yellow-500' : 'bg-stone-100 group-hover/avatar:bg-orange-200'}
+                        ${isActive
+                            ? (_identity === 'son'
+                                ? 'bg-gradient-to-tr from-sky-500 to-blue-400'
+                                : _identity === 'daughter'
+                                    ? 'bg-gradient-to-tr from-rose-500 to-pink-400'
+                                    : 'bg-gradient-to-tr from-orange-500 to-yellow-500')
+                            : (_identity === 'son'
+                                ? 'bg-sky-50 group-hover/avatar:bg-sky-100'
+                                : _identity === 'daughter'
+                                    ? 'bg-rose-50 group-hover/avatar:bg-rose-100'
+                                    : 'bg-stone-100 group-hover/avatar:bg-orange-200')
+                        }
                     `}>
                         <div className="w-full h-full rounded-full overflow-hidden bg-white border-2 border-white">
                             {node.profile_image_url ? (
                                 <img src={node.profile_image_url} alt={node.full_name} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-stone-50 text-stone-300">
+                                <div className={`w-full h-full flex items-center justify-center ${_identity === 'son' ? 'bg-sky-50 text-sky-300' : _identity === 'daughter' ? 'bg-rose-50 text-rose-300' : 'bg-stone-50 text-stone-300'}`}>
                                     <User size={18} className="sm:size-6" />
                                 </div>
                             )}
@@ -731,19 +844,29 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                     </div>
                     <div className={`
                         absolute -bottom-2 left-1/2 -translate-x-1/2 text-[6px] sm:text-[9px] font-bold px-1 sm:px-2 py-0.5 rounded-full border shadow-sm whitespace-nowrap z-10 transition-colors
-                        ${isActive ? 'bg-orange-600 text-white border-orange-500' : 'bg-white text-stone-500 border-stone-200'}
+                        ${isActive
+                            ? (_identity === 'son'
+                                ? 'bg-sky-600 text-white border-sky-500'
+                                : _identity === 'daughter'
+                                    ? 'bg-rose-500 text-white border-rose-400'
+                                    : 'bg-orange-600 text-white border-orange-500')
+                            : 'bg-white text-stone-500 border-stone-200'
+                        }
                     `}>
-                        G{node.level || level}
+                        {isBn ? `প্র-${formatNumber(node.level || level)}` : `G${node.level || level}`}
                     </div>
                 </div>
 
                 {/* Basic Identity Info */}
                 <div className="w-full flex flex-col items-center text-center px-1.5">
-                    <h3 className={`text-xs sm:text-sm font-serif font-bold leading-tight w-full truncate mb-0.5 transition-colors ${isActive ? 'text-orange-900' : 'text-stone-800'}`}>
-                        {node.name_bangla || node.full_name}
+                    <h3 className={`text-xs sm:text-sm font-serif font-bold leading-tight w-full truncate mb-0.5 transition-colors ${isActive
+                        ? (_identity === 'son' ? 'text-sky-900' : _identity === 'daughter' ? 'text-rose-900' : 'text-orange-900')
+                        : 'text-stone-800'
+                    }`}>
+                        {formatName(node)}
                     </h3>
                     <div className="text-[9px] font-medium text-stone-400 uppercase tracking-wide">
-                        {childrenCount > 0 ? `${childrenCount} Children` : 'No Children'}
+                        {childrenCount > 0 ? (isBn ? `${formatNumber(childrenCount)} জন সন্তান` : `${childrenCount} Children`) : (isBn ? 'সন্তান নেই' : 'No Children')}
                     </div>
                 </div>
 
@@ -754,8 +877,9 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                     </div>
                 )}
 
-                {/* Centered Add Button */}
-                {isAdmin && (
+
+                {/* Centered Add Button — only for male members (daughters are leaf nodes) */}
+                {isAdmin && node.gender !== 'Female' && (
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -764,14 +888,15 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                         className={`
                         absolute -bottom-4 left-1/2 -translate-x-1/2
                         w-8 h-8 rounded-full flex items-center justify-center
-                        border-2 border-white shadow-md transition-transform duration-300 hover:scale-110 active:scale-95
+                        border-2 border-white shadow-md transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer
                         ${isActive ? 'bg-orange-600 text-white' : 'bg-stone-50 text-stone-400 hover:bg-orange-100 hover:text-orange-600'}
                     `}
-                        title="Add Child"
+                        title={t('সন্তান যোগ করুন', 'Add Child')}
                     >
                         <Plus size={16} strokeWidth={3} />
                     </button>
                 )}
+
             </div>
 
             {/* Connector Line DOWN - Extends down to touch the horizontal bus of next layer */}
@@ -784,6 +909,7 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
 
 /* Main Component */
 const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, onViewDetails, isAdmin }) => {
+    const { t } = useLanguage();
     const [activePathIds, setActivePathIds] = useState([]);
     const [selectedPerson, setSelectedPerson] = useState(null);
 
@@ -821,17 +947,31 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
             }
         });
 
-        // Now sort the constructed arrays chronologically by created_at to guarantee left-to-right order
+        const getGenderWeight = (gender) => {
+            if (gender === 'Male') return 1;
+            if (gender === 'Female') return 2;
+            return 3;
+        };
+
+        const sortNodes = (a, b) => {
+            const weightA = getGenderWeight(a.gender);
+            const weightB = getGenderWeight(b.gender);
+            if (weightA !== weightB) {
+                return weightA - weightB;
+            }
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        };
+
+        // Now sort the constructed arrays by gender and chronologically
         members.forEach(member => {
             const memberNode = map[String(member.id)];
             if (memberNode && memberNode.children.length > 0) {
-                // Sort children by created_at to maintain insertion order left-to-right
-                memberNode.children.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                memberNode.children.sort(sortNodes);
             }
         });
 
         return {
-            roots: roots.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+            roots: roots.sort(sortNodes),
             map: map
         };
     }, [members]);
@@ -876,6 +1016,7 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                     onDeleteNode={onDeleteNode}
                     onViewDetails={setSelectedPerson}
                     memberMap={map}
+                    isAdmin={isAdmin}
                 />
             )}
 
@@ -888,19 +1029,23 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
             <div className="relative z-10 text-center mb-6 sm:mb-10 mt-2 sm:mt-4 animate-unfold">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100/50 border border-orange-200 text-orange-800 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest mb-2 sm:mb-3 backdrop-blur-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse"></span>
-                    Ancestral Record System
+                    {t('বংশতালিকা সংরক্ষণ ব্যবস্থা', 'Ancestral Record System')}
                 </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-1 sm:mb-2">Ancestral Lineage</h1>
-                <p className="text-stone-500 text-xs sm:text-sm max-w-[280px] sm:max-w-md mx-auto mb-6 sm:mb-8 tracking-tight">Explore the living history across generations.</p>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-1 sm:mb-2">
+                    {t('বংশতালিকা পরিক্রমা', 'Ancestral Lineage')}
+                </h1>
+                <p className="text-stone-500 text-xs sm:text-sm max-w-[280px] sm:max-w-md mx-auto mb-6 sm:mb-8 tracking-tight">
+                    {t('প্রজন্ম থেকে প্রজন্মান্তরে জীবন্ত ইতিহাস আবিষ্কার করুন।', 'Explore the living history across generations.')}
+                </p>
 
                 {isAdmin && (
                     <button
                         onClick={() => onAddRoot && onAddRoot()}
-                        className="group relative inline-flex items-center gap-2 px-8 py-3 bg-orange-800 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg transition-all active:scale-95 text-sm uppercase tracking-widest overflow-hidden"
+                        className="group relative inline-flex items-center gap-2 px-8 py-3 bg-orange-800 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg transition-all active:scale-95 text-sm uppercase tracking-widest overflow-hidden cursor-pointer"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                         <Plus size={18} strokeWidth={3} className="relative z-10" />
-                        <span className="relative z-10">Add Root Member</span>
+                        <span className="relative z-10">{t('মূল সদস্য যোগ করুন', 'Add Root Member')}</span>
                     </button>
                 )}
             </div>
@@ -939,6 +1084,7 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                                                 onEditNode={onEditNode}
                                                 onDeleteNode={onDeleteNode}
                                                 level={node.level || (layerIndex + 1)}
+                                                layerIndex={layerIndex}
                                                 isAdmin={isAdmin}
                                             />
                                         ))}

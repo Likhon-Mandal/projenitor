@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { Users, Calendar, ChevronDown, Plus, UserCircle2, MapPin, Briefcase, Pencil, Trash2 } from 'lucide-react';
 import CommitteeFormModal from '../components/CommitteeFormModal';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
 const CommitteeBoard = () => {
     const { isAdmin } = useAuth();
+    const { t, isBn, formatNumber, formatOccupation, formatName } = useLanguage();
     const [committees, setCommittees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,9 +41,9 @@ const CommitteeBoard = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'Present';
+        if (!dateString) return isBn ? 'বর্তমান' : 'Present';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        return date.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', { year: 'numeric', month: 'short' });
     };
 
     // Separate current and past
@@ -49,7 +51,7 @@ const CommitteeBoard = () => {
     const pastCommittees = committees.filter(c => !c.is_current);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this committee?")) return;
+        if (!window.confirm(t("আপনি কি নিশ্চিতভাবে এই কমিটিটি মুছে ফেলতে চান?", "Are you sure you want to delete this committee?"))) return;
         try {
             await api.delete(`/committee/${id}`);
             fetchCommittees();
@@ -76,7 +78,9 @@ const CommitteeBoard = () => {
                 <div className="font-bold uppercase tracking-wider text-orange-800 text-xs md:text-sm">
                     {role}
                 </div>
-                <div className="text-[10px] text-stone-400 mt-0.5 uppercase tracking-widest">{members.length} member{members.length > 1 ? 's' : ''}</div>
+                <div className="text-[10px] text-stone-400 mt-0.5 uppercase tracking-widest">
+                    {formatNumber(members.length)} {t('জন সদস্য', members.length > 1 ? 'members' : 'member')}
+                </div>
             </div>
 
             {/* Right side: Assigned Persons (Can be multiple) */}
@@ -93,14 +97,14 @@ const CommitteeBoard = () => {
 
                         <div className="flex-1 min-w-0">
                             <h3 className="font-serif font-bold text-stone-800 text-sm md:text-base mb-0.5 truncate group-hover:text-orange-700 transition-colors">
-                                {member.full_name.replace(' (Root)', '')}
+                                {formatName(member)}
                             </h3>
 
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-stone-500 text-[10px] md:text-xs">
                                 {member.occupation && (
                                     <div className="flex items-center gap-1">
                                         <Briefcase size={10} />
-                                        <span className="truncate max-w-[80px]">{member.occupation}</span>
+                                        <span className="truncate max-w-[80px]">{formatOccupation(member.occupation)}</span>
                                     </div>
                                 )}
                                 {member.district && (
@@ -118,7 +122,7 @@ const CommitteeBoard = () => {
     );
 
     const renderCommitteeMembers = (members) => {
-        if (!members || members.length === 0) return <div className="text-center py-6 text-stone-400">No members assigned.</div>;
+        if (!members || members.length === 0) return <div className="text-center py-6 text-stone-400">{t('কোনো সদস্য যুক্ত করা হয়নি।', 'No members assigned.')}</div>;
 
         // Group by role
         const grouped = {};
@@ -145,13 +149,13 @@ const CommitteeBoard = () => {
                 <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-orange-100 text-xs font-bold uppercase tracking-widest mb-3 backdrop-blur-md">
-                            <Users size={14} /> Leadership & Administration
+                            <Users size={14} /> {t('নেতৃত্ব ও প্রশাসন', 'Leadership & Administration')}
                         </div>
                         <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight mb-2 drop-shadow-md">
-                            Committee Board
+                            {t('কার্যনির্বাহী পরিষদ', 'Committee Board')}
                         </h1>
                         <p className="text-orange-100/80 max-w-xl text-base md:text-lg font-light">
-                            Honoring the dedicated individuals guiding our community, shaping our heritage, and leading our progress across generations.
+                            {t('আমাদের সমাজের অগ্রগতি, ঐতিহ্য ও ভবিষ্যতের কাণ্ডারিদের শ্রদ্ধা ও স্বীকৃতি।', 'Honoring the dedicated individuals guiding our community, shaping our heritage, and leading our progress across generations.')}
                         </p>
                     </div>
 
@@ -161,7 +165,7 @@ const CommitteeBoard = () => {
                             className="group bg-white hover:bg-orange-50 text-orange-900 hover:text-orange-600 px-5 py-2.5 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl active:scale-95 flex items-center gap-2 whitespace-nowrap text-sm"
                         >
                             <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                            Form New Committee
+                            {t('নতুন কমিটি গঠন', 'Form New Committee')}
                         </button>
                     )}
                 </div>
@@ -170,7 +174,7 @@ const CommitteeBoard = () => {
             <div className="max-w-7xl mx-auto px-6 -mt-8 relative z-20">
                 {loading ? (
                     <div className="bg-white rounded-3xl p-16 shadow-lg text-center text-stone-400 animate-pulse border border-orange-100 border-t-4 border-t-orange-500">
-                        Loading Committee Records...
+                        {t('কমিটির তথ্য লোড হচ্ছে...', 'Loading Committee Records...')}
                     </div>
                 ) : (
                     <>
@@ -184,7 +188,7 @@ const CommitteeBoard = () => {
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                                             </span>
-                                            <span className="text-xs font-black uppercase tracking-widest text-green-600">Current Administration</span>
+                                            <span className="text-xs font-black uppercase tracking-widest text-green-600">{t('বর্তমান কার্যনির্বাহী পরিষদ', 'Current Administration')}</span>
                                         </div>
                                         <h2 className="text-3xl font-serif font-bold text-stone-800">{currentCommittee.name}</h2>
                                     </div>
@@ -194,10 +198,10 @@ const CommitteeBoard = () => {
                                     </div>
                                     {isAdmin && (
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => handleEdit(currentCommittee)} className="p-2 text-stone-500 hover:text-orange-600 bg-stone-50 hover:bg-orange-50 border border-stone-200 rounded-lg transition-colors" title="Edit Committee">
+                                            <button onClick={() => handleEdit(currentCommittee)} className="p-2 text-stone-500 hover:text-orange-600 bg-stone-50 hover:bg-orange-50 border border-stone-200 rounded-lg transition-colors" title={t('কমিটি সম্পাদনা', 'Edit Committee')}>
                                                 <Pencil size={18} />
                                             </button>
-                                            <button onClick={() => handleDelete(currentCommittee.id)} className="p-2 text-stone-500 hover:text-red-600 bg-stone-50 hover:bg-red-50 border border-stone-200 rounded-lg transition-colors" title="Delete Committee">
+                                            <button onClick={() => handleDelete(currentCommittee.id)} className="p-2 text-stone-500 hover:text-red-600 bg-stone-50 hover:bg-red-50 border border-stone-200 rounded-lg transition-colors" title={t('কমিটি মুছুন', 'Delete Committee')}>
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
@@ -209,8 +213,8 @@ const CommitteeBoard = () => {
                         ) : (
                             <div className="bg-white rounded-[2rem] p-12 shadow-xl border border-orange-100 border-t-8 border-t-stone-300 mb-12 text-center">
                                 <Users size={48} className="mx-auto text-stone-300 mb-4" />
-                                <h3 className="text-xl font-bold text-stone-600 mb-2">No Active Committee</h3>
-                                <p className="text-stone-400">Create a new committee and mark it as 'Current' to display it here.</p>
+                                <h3 className="text-xl font-bold text-stone-600 mb-2">{t('কোনো সক্রিয় কমিটি নেই', 'No Active Committee')}</h3>
+                                <p className="text-stone-400">{t("একটি নতুন কমিটি তৈরি করুন এবং এখানে প্রদর্শন করতে 'বর্তমান' চিহ্নিত করুন।", "Create a new committee and mark it as 'Current' to display it here.")}</p>
                             </div>
                         )}
 
@@ -218,7 +222,7 @@ const CommitteeBoard = () => {
                         {pastCommittees.length > 0 && (
                             <section>
                                 <div className="flex items-center gap-4 mb-8">
-                                    <h3 className="text-2xl font-serif font-bold text-stone-700">Past Committees</h3>
+                                    <h3 className="text-2xl font-serif font-bold text-stone-700">{t('বিগত কার্যনির্বাহী পরিষদসমূহ', 'Past Committees')}</h3>
                                     <div className="h-px bg-stone-200 flex-1"></div>
                                 </div>
 

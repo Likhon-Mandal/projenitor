@@ -8,7 +8,8 @@ const SpousesDirectoryModal = ({
   onClose,
   currentHome = null,
   currentVillage = null,
-  onSelectMember
+  onSelectMember,
+  onEdit
 }) => {
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -100,10 +101,12 @@ const SpousesDirectoryModal = ({
       <MemberProfileModal
         isOpen={isProfileModalOpen}
         member={selectedProfileMember}
+        relationType="spouse"
         onClose={() => {
           setIsProfileModalOpen(false);
           setSelectedProfileMember(null);
         }}
+        onEdit={onEdit}
       />
     </>
   );

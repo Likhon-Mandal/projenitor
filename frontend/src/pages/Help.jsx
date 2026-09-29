@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { HelpCircle, Search, MessageCircle, PlusCircle, Trash2, Edit2 } from 'lucide-react';
 import HelpRequestModal from '../components/HelpRequestModal';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
 const Help = () => {
     const { isAdmin } = useAuth();
+    const { t } = useLanguage();
     const [helpRequests, setHelpRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,16 +52,16 @@ const Help = () => {
                 <div>
                     <h1 className="text-4xl font-serif font-bold text-primary flex items-center gap-3">
                         <HelpCircle className="h-10 w-10 text-secondary" />
-                        Help Desk
+                        {t('সহায়তা কেন্দ্র', 'Help Desk')}
                     </h1>
-                    <p className="text-stone-500 mt-2">Ask for help or offer support to community members.</p>
+                    <p className="text-stone-500 mt-2">{t('সাহায্য চান বা সমাজের সদস্যদের সাহায্য করুন।', 'Ask for help or offer support to community members.')}</p>
                 </div>
                 <button
                     onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
                     className="bg-primary text-white px-6 py-3 rounded-md hover:bg-orange-900 transition flex items-center gap-2 shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
                 >
                     <PlusCircle className="h-5 w-5" />
-                    New Request
+                    {t('নতুন অনুরোধ', 'New Request')}
                 </button>
             </div>
 
@@ -70,7 +72,7 @@ const Help = () => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search requests..."
+                    placeholder={t('অনুরোধ খুঁজুন...', 'Search requests...')}
                     className="flex-1 outline-none text-stone-700 bg-transparent"
                 />
             </div>
@@ -79,7 +81,7 @@ const Help = () => {
             <div className="space-y-4">
                 {loading ? (
                     <div className="bg-white p-8 rounded-lg text-center shadow-sm border border-stone-100 text-stone-400 animate-pulse font-medium">
-                        Loading help requests...
+                        {t('অনুরোধ লোড হচ্ছে...', 'Loading help requests...')}
                     </div>
                 ) : filteredRequests.length > 0 ? (
                     filteredRequests.map((post, index) => (
@@ -93,14 +95,14 @@ const Help = () => {
                                     <button
                                         onClick={() => { setEditingRequest(post); setIsModalOpen(true); }}
                                         className="p-1.5 text-stone-300 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                        title="Edit Request"
+                                        title={t('সম্পাদনা', 'Edit Request')}
                                     >
                                         <Edit2 size={16} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(post.id)}
                                         className="p-1.5 text-stone-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete Request"
+                                        title={t('মুছুন', 'Delete Request')}
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -109,21 +111,21 @@ const Help = () => {
 
                             <div className="flex justify-between items-start mb-2 pr-16">
                                 <span className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors cursor-default ${post.type === 'alert' ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-orange-100 text-orange-800 hover:bg-orange-200'}`}>{post.tag}</span>
-                                <span className="text-sm text-stone-400">Posted by {post.posted_by}</span>
+                                <span className="text-sm text-stone-400">{t('পোস্ট করেছেন', 'Posted by')} {post.posted_by}</span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-800 mb-2 hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
                             <p className="text-stone-600 mb-4 whitespace-pre-wrap">{post.content}</p>
                             <div className="flex gap-4">
                                 <button className="text-secondary font-medium text-sm flex items-center hover:underline hover:text-red-800 transition-colors">
                                     <MessageCircle className="h-4 w-4 mr-1" />
-                                    Reply / Offer Help Manually
+                                    {t('সহায়তা দিতে যোগাযোগ করুন', 'Contact to Offer Help')}
                                 </button>
                             </div>
                         </div>
                     ))
                 ) : (
                     <div className="bg-white p-8 rounded-lg text-center shadow-sm border border-stone-100 text-stone-500 font-medium">
-                        No help requests found.
+                        {t('কোনো সহায়তার অনুরোধ পাওয়া যায়নি।', 'No help requests found.')}
                     </div>
                 )}
             </div>

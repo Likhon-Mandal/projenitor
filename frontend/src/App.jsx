@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import Home from './pages/Home';
@@ -30,8 +32,9 @@ import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <LanguageProvider>
+      <AuthProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Auth pages — standalone (no header/footer) */}
           <Route path="/login" element={<Login />} />
@@ -47,45 +50,48 @@ function App() {
 
           {/* Main app pages — with Layout (header + footer) */}
           <Route path="/*" element={
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/explorer/*" element={<Explorer />} />
-                <Route path="/directory" element={<Directory />} />
-                <Route path="/member/:id" element={<Profile />} />
-                <Route path="/board" element={<EventsAndNotices />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/committee" element={<CommitteeBoard />} />
-                <Route path="/eminent" element={<EminentFigures />} />
-                <Route path="/admin" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <Admin />
-                  </ProtectedRoute>
-                } />
-                <Route path="/relation" element={<FindRelation />} />
-                <Route path="/spouses" element={<SpousesDirectory />} />
-                <Route path="/recycle-bin" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <RecycleBin />
-                  </ProtectedRoute>
-                } />
-                <Route path="/dashboard/superadmin" element={
-                  <ProtectedRoute requiredRole="superadmin">
-                    <SuperAdminDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/dashboard/admin" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </Layout>
+            <ErrorBoundary>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/explorer/*" element={<Explorer />} />
+                  <Route path="/directory" element={<Directory />} />
+                  <Route path="/member/:id" element={<Profile />} />
+                  <Route path="/board" element={<EventsAndNotices />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/committee" element={<CommitteeBoard />} />
+                  <Route path="/eminent" element={<EminentFigures />} />
+                  <Route path="/admin" element={
+                    <ProtectedRoute requiredRole="admin">
+                      <Admin />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/relation" element={<FindRelation />} />
+                  <Route path="/spouses" element={<SpousesDirectory />} />
+                  <Route path="/recycle-bin" element={
+                    <ProtectedRoute requiredRole="admin">
+                      <RecycleBin />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/dashboard/superadmin" element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <SuperAdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/dashboard/admin" element={
+                    <ProtectedRoute requiredRole="admin">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </Layout>
+            </ErrorBoundary>
           } />
         </Routes>
       </Router>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
 

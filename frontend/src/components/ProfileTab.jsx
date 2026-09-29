@@ -5,11 +5,13 @@ import {
 } from 'lucide-react';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import LogoutModal from './LogoutModal';
 
 const ProfileTab = () => {
     const { user, setUser, logout } = useAuth();
+    const { t, isBn, formatName } = useLanguage();
     const navigate = useNavigate();
     const [view, setView] = useState('profile'); // 'profile', 'edit', 'password'
     const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -180,10 +182,9 @@ const ProfileTab = () => {
 
                     {/* Info Section */}
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-serif font-black text-stone-800">{user?.name_english || user?.name}</h2>
-                        {user?.name_bangla && user?.name_bangla !== (user?.name_english || user?.name) && (
-                            <p className="text-sm font-serif font-bold text-orange-800 mt-0.5">{user?.name_bangla}</p>
-                        )}
+                        <h2 className="text-2xl font-serif font-black text-stone-800">
+                            {formatName(user)}
+                        </h2>
                         <div className="flex items-center justify-center gap-2 mt-1">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${user?.role === 'superadmin' ? 'bg-yellow-500 text-orange-950' : 'bg-orange-800 text-white'}`}>
                                 {user?.role}
@@ -203,8 +204,8 @@ const ProfileTab = () => {
                                     <Pencil className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-stone-800 text-sm">Edit Profile</p>
-                                    <p className="text-xs text-stone-500">Change name and profile image</p>
+                                    <p className="font-bold text-stone-800 text-sm">{t('প্রোফাইল সম্পাদনা', 'Edit Profile')}</p>
+                                    <p className="text-xs text-stone-500">{t('নাম ও ছবি পরিবর্তন করুন', 'Change name and profile image')}</p>
                                 </div>
                             </div>
                             <ChevronRight className="w-5 h-5 text-stone-300 group-hover:translate-x-1 transition-transform" />
@@ -219,8 +220,8 @@ const ProfileTab = () => {
                                     <Key className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-stone-800 text-sm">Security</p>
-                                    <p className="text-xs text-stone-500">Update your account password</p>
+                                    <p className="font-bold text-stone-800 text-sm">{t('নিরাপত্তা', 'Security')}</p>
+                                    <p className="text-xs text-stone-500">{t('পাসওয়ার্ড পরিবর্তন করুন', 'Update your account password')}</p>
                                 </div>
                             </div>
                             <ChevronRight className="w-5 h-5 text-stone-300 group-hover:translate-x-1 transition-transform" />
@@ -237,8 +238,8 @@ const ProfileTab = () => {
                                     <LogOut className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-red-600 text-sm">Sign Out</p>
-                                    <p className="text-xs text-red-400">Exit your admin session</p>
+                                    <p className="font-bold text-red-600 text-sm">{t('লগ আউট', 'Sign Out')}</p>
+                                    <p className="text-xs text-red-400">{t('অ্যাডমিন সেশন সমাপ্ত করুন', 'Exit your admin session')}</p>
                                 </div>
                             </div>
                         </button>
@@ -252,7 +253,7 @@ const ProfileTab = () => {
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-zoom-in">
                         <div className="bg-orange-800 px-6 py-4 flex items-center justify-between">
                             <h3 className="text-white font-serif font-bold text-lg">
-                                {view === 'edit' ? 'Edit Profile' : 'Change Password'}
+                                {view === 'edit' ? t('প্রোফাইল সম্পাদনা', 'Edit Profile') : t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}
                             </h3>
                             <button
                                 onClick={() => setView('profile')}
@@ -287,28 +288,28 @@ const ProfileTab = () => {
                                     </div>
                                     <div className="space-y-3">
                                         <div>
-                                            <label className="block text-xs font-black uppercase tracking-wider text-stone-500 mb-1.5 ml-1">Name (Bangla) / নাম (বাংলা)</label>
+                                            <label className="block text-xs font-black uppercase tracking-wider text-stone-500 mb-1.5 ml-1">{t('নাম (বাংলা)', 'Name (Bangla)')}</label>
                                             <input
                                                 type="text"
                                                 value={form.name_bangla}
                                                 onChange={(e) => setForm({ ...form, name_bangla: e.target.value })}
-                                                placeholder="যেমন: সুপার অ্যাডমিন"
+                                                placeholder={t('যেমন: সুপার অ্যাডমিন', 'e.g. Super Admin')}
                                                 className="w-full border-2 border-orange-50 bg-orange-50/30 rounded-xl px-4 py-3 text-sm focus:border-orange-400 focus:outline-none transition-colors"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-black uppercase tracking-wider text-stone-500 mb-1.5 ml-1">Name (English) / নাম (ইংরেজি)</label>
+                                            <label className="block text-xs font-black uppercase tracking-wider text-stone-500 mb-1.5 ml-1">{t('নাম (ইংরেজি)', 'Name (English)')}</label>
                                             <input
                                                 type="text"
                                                 value={form.name_english}
                                                 onChange={(e) => setForm({ ...form, name_english: e.target.value })}
-                                                placeholder="e.g. Super Admin"
+                                                placeholder={t('যেমন: Super Admin', 'e.g. Super Admin')}
                                                 className="w-full border-2 border-orange-50 bg-orange-50/30 rounded-xl px-4 py-3 text-sm focus:border-orange-400 focus:outline-none transition-colors"
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">Profile Image URL</label>
+                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">{t('প্রোফাইল ছবির লিংক', 'Profile Image URL')}</label>
                                         <input
                                             type="url"
                                             value={form.profile_image_url}
@@ -321,13 +322,13 @@ const ProfileTab = () => {
                                         disabled={loading}
                                         className="w-full bg-orange-800 hover:bg-orange-900 text-white font-black py-4 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
                                     >
-                                        {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Update Profile'}
+                                        {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : t('সংরক্ষণ করুন', 'Update Profile')}
                                     </button>
                                 </form>
                             ) : (
                                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">Current Password</label>
+                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">{t('বর্তমান পাসওয়ার্ড', 'Current Password')}</label>
                                         <input
                                             type="password"
                                             value={passForm.oldPassword}
@@ -337,7 +338,7 @@ const ProfileTab = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">New Password</label>
+                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">{t('নতুন পাসওয়ার্ড', 'New Password')}</label>
                                         <input
                                             type="password"
                                             value={passForm.newPassword}
@@ -348,7 +349,7 @@ const ProfileTab = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">Confirm New Password</label>
+                                        <label className="block text-xs font-black uppercase tracking-wider text-stone-400 mb-1.5 ml-1">{t('নতুন পাসওয়ার্ড নিশ্চিত করুন', 'Confirm New Password')}</label>
                                         <input
                                             type="password"
                                             value={passForm.confirmPassword}
@@ -361,7 +362,7 @@ const ProfileTab = () => {
                                         disabled={loading}
                                         className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
                                     >
-                                        {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Save New Password'}
+                                        {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : t('পাসওয়ার্ড সংরক্ষণ করুন', 'Save New Password')}
                                     </button>
                                 </form>
                             )}

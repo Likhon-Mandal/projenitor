@@ -52,11 +52,14 @@ exports.getGeographicHierarchy = async (req, res) => {
             query = 'SELECT name FROM villages WHERE upazila_id = $1 AND deleted_at IS NULL ORDER BY name ASC';
             params = [parentId];
         } else if (level === 'home') {
-            query = 'SELECT name FROM homes WHERE village_id = $1 AND deleted_at IS NULL ORDER BY name ASC';
+            query = 'SELECT id, name, map_link FROM homes WHERE village_id = $1 AND deleted_at IS NULL ORDER BY name ASC';
             params = [parentId];
         }
 
         const result = await pool.query(query, params);
+        if (req.query.include_details === 'true') {
+            return res.json(result.rows);
+        }
         const items = result.rows.map(row => row.name);
         res.json(items);
     } catch (err) {
@@ -67,7 +70,7 @@ exports.getGeographicHierarchy = async (req, res) => {
 
 exports.addLocationItem = async (req, res) => {
     try {
-        const { level, name, parentName } = req.body;
+        const { level, name, parentName, map_link } = req.body;
 
         let table = '';
         let parentTable = '';
@@ -116,6 +119,9 @@ exports.addLocationItem = async (req, res) => {
             }
             query = `INSERT INTO districts (name, division_id) VALUES ($1, $2) RETURNING *`;
             params = [name, divisionId];
+        } else if (table === 'homes') {
+            query = `INSERT INTO homes (name, village_id, map_link) VALUES ($1, $2, $3) RETURNING *`;
+            params = [name, parentId, map_link && typeof map_link === 'string' && map_link.trim() ? map_link.trim() : null];
         } else {
             query = `INSERT INTO ${table} (name, ${foreignKey}) VALUES ($1, $2) RETURNING *`;
             params = [name, parentId];
@@ -136,7 +142,7 @@ exports.addLocationItem = async (req, res) => {
 
 exports.editLocationItem = async (req, res) => {
     try {
-        const { level, oldName, newName, parentName } = req.body;
+        const { level, oldName, newName, parentName, map_link } = req.body;
 
         if (!level || !oldName || !newName) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -187,16 +193,29 @@ exports.editLocationItem = async (req, res) => {
              `;
             params = [newName, oldName, parentName];
         } else if (parentName) {
-            // Secure update for all other levels relying on foreignKey to specific parent
-            query = `
-                UPDATE ${table} 
-                SET name = $1 
-                WHERE name = $2 AND ${foreignKey} = (
-                    SELECT id FROM ${parentTable} WHERE name = $3
-                )
-                RETURNING *
-            `;
-            params = [newName, oldName, parentName];
+            if (level === 'home') {
+                query = `
+                    UPDATE homes 
+                    SET name = COALESCE($1, name),
+                        map_link = CASE WHEN $4::text IS NOT NULL THEN NULLIF($4, '') ELSE map_link END
+                    WHERE name = $2 AND village_id = (
+                        SELECT id FROM villages WHERE name = $3 AND deleted_at IS NULL
+                    )
+                    RETURNING *
+                `;
+                params = [newName || oldName, oldName, parentName, map_link !== undefined ? (map_link ? map_link.trim() : '') : null];
+            } else {
+                // Secure update for all other levels relying on foreignKey to specific parent
+                query = `
+                    UPDATE ${table} 
+                    SET name = $1 
+                    WHERE name = $2 AND ${foreignKey} = (
+                        SELECT id FROM ${parentTable} WHERE name = $3
+                    )
+                    RETURNING *
+                `;
+                params = [newName, oldName, parentName];
+            }
         } else {
             // Fallback unsafe query (should only happen if frontend doesn't send parentName)
             query = `UPDATE ${table} SET name = $1 WHERE name = $2 RETURNING *`;
@@ -306,7 +325,7 @@ exports.getFamilyMembers = async (req, res) => {
 
         // We need to join with homes and villages to filter by their strings
         const query = `
-            SELECT m.*, h.name as home_name, v.name as village, ef.category as eminent_category,
+            SELECT m.*, h.name as home_name, h.map_link as home_map_link, v.name as village, ef.category as eminent_category,
             f.name_bangla as father_name_bangla, f.full_name as father_name, mo.name_bangla as mother_name_bangla, mo.full_name as mother_name,
             (
                 SELECT json_agg(json_build_object('id', s_inner.id, 'full_name', s_inner.full_name, 'name_bangla', s_inner.name_bangla, 'name_english', s_inner.name_english, 'level', s_inner.level, 'profile_image_url', s_inner.profile_image_url))
@@ -330,7 +349,13 @@ exports.getFamilyMembers = async (req, res) => {
             JOIN villages v ON m.village_id = v.id
             LEFT JOIN eminent_figures ef ON m.id = ef.member_id
             WHERE h.name = $1 AND v.name = $2 AND m.deleted_at IS NULL
-            ORDER BY m.created_at ASC
+            ORDER BY 
+                CASE 
+                    WHEN m.gender = 'Male' THEN 1
+                    WHEN m.gender = 'Female' THEN 2
+                    ELSE 3
+                END ASC,
+                m.created_at ASC
         `;
 
         const result = await pool.query(query, [home_name, village]);
@@ -506,4 +531,78 @@ exports.getAllSpouses = async (req, res) => {
         res.status(500).json({ error: 'Server error fetching spouses' });
     }
 };
+
+exports.getHomeDetails = async (req, res) => {
+    try {
+        const { home_name, village, home_id } = req.query;
+        let query, params;
+        if (home_id) {
+            query = `
+                SELECT h.id, h.name, h.map_link, h.village_id, v.name as village_name, u.name as upazila_name, d.name as district_name
+                FROM homes h
+                LEFT JOIN villages v ON h.village_id = v.id
+                LEFT JOIN upazilas u ON v.upazila_id = u.id
+                LEFT JOIN districts d ON u.district_id = d.id
+                WHERE h.id = $1 AND h.deleted_at IS NULL
+            `;
+            params = [home_id];
+        } else if (home_name && village) {
+            query = `
+                SELECT h.id, h.name, h.map_link, h.village_id, v.name as village_name, u.name as upazila_name, d.name as district_name
+                FROM homes h
+                JOIN villages v ON h.village_id = v.id
+                LEFT JOIN upazilas u ON v.upazila_id = u.id
+                LEFT JOIN districts d ON u.district_id = d.id
+                WHERE h.name = $1 AND v.name = $2 AND h.deleted_at IS NULL
+            `;
+            params = [home_name, village];
+        } else {
+            return res.status(400).json({ error: 'home_name and village or home_id are required' });
+        }
+
+        const result = await pool.query(query, params);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Home not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching home details:', err);
+        res.status(500).json({ error: 'Server error fetching home details' });
+    }
+};
+
+exports.updateHomeMapLink = async (req, res) => {
+    try {
+        const { home_id, home_name, village, map_link } = req.body;
+        let query, params;
+        const cleanLink = map_link && typeof map_link === 'string' && map_link.trim() ? map_link.trim() : null;
+
+        if (home_id) {
+            query = `UPDATE homes SET map_link = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING *`;
+            params = [cleanLink, home_id];
+        } else if (home_name && village) {
+            query = `
+                UPDATE homes 
+                SET map_link = $1 
+                WHERE name = $2 
+                  AND village_id = (SELECT id FROM villages WHERE name = $3 AND deleted_at IS NULL LIMIT 1)
+                  AND deleted_at IS NULL
+                RETURNING *
+            `;
+            params = [cleanLink, home_name, village];
+        } else {
+            return res.status(400).json({ error: 'home_id or (home_name and village) is required' });
+        }
+
+        const result = await pool.query(query, params);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Home not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Error updating home map link:', err);
+        res.status(500).json({ error: 'Server error updating home map link' });
+    }
+};
+
 

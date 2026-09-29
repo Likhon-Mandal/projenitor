@@ -12,10 +12,10 @@ const DashboardCharts = ({ data }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* Member Growth Line Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm">
+            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm min-w-0">
                 <h3 className="text-lg font-serif font-bold text-stone-800 mb-6">Member Registrations</h3>
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[300px] w-full min-w-0">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={data.registrations}>
                             <defs>
                                 <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
@@ -53,10 +53,10 @@ const DashboardCharts = ({ data }) => {
             </div>
 
             {/* Village Distribution Bar Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm">
+            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm min-w-0">
                 <h3 className="text-lg font-serif font-bold text-stone-800 mb-6">Top Villages</h3>
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[300px] w-full min-w-0">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <BarChart data={data.villages} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                             <XAxis type="number" hide />
@@ -84,10 +84,10 @@ const DashboardCharts = ({ data }) => {
             </div>
 
             {/* Blood Group Distribution Pie Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm lg:col-span-2">
+            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm lg:col-span-2 min-w-0">
                 <h3 className="text-lg font-serif font-bold text-stone-800 mb-6 text-center">Blood Group Distribution</h3>
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[300px] w-full min-w-0">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <PieChart>
                             <Pie
                                 data={data.bloodGroups}

@@ -3,25 +3,42 @@ import {
   Heart, Search, Users, MapPin, Briefcase, Building, 
   Phone, Globe, Droplet, Home, ChevronDown, Sparkles, Filter, X, Eye, Check
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
-const BENGALI_GEN_LABELS = {
-  1: '১ম প্রজন্ম (1st Gen)',
-  2: '২য় প্রজন্ম (2nd Gen)',
-  3: '৩য় প্রজন্ম (3rd Gen)',
-  4: '৪র্থ প্রজন্ম (4th Gen)',
-  5: '৫ম প্রজন্ম (5th Gen)',
-  6: '৬ষ্ঠ প্রজন্ম (6th Gen)',
-  7: '৭ম প্রজন্ম (7th Gen)',
-  8: '৮ম প্রজন্ম (8th Gen)',
-  9: '৯ম প্রজন্ম (9th Gen)',
-  10: '১০ম প্রজন্ম (10th Gen)',
-  11: '১১তম প্রজন্ম (11th Gen)',
-  12: '১২তম প্রজন্ম (12th Gen)'
+const BN_GEN_LABELS = {
+  1: '১ম প্রজন্ম',
+  2: '২য় প্রজন্ম',
+  3: '৩য় প্রজন্ম',
+  4: '৪র্থ প্রজন্ম',
+  5: '৫ম প্রজন্ম',
+  6: '৬ষ্ঠ প্রজন্ম',
+  7: '৭ম প্রজন্ম',
+  8: '৮ম প্রজন্ম',
+  9: '৯ম প্রজন্ম',
+  10: '১০ম প্রজন্ম',
+  11: '১১তম প্রজন্ম',
+  12: '১২তম প্রজন্ম'
 };
 
-const getGenLabel = (level) => {
-  return BENGALI_GEN_LABELS[level] || `প্রজন্ম ${level} (Gen ${level})`;
+const EN_GEN_LABELS = {
+  1: '1st Generation',
+  2: '2nd Generation',
+  3: '3rd Generation',
+  4: '4th Generation',
+  5: '5th Generation',
+  6: '6th Generation',
+  7: '7th Generation',
+  8: '8th Generation',
+  9: '9th Generation',
+  10: '10th Generation',
+  11: '11th Generation',
+  12: '12th Generation'
+};
+
+const getGenLabel = (level, isBn = true) => {
+  if (isBn) return BN_GEN_LABELS[level] || `প্রজন্ম ${level}`;
+  return EN_GEN_LABELS[level] || `Gen ${level}`;
 };
 
 const SpousesDirectoryView = ({ 
@@ -30,6 +47,7 @@ const SpousesDirectoryView = ({
   onViewProfile,
   isModal = false 
 }) => {
+  const { isBn, t, formatOccupation, formatName } = useLanguage();
   const [spouses, setSpouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -102,11 +120,11 @@ const SpousesDirectoryView = ({
       .map(level => ({
         level,
         count: counts[level],
-        label: getGenLabel(level)
+        label: getGenLabel(level, isBn)
       }));
 
     return list;
-  }, [spouses]);
+  }, [spouses, isBn]);
 
   // Toggle generation in multi-select
   const toggleGen = (level) => {
@@ -188,10 +206,10 @@ const SpousesDirectoryView = ({
       .sort((a, b) => a - b)
       .map(gen => ({
         gen,
-        label: getGenLabel(gen),
+        label: getGenLabel(gen, isBn),
         items: groups[gen]
       }));
-  }, [filteredSpouses]);
+  }, [filteredSpouses, isBn]);
 
   return (
     <div className="space-y-6">
@@ -209,7 +227,7 @@ const SpousesDirectoryView = ({
               }`}
             >
               <Home size={15} />
-              <span>{currentHome} (বর্তমান বাড়ি)</span>
+              <span>{currentHome} ({t('বর্তমান বাড়ি', 'Current Household')})</span>
             </button>
           )}
 
@@ -222,7 +240,7 @@ const SpousesDirectoryView = ({
             }`}
           >
             <Users size={15} />
-            <span>সমগ্র বংশ / All Lineages</span>
+            <span>{t('সমগ্র বংশ', 'All Lineages')}</span>
           </button>
         </div>
 
@@ -230,11 +248,11 @@ const SpousesDirectoryView = ({
         <div className="flex items-center gap-3 text-xs sm:text-sm text-stone-600">
           <div className="flex items-center gap-1.5 bg-orange-50 text-orange-900 font-bold px-3 py-1.5 rounded-xl border border-orange-200">
             <Heart size={15} className="fill-red-700 text-red-700" />
-            <span>মোট সহধর্মিণী: {spouses.length} জন</span>
+            <span>{t('মোট সহধর্মিণী:', 'Total Spouses:')} {spouses.length} {t('জন', '')}</span>
           </div>
           <div className="hidden sm:flex items-center gap-1 bg-amber-50 text-amber-900 font-bold px-3 py-1.5 rounded-xl border border-amber-200">
             <Sparkles size={14} className="text-amber-600" />
-            <span>{generationStats.length} টি প্রজন্ম</span>
+            <span>{generationStats.length} {t('টি প্রজন্ম', 'Generations')}</span>
           </div>
         </div>
       </div>
@@ -244,7 +262,7 @@ const SpousesDirectoryView = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
           <label className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
             <Filter size={14} className="text-orange-800" />
-            <span>প্রজন্ম অনুসারে ফিল্টার (Filter by Generation):</span>
+            <span>{t('প্রজন্ম অনুসারে ফিল্টার:', 'Filter by Generation:')}</span>
           </label>
           
           {selectedGens.length > 0 && (
@@ -252,7 +270,7 @@ const SpousesDirectoryView = ({
               onClick={() => setSelectedGens([])}
               className="text-xs text-orange-800 hover:text-red-800 font-bold self-start sm:self-auto hover:underline cursor-pointer"
             >
-              সব প্রজন্ম দেখান (Clear Filter)
+              {t('সব প্রজন্ম দেখান', 'Clear Filter')}
             </button>
           )}
         </div>
@@ -266,14 +284,14 @@ const SpousesDirectoryView = ({
           >
             <div className="flex items-center gap-2 truncate">
               {selectedGens.length === 0 ? (
-                <span className="font-medium text-stone-700">সকল প্রজন্ম (All Generations)</span>
+                <span className="font-medium text-stone-700">{t('সকল প্রজন্ম', 'All Generations')}</span>
               ) : (
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-orange-900 font-bold text-xs bg-orange-100 px-2 py-0.5 rounded-lg border border-orange-200">
-                    {selectedGens.length} টি প্রজন্ম নির্বাচিত
+                    {selectedGens.length} {t('টি প্রজন্ম নির্বাচিত', 'Generations Selected')}
                   </span>
                   <span className="text-xs text-stone-600 truncate">
-                    ({selectedGens.map(g => getGenLabel(g)).join(', ')})
+                    ({selectedGens.map(g => getGenLabel(g, isBn)).join(', ')})
                   </span>
                 </div>
               )}
@@ -301,11 +319,11 @@ const SpousesDirectoryView = ({
                     className="w-4 h-4 rounded text-orange-800 focus:ring-amber-500 border-stone-300 cursor-pointer"
                   />
                   <span className="text-xs sm:text-sm font-bold text-stone-800">
-                    সকল প্রজন্ম (All Generations)
+                    {t('সকল প্রজন্ম', 'All Generations')}
                   </span>
                 </div>
                 <span className="text-xs font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
-                  {spouses.length} জন
+                  {spouses.length} {t('জন', '')}
                 </span>
               </div>
 
@@ -337,7 +355,7 @@ const SpousesDirectoryView = ({
                       <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                         isChecked ? 'bg-orange-200 text-orange-900' : 'bg-stone-100 text-stone-500'
                       }`}>
-                        {stat.count} জন
+                        {stat.count} {t('জন', '')}
                       </span>
                     </div>
                   );
@@ -350,13 +368,13 @@ const SpousesDirectoryView = ({
         {/* Selected Generation Badges/Chips */}
         {selectedGens.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-stone-100">
-            <span className="text-[11px] text-stone-400 font-medium">নির্বাচিত প্রজন্ম:</span>
+            <span className="text-[11px] text-stone-400 font-medium">{t('নির্বাচিত প্রজন্ম:', 'Selected Generations:')}</span>
             {selectedGens.map(gen => (
               <span
                 key={gen}
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-orange-900 text-xs font-bold"
               >
-                <span>{getGenLabel(gen)}</span>
+                <span>{getGenLabel(gen, isBn)}</span>
                 <button
                   type="button"
                   onClick={() => toggleGen(gen)}
@@ -459,117 +477,112 @@ const SpousesDirectoryView = ({
               </div>
 
               {/* Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
                 {group.items.map(spouse => {
                   const partnerNames = (spouse.partners && spouse.partners.length > 0)
-                    ? spouse.partners.map(p => p.name_bangla || p.full_name).join(', ')
-                    : 'তথ্য নেই';
+                    ? spouse.partners.map(p => formatName(p)).join(', ')
+                    : (isBn ? 'তথ্য নেই' : 'No info');
 
                   return (
                     <div
                       key={spouse.id}
                       onClick={() => onViewProfile && onViewProfile(spouse)}
-                      className="group relative bg-white rounded-2xl border border-orange-100 hover:border-orange-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between cursor-pointer"
+                      className="group relative bg-white rounded-xl border border-orange-100 hover:border-orange-300 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 overflow-hidden flex flex-col justify-between cursor-pointer"
                     >
                       {/* Top Decorative Gradient Accent Bar */}
-                      <div className="h-1.5 w-full bg-gradient-to-r from-orange-700 via-red-700 to-amber-500"></div>
+                      <div className="h-1 w-full bg-gradient-to-r from-orange-700 via-red-700 to-amber-500"></div>
 
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                      <div className="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
                         {/* Top Row: Avatar + Generation Badge */}
                         <div>
-                          <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-start justify-between gap-2.5 mb-2.5">
                             {/* Avatar with Halo Ring */}
                             <div className="relative">
-                              <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-tr from-orange-600 via-red-600 to-yellow-400 shadow-sm shadow-orange-500/20">
+                              <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-orange-600 via-red-600 to-yellow-400 shadow-xs shadow-orange-500/20">
                                 <div className="w-full h-full rounded-full overflow-hidden bg-orange-50 flex items-center justify-center">
                                   {spouse.profile_image_url ? (
                                     <img 
                                       src={spouse.profile_image_url} 
-                                      alt={spouse.full_name} 
+                                      alt={formatName(spouse)} 
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-orange-100 to-amber-50 text-orange-600">
-                                      <Heart size={24} className="fill-orange-300/40 text-orange-600" />
+                                      <Heart size={18} className="fill-orange-300/40 text-orange-600" />
                                     </div>
                                   )}
                                 </div>
                               </div>
                               {/* Bottom-right Heart Badge */}
-                              <div className="absolute -bottom-1 -right-1 bg-red-800 text-white p-1 rounded-full shadow-md border-2 border-white">
-                                <Heart size={10} className="fill-current text-white" />
+                              <div className="absolute -bottom-0.5 -right-0.5 bg-red-800 text-white p-0.5 rounded-full shadow-xs border border-white">
+                                <Heart size={8} className="fill-current text-white" />
                               </div>
                             </div>
 
                             {/* Generation & Status Badges */}
                             <div className="flex flex-col items-end gap-1">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100/90 text-orange-900 border border-orange-200 text-[11px] font-bold tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100/90 text-orange-900 border border-orange-200 text-[10px] font-bold tracking-wide">
                                 Gen {spouse.generation_level || 1}
                               </span>
 
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-900 border border-orange-200 text-[10px] font-bold">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-900 border border-orange-200 text-[9px] font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-700 animate-pulse"></span>
-                                সহধর্মিণী
+                                {t('সহধর্মিণী', 'Spouse')}
                               </span>
 
                               {spouse.is_alive === false && (
-                                <span className="text-[10px] text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full font-medium">
-                                  স্বর্গীয়
+                                <span className="text-[9px] text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded-full font-medium">
+                                  {t('স্বর্গীয়', 'Deceased')}
                                 </span>
                               )}
                             </div>
                           </div>
 
                           {/* Names */}
-                          <div className="mb-2">
-                            <h4 className="font-serif font-bold text-lg text-stone-900 group-hover:text-orange-800 transition-colors line-clamp-1">
-                              {spouse.name_bangla || spouse.full_name}
+                          <div className="mb-1.5">
+                            <h4 className="font-serif font-bold text-sm sm:text-base text-stone-900 group-hover:text-orange-800 transition-colors line-clamp-1 leading-snug">
+                              {formatName(spouse)}
                             </h4>
-                            {spouse.name_english && spouse.name_bangla && (
-                              <p className="text-xs text-stone-500 font-medium line-clamp-1">
-                                {spouse.name_english}
-                              </p>
-                            )}
                           </div>
 
                           {/* Husband Tag */}
-                          <div className="mb-3.5 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50/80 border border-orange-100 text-xs text-orange-950">
-                            <Heart size={13} className="text-red-700 fill-red-700 shrink-0" />
+                          <div className="mb-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50/80 border border-orange-100 text-[11px] text-orange-950">
+                            <Heart size={11} className="text-red-700 fill-red-700 shrink-0" />
                             <span className="truncate">
-                              স্বামী: <strong className="font-bold">{partnerNames}</strong>
+                              {t('স্বামী:', 'Husband:')} <strong className="font-bold">{partnerNames}</strong>
                             </span>
                           </div>
 
                           {/* Info Items Mini-Grid */}
-                          <div className="space-y-1.5 text-xs text-stone-600 mb-4 bg-stone-50/60 p-2.5 rounded-xl border border-stone-100">
+                          <div className="space-y-1 text-[11px] text-stone-600 mb-2.5 bg-stone-50/60 p-2 rounded-lg border border-stone-100">
                             {/* Occupation */}
                             {spouse.occupation && (
-                              <div className="flex items-center gap-2">
-                                <Briefcase size={12} className="text-orange-800 shrink-0" />
+                              <div className="flex items-center gap-1.5">
+                                <Briefcase size={11} className="text-orange-800 shrink-0" />
                                 <span className="truncate font-medium">{spouse.occupation}</span>
                               </div>
                             )}
 
                             {/* Workplace */}
                             {spouse.workplace && (
-                              <div className="flex items-center gap-2">
-                                <Building size={12} className="text-orange-800 shrink-0" />
+                              <div className="flex items-center gap-1.5">
+                                <Building size={11} className="text-orange-800 shrink-0" />
                                 <span className="truncate">{spouse.workplace}</span>
                               </div>
                             )}
 
                             {/* Blood Group */}
                             {spouse.blood_group && (
-                              <div className="flex items-center gap-2">
-                                <Droplet size={12} className="text-red-600 shrink-0 fill-red-600" />
+                              <div className="flex items-center gap-1.5">
+                                <Droplet size={11} className="text-red-600 shrink-0 fill-red-600" />
                                 <span>রক্তের গ্রুপ: <strong className="text-red-800 font-extrabold">{spouse.blood_group}</strong></span>
                               </div>
                             )}
 
                             {/* Phone */}
                             {spouse.contact_number && (
-                              <div className="flex items-center gap-2">
-                                <Phone size={12} className="text-orange-800 shrink-0" />
+                              <div className="flex items-center gap-1.5">
+                                <Phone size={11} className="text-orange-800 shrink-0" />
                                 <a 
                                   href={`tel:${spouse.contact_number}`} 
                                   className="text-orange-900 hover:underline font-semibold"
@@ -582,8 +595,8 @@ const SpousesDirectoryView = ({
 
                             {/* Location */}
                             {(spouse.home_name || spouse.village) && (
-                              <div className="flex items-center gap-2 text-stone-500">
-                                <Home size={12} className="text-stone-400 shrink-0" />
+                              <div className="flex items-center gap-1.5 text-stone-500">
+                                <Home size={11} className="text-stone-400 shrink-0" />
                                 <span className="truncate">
                                   {spouse.home_name ? `${spouse.home_name}, ` : ''}
                                   {spouse.village || ''}
@@ -600,10 +613,10 @@ const SpousesDirectoryView = ({
                             e.stopPropagation();
                             if (onViewProfile) onViewProfile(spouse);
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-orange-50 hover:bg-orange-100 text-orange-900 hover:text-orange-950 border border-orange-200 rounded-xl text-xs font-bold transition-all active:scale-98 group/btn cursor-pointer"
+                          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 bg-orange-50 hover:bg-orange-100 text-orange-900 hover:text-orange-950 border border-orange-200 rounded-lg text-[11px] font-bold transition-all active:scale-98 group/btn cursor-pointer"
                         >
-                          <Eye size={14} className="text-orange-800 group-hover/btn:scale-110 transition-transform" />
-                          <span>বিস্তারিত প্রোফাইল / View Details</span>
+                          <Eye size={12} className="text-orange-800 group-hover/btn:scale-110 transition-transform" />
+                          <span>{t('বিস্তারিত প্রোফাইল', 'View Details')}</span>
                         </button>
                       </div>
                     </div>

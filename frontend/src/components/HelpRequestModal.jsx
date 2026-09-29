@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2 } from 'lucide-react';
 import MemberSelector from './MemberSelector';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
-const tags = ['Research', 'Medical', 'Financial', 'Advice', 'Other'];
-const types = ['alert', 'info'];
+const tagsList = [
+    { id: 'Research', bn: 'গবেষণা', en: 'Research' },
+    { id: 'Medical', bn: 'চিকিৎসা', en: 'Medical' },
+    { id: 'Financial', bn: 'আর্থিক', en: 'Financial' },
+    { id: 'Advice', bn: 'পরামর্শ', en: 'Advice' },
+    { id: 'Other', bn: 'অন্যান্য', en: 'Other' }
+];
 
 const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
+    const { t } = useLanguage();
     const [title, setTitle] = useState('');
     const [tag, setTag] = useState('Advice');
     const [type, setType] = useState('alert');
@@ -79,7 +86,9 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
             >
                 {/* Header */}
                 <div className={`px-6 py-4 flex justify-between items-center text-white ${type === 'alert' ? 'bg-gradient-to-r from-red-800 to-red-600' : 'bg-gradient-to-r from-stone-800 to-stone-600'}`}>
-                    <h2 className="text-xl font-serif font-bold">{initialData ? 'Edit Request' : 'Create New Request'}</h2>
+                    <h2 className="text-xl font-serif font-bold">
+                        {initialData ? t('অনুরোধ সম্পাদনা করুন', 'Edit Request') : t('নতুন সহায়তার অনুরোধ', 'Create New Request')}
+                    </h2>
                     <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                         <X size={20} />
                     </button>
@@ -89,20 +98,20 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
 
                     {/* Title */}
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">Request Title *</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-1">{t('অনুরোধের শিরোনাম *', 'Request Title *')}</label>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="w-full border border-stone-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 outline-none text-stone-800 placeholder-stone-400 bg-stone-50"
-                            placeholder="e.g. Urgent: B+ Blood Donor needed in Dhaka"
+                            placeholder={t('যেমন: জরুরি ভিত্তিতে রক্তের প্রয়োজন...', 'e.g. Urgent: B+ Blood Donor needed in Dhaka')}
                             required
                         />
                     </div>
 
                     {/* Help Seeker Selection */}
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">Help Seeker (Select Member)</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-1">{t('সাহায্যপ্রার্থী (সদস্য নির্বাচন করুন)', 'Help Seeker (Select Member)')}</label>
                         <MemberSelector
                             label=""
                             onSelect={(member) => {
@@ -114,7 +123,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                 }
                             }}
                             selectedMember={selectedSeeker}
-                            placeholder="Search and select a family member..."
+                            placeholder={t('পরিবারের সদস্য খুঁজুন ও নির্বাচন করুন...', 'Search and select a family member...')}
                         />
                         <input
                             type="text"
@@ -124,44 +133,44 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                 if (selectedSeeker) setSelectedSeeker(null); // Clear selection if manually edited
                             }}
                             className="mt-2 w-full border border-stone-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 outline-none text-stone-800 placeholder-stone-400 bg-stone-50 text-sm"
-                            placeholder="...or manually type a name if not in directory"
+                            placeholder={t('...বা তালিকায় না থাকলে ম্যানুয়ালি নাম লিখুন', '...or manually type a name if not in directory')}
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         {/* Tag */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">Category / Tag</label>
+                            <label className="block text-sm font-bold text-stone-700 mb-1">{t('ক্যাটাগরি', 'Category')}</label>
                             <select
                                 value={tag}
                                 onChange={(e) => setTag(e.target.value)}
                                 className="w-full border border-stone-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 outline-none text-stone-800 bg-stone-50"
                             >
-                                {tags.map(t => <option key={t} value={t}>{t}</option>)}
+                                {tagsList.map(item => <option key={item.id} value={item.id}>{t(item.bn, item.en)}</option>)}
                             </select>
                         </div>
                         {/* Type */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">Severity / Type</label>
+                            <label className="block text-sm font-bold text-stone-700 mb-1">{t('জরুরিতা স্তর', 'Severity Level')}</label>
                             <select
                                 value={type}
                                 onChange={(e) => setType(e.target.value)}
                                 className="w-full border border-stone-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 outline-none text-stone-800 bg-stone-50"
                             >
-                                <option value="info">Info (Standard)</option>
-                                <option value="alert">Alert (Urgent / Red)</option>
+                                <option value="info">{t('সাধারণ তথ্য (তথ্যমূলক)', 'Standard (Info)')}</option>
+                                <option value="alert">{t('জরুরি প্রয়োজন (লাল সতর্কবার্তা)', 'Urgent (Red Alert)')}</option>
                             </select>
                         </div>
                     </div>
 
                     {/* Content */}
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">Details</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-1">{t('বিস্তারিত বিবরণ', 'Details')}</label>
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             className="w-full border border-stone-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none text-stone-800 placeholder-stone-400 bg-stone-50 h-32 resize-none"
-                            placeholder="Provide any additional details or contact information..."
+                            placeholder={t('প্রয়োজনীয় বিবরণ ও যোগাযোগের নম্বর প্রদান করুন...', 'Provide any additional details or contact information...')}
                         />
                     </div>
 
@@ -172,14 +181,14 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                             onClick={onClose}
                             className="px-5 py-2 text-stone-500 hover:text-stone-700 font-bold hover:bg-stone-100 rounded-lg transition-colors"
                         >
-                            Cancel
+                            {t('বাতিল', 'Cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
                             className={`px-6 py-2 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 ${type === 'alert' ? 'bg-red-700 hover:bg-red-800' : 'bg-orange-700 hover:bg-orange-800'}`}
                         >
-                            {loading ? 'Submitting...' : <><CheckCircle2 size={18} /> {initialData ? 'Save Changes' : 'Submit Request'}</>}
+                            {loading ? t('সংরক্ষণ হচ্ছে...', 'Submitting...') : <><CheckCircle2 size={18} /> {initialData ? t('সংরক্ষণ করুন', 'Save Changes') : t('অনুরোধ জমা দিন', 'Submit Request')}</>}
                         </button>
                     </div>
                 </form>

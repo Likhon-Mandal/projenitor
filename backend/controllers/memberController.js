@@ -165,7 +165,9 @@ exports.getMemberById = async (req, res) => {
         h.name as home_name,
         ef.category as eminent_category,
         f.full_name as father_name,
-        mo.full_name as mother_name
+        f.name_bangla as father_name_bangla,
+        mo.full_name as mother_name,
+        mo.name_bangla as mother_name_bangla
       FROM members m
       LEFT JOIN countries c ON m.country_id = c.id
       LEFT JOIN divisions d ON m.division_id = d.id
@@ -185,9 +187,9 @@ exports.getMemberById = async (req, res) => {
 
     const member = result.rows[0];
 
-    // Fetch children
+    // Fetch children (with rich data)
     const childrenQuery = `
-      SELECT id, full_name, name_bangla, name_english, profile_image_url, created_at 
+      SELECT id, full_name, name_bangla, name_english, profile_image_url, gender, level, father_id, mother_id, created_at 
       FROM members 
       WHERE (father_id = $1 OR mother_id = $1) AND deleted_at IS NULL
       ORDER BY created_at ASC
@@ -195,9 +197,9 @@ exports.getMemberById = async (req, res) => {
     const childrenResult = await pool.query(childrenQuery, [id]);
     member.children = childrenResult.rows;
 
-    // Fetch spouses (ensure distinct and bidirectional)
+    // Fetch spouses (with rich data including father_id, mother_id, level)
     const spousesQuery = `
-      SELECT DISTINCT m.id, m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.gender, m.occupation, m.workplace, m.blood_group, m.contact_number, m.social_media
+      SELECT DISTINCT m.id, m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.gender, m.occupation, m.workplace, m.blood_group, m.contact_number, m.social_media, m.level, m.father_id, m.mother_id
       FROM members m
       WHERE (
         m.id IN (SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = $1)
@@ -210,6 +212,23 @@ exports.getMemberById = async (req, res) => {
     `;
     const spousesResult = await pool.query(spousesQuery, [id]);
     member.spouses = spousesResult.rows;
+
+    // Fetch siblings (same father or same mother)
+    if (member.father_id || member.mother_id) {
+      const siblingsQuery = `
+        SELECT DISTINCT m.id, m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.gender, m.level, m.father_id, m.mother_id
+        FROM members m
+        WHERE m.id != $1 AND m.deleted_at IS NULL
+          AND (
+            ($2::uuid IS NOT NULL AND m.father_id = $2)
+            OR ($3::uuid IS NOT NULL AND m.mother_id = $3)
+          )
+      `;
+      const siblingsResult = await pool.query(siblingsQuery, [id, member.father_id || null, member.mother_id || null]);
+      member.siblings = siblingsResult.rows;
+    } else {
+      member.siblings = [];
+    }
 
     res.json(member);
   } catch (err) {
@@ -263,6 +282,21 @@ exports.createMember = async (req, res) => {
     const trimmedEnglish = name_english?.trim() || null;
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
+    // Lock spouse generation level to her husband's level and gender to Female
+    let finalLevel = level;
+    let finalGender = gender;
+    if (spouse_id || req.body.isSpouseFlag || req.body.role === 'spouse') {
+      const husbandRes = await pool.query('SELECT level FROM members WHERE id = $1', [spouse_id]);
+      if (husbandRes.rows.length > 0) {
+        finalGender = 'Female';
+        if (husbandRes.rows[0].level !== null) {
+          finalLevel = husbandRes.rows[0].level;
+        }
+      } else if (req.body.isSpouseFlag || req.body.role === 'spouse') {
+        finalGender = 'Female';
+      }
+    }
+
     const query = `
       INSERT INTO members (
         full_name, name_bangla, name_english, gender, blood_group, occupation, education,
@@ -281,12 +315,12 @@ exports.createMember = async (req, res) => {
       ) RETURNING *`;
 
     const values = [
-      computedFullName, trimmedBangla, trimmedEnglish, gender, blood_group, occupation, education,
+      computedFullName, trimmedBangla, trimmedEnglish, finalGender, blood_group, occupation, education,
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
       father_id, mother_id, spouse_id,
-      profile_image_url, bio, level, workplace, social_media
+      profile_image_url, bio, finalLevel, workplace, social_media
     ];
 
     const result = await pool.query(query, values);
@@ -345,6 +379,43 @@ exports.updateMember = async (req, res) => {
     const trimmedEnglish = name_english?.trim() || null;
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
+    // Get existing member to check if level changed
+    const existingMemberRes = await pool.query('SELECT level, gender FROM members WHERE id = $1', [id]);
+    if (existingMemberRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+    const oldLevel = existingMemberRes.rows[0].level;
+    const existingGender = existingMemberRes.rows[0].gender;
+
+    // Determine target level & gender:
+    // If the member is a spouse of a male member (or has a husband / spouse role),
+    // her generation level is ALWAYS strictly locked to her husband's level,
+    // and her gender is ALWAYS strictly fixed as 'Female'!
+    let targetLevel = level;
+    let finalGender = gender || existingGender;
+
+    const husbandRes = await pool.query(`
+      SELECT m.level 
+      FROM members m
+      WHERE m.gender = 'Male' AND m.deleted_at IS NULL AND (
+        m.id = $1::uuid
+        OR m.id IN (SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = $2::uuid)
+        OR m.id IN (SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = $2::uuid)
+        OR m.id = (SELECT spouse_id FROM members WHERE id = $2::uuid)
+      )
+      LIMIT 1
+    `, [spouse_id || null, id]);
+
+    const isSpouseOfMale = husbandRes.rows.length > 0;
+    if (isSpouseOfMale || req.body.isSpouseFlag || req.body.role === 'spouse') {
+      finalGender = 'Female';
+      if (husbandRes.rows.length > 0 && husbandRes.rows[0].level !== null) {
+        targetLevel = husbandRes.rows[0].level;
+      }
+    } else if (finalGender === 'Female' && husbandRes.rows.length > 0 && husbandRes.rows[0].level !== null) {
+      targetLevel = husbandRes.rows[0].level;
+    }
+
     const query = `
       UPDATE members SET
         full_name = $1, name_bangla = $2, name_english = $3, gender = $4, blood_group = $5, occupation = $6, education = $7,
@@ -357,19 +428,68 @@ exports.updateMember = async (req, res) => {
       WHERE id = $29 RETURNING *`;
 
     const values = [
-      computedFullName, trimmedBangla, trimmedEnglish, gender, blood_group, occupation, education,
+      computedFullName, trimmedBangla, trimmedEnglish, finalGender, blood_group, occupation, education,
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
       father_id, mother_id, spouse_id,
-      profile_image_url, bio, level, workplace, social_media,
+      profile_image_url, bio, targetLevel, workplace, social_media,
       id
     ];
 
     const result = await pool.query(query, values);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Member not found' });
+    // If level has changed and the new level is valid, update all descendants recursively
+    if (targetLevel !== undefined && targetLevel !== null && oldLevel !== null && Number(targetLevel) !== Number(oldLevel)) {
+      const updateSubtreeQuery = `
+        WITH RECURSIVE family_tree AS (
+            -- Base case: The children of the updated member
+            SELECT id, $2::int + 1 AS correct_level
+            FROM members
+            WHERE father_id = $1 OR mother_id = $1
+
+            UNION ALL
+
+            -- Recursive case: Next generations
+            SELECT m.id, ft.correct_level + 1
+            FROM members m
+            INNER JOIN family_tree ft ON (m.father_id = ft.id OR m.mother_id = ft.id)
+        )
+        UPDATE members
+        SET level = ft.correct_level
+        FROM family_tree ft
+        WHERE members.id = ft.id;
+      `;
+      await pool.query(updateSubtreeQuery, [id, Number(targetLevel)]);
+    }
+
+    // Always sync spouses for the updated member and their descendants (if level changed)
+    // We can do this whether or not level changed, or just when it changed. 
+    // It's safest to sync spouses of the target member and their subtree to ensure consistency.
+    if (targetLevel !== undefined && targetLevel !== null) {
+      const syncSpousesQuery = `
+        WITH RECURSIVE family_tree AS (
+            -- Base case: The updated member
+            SELECT id
+            FROM members
+            WHERE id = $1
+
+            UNION ALL
+
+            -- Recursive case: Next generations
+            SELECT m.id
+            FROM members m
+            INNER JOIN family_tree ft ON (m.father_id = ft.id OR m.mother_id = ft.id)
+        )
+        UPDATE members m
+        SET level = blood.level
+        FROM member_spouses ms
+        JOIN members blood ON ms.member_id = blood.id
+        JOIN family_tree ft ON blood.id = ft.id
+        WHERE m.id = ms.spouse_id 
+          AND (m.level IS NULL OR m.level != blood.level);
+      `;
+      await pool.query(syncSpousesQuery, [id]);
     }
 
     // Sync spouse if changed/provided
@@ -402,6 +522,17 @@ exports.deleteMember = async (req, res) => {
     }
 
     const target = targetCheck.rows[0];
+    
+    // If spouseOnly flag is set, just delete the spouse without cascading
+    if (req.query.spouseOnly === 'true') {
+      await pool.query('UPDATE members SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+      return res.json({
+        message: 'Spouse deleted successfully',
+        deleted_count: 1,
+        deleted_members: [target]
+      });
+    }
+
     const isFemaleInMarriedSpouse = target && (target.gender === 'Female' || !target.gender) && !target.father_id && !target.mother_id;
 
     const query = `
@@ -530,6 +661,19 @@ exports.addSpouseRelationship = async (req, res) => {
     // Also update redundant legacy spouse_id column for consistency
     await pool.query('UPDATE members SET spouse_id = $2 WHERE id = $1', [id, spouseId]);
     await pool.query('UPDATE members SET spouse_id = $1 WHERE id = $2', [id, spouseId]);
+
+    // Ensure female spouse's level matches her husband's level
+    await pool.query(`
+      UPDATE members
+      SET level = (SELECT level FROM members WHERE id = $1 AND gender = 'Male')
+      WHERE id = $2 AND gender = 'Female' AND (SELECT level FROM members WHERE id = $1 AND gender = 'Male') IS NOT NULL
+    `, [id, spouseId]);
+
+    await pool.query(`
+      UPDATE members
+      SET level = (SELECT level FROM members WHERE id = $2 AND gender = 'Male')
+      WHERE id = $1 AND gender = 'Female' AND (SELECT level FROM members WHERE id = $2 AND gender = 'Male') IS NOT NULL
+    `, [id, spouseId]);
 
     res.json({ message: 'Spouse relationship added successfully' });
   } catch (err) {
