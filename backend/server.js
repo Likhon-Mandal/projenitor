@@ -23,11 +23,13 @@ app.use(encryptionMiddleware);
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/members', require('./routes/memberRoutes'));
 app.use('/api/family', require('./routes/familyRoutes'));
 app.use('/api/committee', require('./routes/committee'));
 app.use('/api/eminent', require('./routes/eminent'));
+app.use('/api/brilliant-students', require('./routes/brilliantStudentRoutes'));
 app.use('/api/notices', require('./routes/notices'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/history', require('./routes/history'));

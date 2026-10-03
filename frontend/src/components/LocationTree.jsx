@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronRight, Edit2, Check, X, Trash2, MapPin } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import VerifiedBadge from './VerifiedBadge';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
@@ -10,8 +11,8 @@ const AnimationStyles = () => (
             to { width: 100%; opacity: 1; }
         }
         @keyframes expandHeight {
-            from { height: 0; opacity: 0; }
-            to { height: 100%; opacity: 1; }
+            from { transform: scaleY(0); opacity: 0; }
+            to { transform: scaleY(1); opacity: 1; }
         }
         @keyframes unfoldNodeH {
             from { opacity: 0; transform: translateX(-20px) scale(0.9); }
@@ -163,6 +164,7 @@ const LocationNode = ({ node, isActive, isDimmed, onClick, onMapSelect, onEditSu
                     ) : (
                         <div className="flex items-center gap-1.5 min-w-0">
                             <span className={`text-xs sm:text-base font-serif font-bold truncate ${isActive ? 'text-orange-900' : 'text-stone-800'}`}>{node.name}</span>
+                            <VerifiedBadge size={14} />
                             {levelName === 'home' && node.map_link && (
                                 <a
                                     href={node.map_link.startsWith('http') ? node.map_link : `https://${node.map_link}`}
@@ -248,8 +250,21 @@ const LocationTree = ({
 
     const levelsMapKeys = Object.keys(levelTitles);
 
+    useEffect(() => {
+        const container = document.getElementById('location-tree-scroll');
+        if (container) {
+            // Scroll to the far right whenever the path changes (meaning a new column might have appeared)
+            setTimeout(() => {
+                container.scrollTo({
+                    left: container.scrollWidth,
+                    behavior: 'smooth'
+                });
+            }, 300); // small delay to allow render
+        }
+    }, [activePath.length]);
+
     return (
-        <div className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] hide-scrollbar py-4 sm:py-8 px-2 sm:px-4 lg:px-12 bg-[#fffcf5]">
+        <div id="location-tree-scroll" className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] hide-scrollbar py-4 sm:py-8 px-2 sm:px-4 lg:px-12 bg-[#fffcf5]">
             <AnimationStyles />
 
             <div className="flex flex-row items-center gap-0 w-fit h-fit my-auto">
@@ -264,7 +279,7 @@ const LocationTree = ({
                         <div key={layerIndex} className="flex flex-row items-center relative min-h-full">
 
                             {/* Vertical Bus Line */}
-                            {layerIndex > 0 && layerNodes.length > 1 && (
+                            {layerIndex > 0 && (
                                 <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-orange-300 z-0 opacity-80 rounded-full animate-expand-h origin-top"></div>
                             )}
 

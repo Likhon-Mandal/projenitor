@@ -326,7 +326,10 @@ exports.getFamilyMembers = async (req, res) => {
         // We need to join with homes and villages to filter by their strings
         const query = `
             SELECT m.*, h.name as home_name, h.map_link as home_map_link, v.name as village, ef.category as eminent_category,
-            f.name_bangla as father_name_bangla, f.full_name as father_name, mo.name_bangla as mother_name_bangla, mo.full_name as mother_name,
+            f.name_bangla as father_name_bangla, f.name_english as father_name_english, f.full_name as father_name, mo.name_bangla as mother_name_bangla, mo.name_english as mother_name_english, mo.full_name as mother_name,
+            u_acc.status as user_status,
+            (u_acc.status = 'active') as is_active,
+            (u_acc.id IS NOT NULL) as is_claimed,
             (
                 SELECT json_agg(json_build_object('id', s_inner.id, 'full_name', s_inner.full_name, 'name_bangla', s_inner.name_bangla, 'name_english', s_inner.name_english, 'level', s_inner.level, 'profile_image_url', s_inner.profile_image_url))
                 FROM (
@@ -343,6 +346,12 @@ exports.getFamilyMembers = async (req, res) => {
                 ) s_inner
             ) as spouses
             FROM members m
+            LEFT JOIN (
+                SELECT DISTINCT ON (member_id) member_id, id, status, role 
+                FROM users 
+                WHERE member_id IS NOT NULL 
+                ORDER BY member_id, CASE WHEN status = 'active' THEN 1 WHEN status = 'approved' THEN 2 WHEN status = 'pending' THEN 3 ELSE 4 END
+            ) u_acc ON m.id = u_acc.member_id
             LEFT JOIN members f ON m.father_id = f.id
             LEFT JOIN members mo ON m.mother_id = mo.id
             JOIN homes h ON m.home_id = h.id

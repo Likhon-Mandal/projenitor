@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, User, Camera } from 'lucide-react';
+import { Save, X, User, Camera, Plus, Trash2, Key, AlertTriangle } from 'lucide-react';
 import api from '../api/api';
 import OccupationSelect from './OccupationSelect';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,7 +19,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         country: 'Bangladesh', division: '', district: '', upazila: '', village: '', home_name: '',
         father_id: '', mother_id: '', spouse_id: '', profile_image_url: '', bio: '',
         workplace: '', social_media: '',
-        level: 1, isRoot: true,
+        level: 1, isRoot: false,
         ...initialData // Override defaults with initialData if provided
     });
 
@@ -27,6 +27,12 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
     const [possibleFathers, setPossibleFathers] = useState([]);
     const [possibleMothers, setPossibleMothers] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    // Multi-phone number states
+    const [phoneNumbers, setPhoneNumbers] = useState(['']);
+    const [accountMobile, setAccountMobile] = useState(null);
+    const [showAccountMobileWarningModal, setShowAccountMobileWarningModal] = useState(false);
+    const [warningModalData, setWarningModalData] = useState(null);
 
     // Quick Add Spouse State
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -44,6 +50,80 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
     const [isSavingQuickSpouse, setIsSavingQuickSpouse] = useState(false);
 
     const [currentSpouses, setCurrentSpouses] = useState([]);
+
+    const parseNumbers = (raw) => {
+        if (!raw) return [''];
+        const list = String(raw).split(/[,;\/\n\r]+/).map(n => n.trim()).filter(Boolean);
+        return list.length > 0 ? list : [''];
+    };
+
+    const isAccountLoginNumber = (num) => {
+        if (!accountMobile || !num) return false;
+        const clean = (s) => (s || '').replace(/[^0-9+]/g, '');
+        return clean(num) === clean(accountMobile) || num.trim() === accountMobile.trim();
+    };
+
+    const handleAddPhoneNumber = () => {
+        setPhoneNumbers(prev => [...prev, '']);
+    };
+
+    const handlePhoneChange = (index, value) => {
+        setPhoneNumbers(prev => {
+            const next = [...prev];
+            next[index] = value;
+            return next;
+        });
+    };
+
+    const handleRemovePhoneNumber = (idx) => {
+        const targetNumber = phoneNumbers[idx];
+        if (isAccountLoginNumber(targetNumber)) {
+            setWarningModalData({
+                type: 'remove_number',
+                index: idx,
+                title: t('লগইন নম্বর মুছে ফেলার সতর্কতা', 'Delete Login Number Warning'),
+                message: t(
+                    `সতর্কতা: "${targetNumber}" নম্বরটি ব্যবহারকারীর অ্যাকাউন্ট লগইন হিসেবে ব্যবহৃত হচ্ছে। এটি মুছে ফেললে ব্যবহারকারীর লগইন এক্সেস ক্ষতিগ্রস্ত হতে পারে। আপনি কি নিশ্চিতভাবে এটি মুছে ফেলতে চান?`,
+                    `Warning: "${targetNumber}" is used for account login authentication. Deleting it will affect user login access. Are you sure you want to remove it?`
+                )
+            });
+            setShowAccountMobileWarningModal(true);
+            return;
+        }
+
+        setPhoneNumbers(prev => {
+            const next = prev.filter((_, i) => i !== idx);
+            return next.length > 0 ? next : [''];
+        });
+    };
+
+    const handleConfirmWarning = () => {
+        setShowAccountMobileWarningModal(false);
+        if (warningModalData?.type === 'remove_number') {
+            const idx = warningModalData.index;
+            setPhoneNumbers(prev => {
+                const next = prev.filter((_, i) => i !== idx);
+                return next.length > 0 ? next : [''];
+            });
+        } else if (warningModalData?.type === 'submit') {
+            handleSubmit(null, true);
+        } else if (warningModalData?.type === 'delete_spouse') {
+            const spouse = warningModalData.spouse;
+            if (spouse) {
+                (async () => {
+                    try {
+                        await api.delete(`/members/${spouse.id}?spouseOnly=true`);
+                        setCurrentSpouses(prev => prev.filter(s => s.id !== spouse.id));
+                        if (fetchMembers) fetchMembers();
+                        if (onSuccess) onSuccess();
+                    } catch (err) {
+                        console.error('Error handling spouse deletion:', err);
+                        alert('Failed to process spouse removal: ' + (err.response?.data?.error || err.message));
+                    }
+                })();
+            }
+        }
+    };
 
     // If initialData changes (e.g. when opening form with different context), update state
     useEffect(() => {
@@ -64,37 +144,82 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                 name_english = sanitizedData.full_name;
             }
 
-            const isInitialSpouse = Boolean(
+            // A member is only an in-law spouse if explicitly designated as a female spouse (never a male member)
+            const isExplicitSpouseFlag = Boolean(
                 sanitizedData.isSpouseFlag ||
                 sanitizedData.role === 'spouse' ||
                 sanitizedData.relationType === 'spouse' ||
-                sanitizedData.is_spouse ||
-                (sanitizedData.gender === 'Female' && (sanitizedData.spouse_id || sanitizedData.husband_id)) ||
-                (sanitizedData.gender === 'Female' && !sanitizedData.father_id)
+                sanitizedData.is_spouse
             );
 
-            // isRoot is STRICTLY true ONLY for male root members without father_id
-            const isRootVal = sanitizedData.gender === 'Male' && !isInitialSpouse && (initialData.id ? (!initialData.father_id) : (initialData.father_id ? false : prev.isRoot));
+            const isInitialSpouse = Boolean(
+                sanitizedData.gender !== 'Male' && (
+                    isExplicitSpouseFlag ||
+                    (!initialData.id && (sanitizedData.husband || sanitizedData.husband_id || sanitizedData.spouse_id || initialData.husband || initialData.spouse_id))
+                )
+            );
+
+            // Determine if this should be a root member (properly honoring initialData.isRoot)
+            const isRootVal = isInitialSpouse ? false : (
+                initialData.isRoot !== undefined
+                    ? Boolean(initialData.isRoot)
+                    : (initialData.id ? (!initialData.father_id && !initialData.mother_id && !sanitizedData.father_id && !sanitizedData.mother_id && sanitizedData.gender === 'Male') : false)
+            );
 
             // Extract husband if provided in initialData to instantly sync generation level
-            const initialHusband = (sanitizedData.spouses && sanitizedData.spouses.find(s => s.gender === 'Male')) ||
-                                   sanitizedData.husband ||
-                                   (sanitizedData.spouse_id && members.find(m => m.id === sanitizedData.spouse_id));
+            const initialHusband = isInitialSpouse ? (
+                sanitizedData.husband ||
+                (sanitizedData.spouse_id && members.find(m => m.id === sanitizedData.spouse_id))
+            ) : null;
+
             let initialLevel = sanitizedData.level;
             if (isInitialSpouse && initialHusband && initialHusband.level) {
                 initialLevel = initialHusband.level;
             }
 
-            setFormData(prev => ({
-                ...prev,
-                ...sanitizedData,
-                name_bangla,
-                name_english,
-                gender: isInitialSpouse ? 'Female' : (sanitizedData.gender || prev.gender),
-                level: initialLevel,
+            // Gender rules:
+            // 1. Spouses are strictly Female
+            // 2. Root members are strictly Male
+            // 3. For any other member, preserve their existing gender or let user choose
+            const determinedGender = isInitialSpouse 
+                ? 'Female' 
+                : (isRootVal ? 'Male' : (sanitizedData.gender || ''));
+
+            const defaultEmptyForm = {
+                full_name: '', name_bangla: '', name_english: '', 
+                gender: determinedGender, 
+                blood_group: '', occupation: '', education: '',
+                birth_date: '', death_date: '', is_alive: true,
+                contact_number: '', email: '', present_address: '', permanent_address: '',
+                country: 'Bangladesh', division: '', district: '', upazila: '', village: '', home_name: '',
+                father_id: '', mother_id: '', spouse_id: '', profile_image_url: '', bio: '',
+                workplace: '', social_media: '',
+                level: isRootVal ? (initialLevel || 1) : (initialLevel || 1),
                 isRoot: isRootVal,
-                isSpouseFlag: isInitialSpouse ? true : sanitizedData.isSpouseFlag
-            }));
+                isSpouseFlag: isInitialSpouse
+            };
+
+            setFormData(prev => {
+                const base = initialData.id ? { ...prev } : { ...defaultEmptyForm };
+                return {
+                    ...base,
+                    ...sanitizedData,
+                    name_bangla,
+                    name_english,
+                    gender: determinedGender,
+                    father_id: isRootVal ? '' : (sanitizedData.father_id !== undefined ? sanitizedData.father_id : (initialData.id ? base.father_id : '')),
+                    mother_id: isRootVal ? '' : (sanitizedData.mother_id !== undefined ? sanitizedData.mother_id : (initialData.id ? base.mother_id : '')),
+                    level: isRootVal ? (initialLevel || 1) : (initialLevel || base.level || 1),
+                    isRoot: isRootVal,
+                    isSpouseFlag: isInitialSpouse ? true : false
+                };
+            });
+
+            // Sync phone numbers and account mobile
+            const initialNumbers = parseNumbers(sanitizedData.contact_number);
+            setPhoneNumbers(initialNumbers);
+            setAccountMobile(sanitizedData.account_mobile || null);
+
             fetchMembers();
             if (initialData.id) {
                 if (initialData.spouses && Array.isArray(initialData.spouses)) {
@@ -119,13 +244,25 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
             const spousesList = res.data.spouses || [];
             setCurrentSpouses(spousesList);
 
-            // If female spouse, auto-sync level to her husband's level
-            if (res.data.gender === 'Female' || formData.gender === 'Female') {
-                const husband = spousesList.find(s => s.gender === 'Male') || spousesList[0];
+            if (res.data.account_mobile) {
+                setAccountMobile(res.data.account_mobile);
+            }
+            if (res.data.contact_number) {
+                setPhoneNumbers(parseNumbers(res.data.contact_number));
+            }
+
+            // Only if editing an in-law wife, sync level to her husband's level
+            const isSpouse = res.data.gender === 'Female' && (
+                res.data.isSpouseFlag ||
+                res.data.role === 'spouse' ||
+                res.data.relationType === 'spouse' ||
+                (!res.data.father_id && !res.data.mother_id && spousesList.some(s => s.gender === 'Male'))
+            );
+            if (isSpouse) {
+                const husband = spousesList.find(s => s.gender === 'Male');
                 if (husband && husband.level) {
                     setFormData(prev => ({
                         ...prev,
-                        isSpouseFlag: true,
                         level: husband.level
                     }));
                 }
@@ -138,7 +275,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
     // Level and Mother calculation logic
     useEffect(() => {
         if (formData.isRoot) {
-            setFormData(prev => ({ ...prev, father_id: '' }));
+            setFormData(prev => ({ ...prev, father_id: '', mother_id: '' }));
             setPossibleMothers([]);
         } else if (formData.father_id) {
             // Always fetch spouses if father_id is present
@@ -190,8 +327,22 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         const file = e.target.files[0];
         if (!file) return;
 
+        // Enforce 5MB limit for profile picture
+        const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_PROFILE_IMAGE_SIZE) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+            alert(
+                isBn 
+                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।` 
+                    : `Profile picture size must not exceed 5MB. Your selected image is ${sizeInMB} MB. Please choose a smaller image.`
+            );
+            e.target.value = '';
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
+        uploadData.append('category', 'profile');
 
         try {
             setIsUploadingSpouseImage(true);
@@ -240,7 +391,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                 upazila: formData.upazila,
                 village: formData.village,
                 home_name: formData.home_name,
-                is_alive: true
+                is_alive: true,
+                isSpouseFlag: true,
+                role: 'spouse'
             };
 
             // If adding as mother, link to father
@@ -288,29 +441,39 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         }
     };
 
-    const handleDeleteSpouse = async (spouse) => {
-        if (!window.confirm(`Are you sure you want to delete ${spouse.full_name}? This will move their record to the RECYCLE BIN.`)) return;
-
-        try {
-            // Delete the member (moves to recycle bin) but only the spouse, not the generation
-            await api.delete(`/members/${spouse.id}?spouseOnly=true`);
-            setCurrentSpouses(prev => prev.filter(s => s.id !== spouse.id));
-
-            // Refresh local list and parent state
-            if (fetchMembers) fetchMembers();
-            if (onSuccess) onSuccess();
-        } catch (err) {
-            console.error('Error handling spouse deletion:', err);
-            alert('Failed to process spouse removal: ' + (err.response?.data?.error || err.message));
-        }
+    const handleDeleteSpouse = (spouse) => {
+        const spouseDisplayName = formatName(spouse) || spouse.full_name;
+        setWarningModalData({
+            type: 'delete_spouse',
+            spouse,
+            title: t('সহধর্মিণী মুছে ফেলা নিশ্চিতকরণ', 'Confirm Spouse Removal'),
+            message: isBn
+                ? `আপনি কি নিশ্চিত যে "${spouseDisplayName}"-কে মুছে ফেলতে চান? তাঁর তথ্য রিসাইকেল বিনে চলে যাবে।`
+                : `Are you sure you want to delete "${spouseDisplayName}"? This will move their record to the RECYCLE BIN.`
+        });
+        setShowAccountMobileWarningModal(true);
     };
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Enforce 5MB limit for profile picture
+        const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_PROFILE_IMAGE_SIZE) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+            alert(
+                isBn 
+                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।` 
+                    : `Profile picture size must not exceed 5MB. Your selected image is ${sizeInMB} MB. Please choose a smaller image.`
+            );
+            e.target.value = '';
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
+        uploadData.append('category', 'profile');
 
         try {
             const res = await api.post('/upload', uploadData, {
@@ -325,8 +488,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (e, forceConfirmed = false) => {
+        if (e && e.preventDefault) e.preventDefault();
         const editingId = initialData.id;
         const payload = { ...formData };
 
@@ -343,6 +506,35 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         payload.name_english = eName;
         payload.full_name = computedFullName;
 
+        // Process multiple phone numbers into comma-separated string
+        const cleanPhoneList = phoneNumbers.map(p => p.trim()).filter(Boolean);
+        payload.contact_number = cleanPhoneList.join(', ');
+
+        // Check if account login mobile is being deleted or altered without confirmation
+        if (accountMobile && !forceConfirmed) {
+            const clean = (s) => (s || '').replace(/[^0-9+]/g, '');
+            const targetClean = clean(accountMobile);
+            const stillPresent = cleanPhoneList.some(n => clean(n) === targetClean || n === accountMobile);
+
+            if (!stillPresent) {
+                setWarningModalData({
+                    type: 'submit',
+                    title: t('অ্যাকাউন্ট লগইন নম্বর পরিবর্তনের সতর্কতা', 'Account Login Number Changed Warning'),
+                    message: t(
+                        `সতর্কতা: এই সদস্যের অ্যাকাউন্ট লগইন নম্বর (${accountMobile}) পরিবর্তন বা বাদ দেওয়া হয়েছে। এটি নিশ্চিত করলে ব্যবহারকারীর লগইন এক্সেস পরিবর্তিত হবে এবং ব্যবহারকারীর নম্বরে কনফার্মেশন এসএমএস পাঠানো হবে। আপনি কি নিশ্চিতভাবে সংরক্ষণ করতে চান?`,
+                        `Warning: The account login number (${accountMobile}) was removed or changed. Confirming will update login credentials and send a confirmation SMS to the user. Are you sure you want to proceed?`
+                    )
+                });
+                setShowAccountMobileWarningModal(true);
+                return;
+            }
+        }
+
+        if (forceConfirmed) {
+            payload.confirm_account_mobile_change = true;
+            payload.new_account_mobile = cleanPhoneList[0] || null;
+        }
+
         // Remove null bytes from any string to prevent PostgreSQL UTF8 0x00 errors
         Object.keys(payload).forEach(key => {
             if (typeof payload[key] === 'string') {
@@ -351,7 +543,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         });
 
         if (formData.isRoot) {
+            payload.gender = 'Male';
             payload.father_id = null;
+            payload.mother_id = null;
         }
         // Handle optional fields
         if (!payload.mother_id) payload.mother_id = null;
@@ -366,47 +560,76 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         // For spouses: gender is ALWAYS Female, level is always equal to her husband's level
         if (isSpouseRole) {
             payload.gender = 'Female';
+            payload.role = 'spouse';
+            payload.isSpouseFlag = true;
             payload.father_id = null;
             payload.mother_id = null;
             const husband = currentSpouses.find(s => s.gender === 'Male') || 
-                            currentSpouses[0] || 
                             (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
                             initialData.husband;
             if (husband && husband.level) {
                 payload.level = husband.level;
             }
+            if (!editingId && husband) {
+                payload.spouse_id = husband.id;
+            }
+        }
+
+        // Gender validation: MUST be selected and valid ('Male' or 'Female')
+        if (!payload.gender || !['Male', 'Female'].includes(payload.gender)) {
+            alert(isBn ? 'অনুগ্রহ করে লিঙ্গ নির্বাচন করুন (পুরুষ বা নারী)।' : 'Please select gender (Male or Female).');
+            const genderSelect = document.getElementById('member-gender-select');
+            if (genderSelect) {
+                genderSelect.focus();
+                genderSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
         }
 
         delete payload.isRoot;
 
         try {
+            let res;
             if (editingId) {
-                await api.put(`/members/${editingId}`, payload);
+                res = await api.put(`/members/${editingId}`, payload);
             } else {
-                await api.post('/members', payload);
+                res = await api.post('/members', payload);
             }
+
+            if (res.data?.sms_notice) {
+                alert(res.data.sms_notice);
+            }
+
             onSuccess();
             onClose();
         } catch (err) {
             console.error(err);
+            if (err.response?.data?.error === 'ACCOUNT_MOBILE_AFFECTED') {
+                setWarningModalData({
+                    type: 'submit',
+                    title: t('অ্যাকাউন্ট লগইন সতর্কতা', 'Account Login Warning'),
+                    message: err.response.data.message
+                });
+                setShowAccountMobileWarningModal(true);
+                return;
+            }
             alert('Error saving data: ' + (err.response?.data?.error || err.message));
         }
     };
 
-    const isSpouseRole = Boolean(
+    const isSpouseRole = !formData.isRoot && formData.gender !== 'Male' && Boolean(
         formData.isSpouseFlag ||
         initialData.isSpouseFlag ||
         initialData.role === 'spouse' ||
         initialData.relationType === 'spouse' ||
         initialData.is_spouse ||
-        (formData.gender === 'Female' && (formData.spouse_id || initialData.spouse_id || (currentSpouses && currentSpouses.length > 0))) ||
-        (formData.gender === 'Female' && !formData.father_id && !formData.mother_id)
+        (!initialData.id && (formData.spouse_id || initialData.spouse_id || initialData.husband)) ||
+        (initialData.id && initialData.husband && !formData.father_id)
     );
 
     const isMaleRootMember = Boolean(
         !isSpouseRole &&
-        formData.gender === 'Male' &&
-        (formData.isRoot || (!formData.father_id && !initialData.father_id))
+        (formData.isRoot || (formData.gender === 'Male' && !formData.father_id && !initialData.father_id))
     );
 
     if (!isOpen) return null;
@@ -465,19 +688,51 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('লিঙ্গ', 'Gender')}</label>
+                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1 flex items-center justify-between">
+                                        <span>{t('লিঙ্গ', 'Gender')} <span className="text-red-600">*</span></span>
+                                        {!formData.gender && !isSpouseRole && !formData.isRoot && (
+                                            <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                                {t('বাধ্যতামূলক', 'Required')}
+                                            </span>
+                                        )}
+                                    </label>
                                     {isSpouseRole ? (
-                                        <div className="w-full p-2.5 border border-stone-200 rounded-lg bg-stone-100 text-stone-700 font-bold text-sm flex items-center justify-between">
-                                            <span>{t('নারী', 'Female')}</span>
-                                            <span className="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
-                                                {t('স্থির (পরিবর্তনযোগ্য নয়)', 'Fixed')}
+                                        <div className="w-full p-2.5 border border-rose-200 rounded-lg bg-rose-50/60 text-stone-800 font-bold text-sm flex items-center justify-between shadow-sm">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                                                {t('নারী', 'Female')}
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-rose-700 bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-full">
+                                                {t('স্থির (পত্নী)', 'Fixed (Spouse)')}
+                                            </span>
+                                        </div>
+                                    ) : formData.isRoot ? (
+                                        <div className="w-full p-2.5 border border-orange-200 rounded-lg bg-orange-50/70 text-orange-950 font-bold text-sm flex items-center justify-between shadow-sm">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-orange-600"></span>
+                                                {t('পুরুষ', 'Male')}
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-orange-800 bg-orange-100 border border-orange-300 px-2 py-0.5 rounded-full">
+                                                {t('স্থির (মূল সদস্য)', 'Fixed (Root)')}
                                             </span>
                                         </div>
                                     ) : (
-                                        <select className="w-full p-2 border rounded" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                                            <option value="">{t('নির্বাচন করুন', 'Select')}</option>
-                                            <option value="Male">{t('পুরুষ', 'Male')}</option>
-                                            <option value="Female">{t('নারী', 'Female')}</option>
+                                        <select
+                                            id="member-gender-select"
+                                            required
+                                            className={`w-full p-2.5 border rounded-lg font-medium text-stone-800 outline-none transition-all shadow-sm ${
+                                                !formData.gender 
+                                                    ? 'border-amber-400 bg-amber-50/30 focus:ring-2 focus:ring-orange-500 focus:border-orange-500' 
+                                                    : 'border-stone-300 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                                            }`}
+                                            value={formData.gender || ''}
+                                            onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                                        >
+                                            <option value="" disabled className="text-stone-400">
+                                                {t('-- লিঙ্গ নির্বাচন করুন * --', '-- Select Gender * --')}
+                                            </option>
+                                            <option value="Male">{t('পুরুষ (Male)', 'Male')}</option>
+                                            <option value="Female">{t('নারী (Female)', 'Female')}</option>
                                         </select>
                                     )}
                                 </div>
@@ -555,10 +810,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                     {/* Husband Display */}
                                     {(() => {
                                         const husband = currentSpouses.find(s => s.gender === 'Male') || 
-                                                        currentSpouses[0] || 
                                                         (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
                                                         initialData.husband;
-                                        return husband ? (
+                                        return (isSpouseRole && husband) ? (
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
                                                     {t('স্বামী', 'Husband')}
@@ -580,14 +834,22 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                 </div>
                             ) : (
                                 <>
-                                    {!initialData.father_id && !initialData.id && formData.gender === 'Male' && (
+                                    {!initialData.father_id && !initialData.id && (formData.gender === 'Male' || formData.isRoot || !formData.gender) && (
                                         <div className="flex gap-4 mb-4">
                                             <label className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-orange-50">
-                                                <input type="radio" checked={formData.isRoot} onChange={() => setFormData({ ...formData, isRoot: true })} />
+                                                <input
+                                                    type="radio"
+                                                    checked={formData.isRoot}
+                                                    onChange={() => setFormData(prev => ({ ...prev, isRoot: true, gender: 'Male', father_id: '', mother_id: '' }))}
+                                                />
                                                 <span className="font-bold text-sm">{t('রুট সদস্য (ম্যানুয়াল লেভেল)', 'Review as Root (Manual Level)')}</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-orange-50">
-                                                <input type="radio" checked={!formData.isRoot} onChange={() => setFormData({ ...formData, isRoot: false })} />
+                                                <input
+                                                    type="radio"
+                                                    checked={!formData.isRoot}
+                                                    onChange={() => setFormData(prev => ({ ...prev, isRoot: false, gender: initialData.gender || '' }))}
+                                                />
                                                 <span className="font-bold text-sm">{t(`পিতা আছে (${formData.level}ম প্রজন্ম)`, `Has Father (Gen ${formData.level})`)}</span>
                                             </label>
                                         </div>
@@ -704,7 +966,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                                                         <img src={spouse.profile_image_url} alt="" className="w-6 h-6 rounded-full object-cover" />
                                                                     ) : (
                                                                         <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-[10px] text-orange-600 font-bold">
-                                                                            {spouse.full_name?.charAt(0)}
+                                                                            {(formatName(spouse) || '?').charAt(0)}
                                                                         </div>
                                                                     )}
                                                                     <span className="text-sm font-medium text-stone-700 truncate">{formatName(spouse)}</span>
@@ -744,9 +1006,68 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                 {t('যোগাযোগ ও অবস্থান', 'Contact & Location')}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="col-span-1 md:col-span-2 lg:col-span-2">
-                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('মোবাইল নম্বর', 'Phone Number')}</label>
-                                    <input type="text" className="w-full p-2 border rounded" value={formData.contact_number} onChange={e => setFormData({ ...formData, contact_number: e.target.value })} placeholder="+8801XXXXXXXXX" />
+                                <div className="col-span-1 md:col-span-2 lg:col-span-2 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-xs font-bold text-stone-500 uppercase">
+                                            {t('মোবাইল নম্বর (একাধিক যোগ করা যাবে)', 'Phone Numbers (Multiple allowed)')}
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddPhoneNumber}
+                                            className="text-xs font-semibold text-orange-700 hover:text-orange-900 flex items-center gap-1 hover:underline cursor-pointer transition-colors p-0.5"
+                                        >
+                                            <Plus size={13} /> {t('+ নম্বর যোগ করুন', '+ Add Number')}
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {phoneNumbers.map((phone, idx) => {
+                                            const isLoginNumber = isAccountLoginNumber(phone);
+                                            return (
+                                                <div key={idx} className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="relative flex-1">
+                                                            <input
+                                                                type="text"
+                                                                className={`w-full p-2 pr-28 text-sm border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all ${
+                                                                    isLoginNumber
+                                                                        ? 'border-amber-400 bg-amber-50/40 text-amber-950 font-medium'
+                                                                        : 'border-stone-300 bg-white text-stone-800'
+                                                                }`}
+                                                                value={phone}
+                                                                onChange={e => handlePhoneChange(idx, e.target.value)}
+                                                                placeholder="+8801XXXXXXXXX"
+                                                            />
+                                                            {isLoginNumber && (
+                                                                <span
+                                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs select-none"
+                                                                    title="Used for logging into user account"
+                                                                >
+                                                                    <Key size={10} className="text-amber-700" />
+                                                                    {t('অ্যাকাউন্ট লগইন', 'Account Login')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {(phoneNumbers.length > 1 || phone.trim()) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemovePhoneNumber(idx)}
+                                                                className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer shrink-0"
+                                                                title={t('মুছে ফেলুন', 'Remove')}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {isLoginNumber && (
+                                                        <p className="text-[11px] text-amber-700 flex items-center gap-1 pl-1">
+                                                            <Key size={12} className="shrink-0 text-amber-600" />
+                                                            <span>{t('এই নম্বরটি দিয়ে ব্যবহারকারীর অ্যাকাউন্ট খোলা হয়েছে এবং লগইন করা হয়।', 'This number is registered for user account login credentials.')}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                                 <div className="col-span-1 md:col-span-2 lg:col-span-2">
                                     <label className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('সোশ্যাল মিডিয়া লিংক', 'Social Media Link')}</label>
@@ -798,6 +1119,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                             onChange={handleImageUpload}
                                         />
                                     </div>
+                                    <p className="text-[11px] text-stone-500 mt-1">
+                                        {t('সর্বোচ্চ ছবির আকার: ৫ MB (JPG, PNG, WebP)', 'Max image size: 5MB (JPG, PNG, WebP)')}
+                                    </p>
                                     {formData.profile_image_url && (
                                         <div className="mt-2 text-xs text-green-600">
                                             {t('ছবি আপলোড হয়েছে:', 'Image Uploaded:')} <a href={formData.profile_image_url} target="_blank" rel="noreferrer" className="underline">{t('দেখুন', 'View')}</a>
@@ -879,7 +1203,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                             </button>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-stone-400 mt-1">{t('JPG, PNG, বা WebP ছবি আপলোড করুন', 'Upload JPG, PNG, or WebP photo')}</p>
+                                    <p className="text-[11px] text-stone-400 mt-1">{t('JPG, PNG, বা WebP (সর্বোচ্চ ৫ MB)', 'JPG, PNG, or WebP (Max 5MB)')}</p>
                                 </div>
                             </div>
 
@@ -1011,6 +1335,59 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                     )}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Account Mobile Warning & Confirmation Modal */}
+            {showAccountMobileWarningModal && warningModalData && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[250] p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-amber-300 transform scale-100 transition-all">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-600 shrink-0">
+                                <AlertTriangle size={26} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-serif font-bold text-stone-900">
+                                    {warningModalData.title}
+                                </h3>
+                                <p className="text-xs text-amber-700 font-medium">
+                                    {t('গুরুত্বপূর্ণ নিরাপত্তা সতর্কতা', 'Important Security Warning')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 mb-5 text-sm text-stone-800 leading-relaxed space-y-2">
+                            <p>{warningModalData.message}</p>
+                            {accountMobile && (
+                                <div className="mt-2 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs">
+                                    <span className="text-stone-600">{t('বর্তমান লগইন নম্বর:', 'Current Login Number:')}</span>
+                                    <span className="font-mono font-bold text-amber-900 bg-white px-2 py-0.5 rounded border border-amber-300 shadow-2xs">
+                                        {accountMobile}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowAccountMobileWarningModal(false);
+                                    setWarningModalData(null);
+                                }}
+                                className="flex-1 py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            >
+                                {t('বাতিল', 'Cancel')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmWarning}
+                                className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                                <span>{t('নিশ্চিত করুন', 'Confirm & Proceed')}</span>
+                            </button>
                         </div>
                     </div>
                 </div>

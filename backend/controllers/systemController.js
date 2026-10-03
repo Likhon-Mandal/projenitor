@@ -660,6 +660,17 @@ exports.permanentDeleteItem = async (req, res) => {
                     return res.status(404).json({ error: 'Member not found in recycle bin' });
                 }
 
+                const superAdminCheck = await client.query(
+                    `SELECT id FROM admin_users WHERE member_id = $1 AND role = 'superadmin'
+                     UNION
+                     SELECT id FROM users WHERE member_id = $1 AND role = 'superadmin'`,
+                    [id]
+                );
+                if (superAdminCheck.rows.length > 0) {
+                    await client.query('ROLLBACK');
+                    return res.status(403).json({ error: 'SuperAdmin profile is protected and cannot be deleted.' });
+                }
+
                 const recursiveDeleteQuery = `
                     WITH RECURSIVE lineage AS (
                         SELECT id FROM members WHERE id = $1 AND deleted_at IS NOT NULL
@@ -709,7 +720,13 @@ exports.permanentDeleteItem = async (req, res) => {
                         SELECT id FROM lineage UNION SELECT id FROM all_spouses WHERE id IS NOT NULL
                     )
                     DELETE FROM members
-                    WHERE id IN (SELECT id FROM full_subtree) AND deleted_at IS NOT NULL
+                    WHERE id IN (SELECT id FROM full_subtree) 
+                      AND deleted_at IS NOT NULL
+                      AND id NOT IN (
+                          SELECT member_id FROM admin_users WHERE role = 'superadmin' AND member_id IS NOT NULL
+                          UNION
+                          SELECT member_id FROM users WHERE role = 'superadmin' AND member_id IS NOT NULL
+                      )
                     RETURNING id, full_name;
                 `;
                 const delRes = await client.query(recursiveDeleteQuery, [id]);
@@ -864,7 +881,16 @@ exports.emptyRecycleBin = async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const delMembers = await client.query('DELETE FROM members WHERE deleted_at IS NOT NULL RETURNING id');
+        const delMembers = await client.query(`
+            DELETE FROM members 
+            WHERE deleted_at IS NOT NULL 
+              AND id NOT IN (
+                  SELECT member_id FROM admin_users WHERE role = 'superadmin' AND member_id IS NOT NULL
+                  UNION
+                  SELECT member_id FROM users WHERE role = 'superadmin' AND member_id IS NOT NULL
+              ) 
+            RETURNING id
+        `);
         const delHomes = await client.query('DELETE FROM homes WHERE deleted_at IS NOT NULL RETURNING id');
         const delVillages = await client.query('DELETE FROM villages WHERE deleted_at IS NOT NULL RETURNING id');
         const delUpazilas = await client.query('DELETE FROM upazilas WHERE deleted_at IS NOT NULL RETURNING id');

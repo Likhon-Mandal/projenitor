@@ -180,11 +180,99 @@ export const LanguageProvider = ({ children }) => {
     return trimmed;
   }, [isBn]);
 
+const COMMON_SURNAMES_MAP = {
+  'মন্ডল': 'Mandal',
+  'মণ্ডল': 'Mandal',
+  'হালদার': 'Haldar',
+  'কর্মকার': 'Karmakar',
+  'বিশ্বাস': 'Biswas',
+  'শিকদার': 'Sikdar',
+  'রায়': 'Roy',
+  'দাস': 'Das',
+  'ঘোষ': 'Ghosh',
+  'মৃত': 'Late',
+  'স্বর্গীয়': 'Late',
+  'সরকার': 'Sarker',
+  'অধিকারী': 'Adhikari',
+  'চক্রবর্তী': 'Chakraborty',
+  'ভট্টাচার্য': 'Bhattacharya',
+  'ব্যানার্জী': 'Banerjee',
+  'মুখার্জী': 'Mukherjee',
+  'চ্যাটার্জী': 'Chatterjee',
+  'মল্লিক': 'Mallick',
+  'মজুমদার': 'Majumder',
+  'চৌধুরী': 'Chowdhury',
+  'খান': 'Khan',
+  'শেখ': 'Sheikh',
+  'আলী': 'Ali',
+  'হোসেন': 'Hossain',
+  'উদ্দিন': 'Uddin',
+  'আহমেদ': 'Ahmed',
+  'রহমান': 'Rahman'
+};
+
+const BN_TO_EN_CHARS = {
+  'অ': 'A', 'আ': 'A', 'ই': 'I', 'ঈ': 'I', 'উ': 'U', 'ঊ': 'U', 'ঋ': 'Ri',
+  'এ': 'E', 'ঐ': 'Oi', 'ও': 'O', 'ঔ': 'Ou',
+  'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'ng',
+  'চ': 'ch', 'ছ': 'chh', 'জ': 'j', 'ঝ': 'jh', 'ঞ': 'n',
+  'ট': 't', 'ঠ': 'th', 'ড': 'd', 'ঢ': 'dh', 'ণ': 'n',
+  'ত': 't', 'থ': 'th', 'দ': 'd', 'ধ': 'dh', 'ন': 'n',
+  'প': 'p', 'ফ': 'f', 'ব': 'b', 'ভ': 'bh', 'ম': 'm',
+  'য': 'j', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh', 'স': 's', 'হ': 'h',
+  'ড়': 'r', 'ঢ়': 'rh', 'য়': 'y', 'ৎ': 't', 'ং': 'ng', 'ঃ': '', 'ঁ': ''
+};
+
+const BN_KAR_MAP = {
+  'া': 'a', 'ি': 'i', 'ী': 'i', 'ু': 'u', 'ূ': 'u', 'ৃ': 'ri',
+  'ে': 'e', 'ৈ': 'oi', 'ো': 'o', 'ৌ': 'ou', '্': ''
+};
+
+const transliterateBengaliWord = (w) => {
+  if (!w) return '';
+  if (COMMON_SURNAMES_MAP[w]) return COMMON_SURNAMES_MAP[w];
+  let res = '';
+  const chars = [...w];
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    const next = chars[i + 1];
+    if (BN_TO_EN_CHARS[c]) {
+      const en = BN_TO_EN_CHARS[c];
+      const isConsonant = !'অআইঈউঊঋএঐওঔ'.includes(c);
+      if (isConsonant) {
+        if (next && BN_KAR_MAP[next] !== undefined) {
+          res += en + BN_KAR_MAP[next];
+          i++;
+        } else if (next && next === '্') {
+          res += en;
+          i++;
+        } else {
+          if (i === chars.length - 1 && chars.length > 2) {
+            res += en;
+          } else {
+            res += en + 'a';
+          }
+        }
+      } else {
+        res += en;
+      }
+    } else {
+      res += c;
+    }
+  }
+  return res ? res.charAt(0).toUpperCase() + res.slice(1).toLowerCase() : w;
+};
+
+const transliterateBengali = (text) => {
+  if (!text) return '';
+  return text.split(/\s+/).map(transliterateBengaliWord).join(' ');
+};
+
   /**
    * Format any name (member object or raw string) to show ONLY one language:
    * - If Bengali is selected, show Bengali name.
    * - If English is selected, show English name.
-   * - If the name is not in the selected language, show the present one.
+   * - If the name is not in the selected language, show the present one (or transliterated).
    * - Strips dual "(English)" / "(Root)" repetitions like "noyontara (noyontara)".
    */
   const formatName = useCallback((input, overrideIsBn = null) => {
@@ -195,25 +283,25 @@ export const LanguageProvider = ({ children }) => {
     let nb = '';
     let ne = '';
 
-    if (typeof input === 'object') {
-      nb = input.name_bangla || input.father_name_bangla || input.mother_name_bangla || '';
-      ne = input.name_english || input.father_name_english || input.mother_name_english || '';
-      raw = input.full_name || input.name || input.father_name || input.mother_name || '';
+    if (typeof input === 'object' && input !== null) {
+      nb = input.name_bangla || input.member_name_bangla || input.applicant_name_bangla || input.applicant_member_name_bangla || input.name_bn || '';
+      ne = input.name_english || input.member_name_english || input.applicant_name_english || input.applicant_member_name_english || input.name_en || '';
+      raw = input.full_name || input.name || input.member_name || input.applicant_name || input.applicant_member_name || '';
     } else if (typeof input === 'string') {
       raw = input;
     }
 
-    const cleanTag = (s) => (s || '').replace(/\s*\(\s*root\s*\)/gi, '').trim();
+    const cleanTag = (s) => (s || '').replace(/\s*\(\s*(root|মূল|root member|মূল সদস্য)\s*\)/gi, '').trim();
     nb = cleanTag(nb);
     ne = cleanTag(ne);
     raw = cleanTag(raw);
 
-    // Helper to parse bilingual patterns: "Bangla (English)" or "noyontara (noyontara)"
+    // Helper to parse bilingual patterns: "Bangla (English)", "Bangla / English", "Bangla - English", etc.
     const parse = (text) => {
       if (!text) return { bn: '', en: '' };
       const s = cleanTag(text);
 
-      const m = s.match(/^([^(]+)\(([^)]+)\)$/);
+      const m = s.match(/^(.*?)\s*[\[(]([^\])]+)[\])]\s*$/);
       if (m) {
         const p1 = m[1].trim();
         const p2 = m[2].trim();
@@ -235,14 +323,41 @@ export const LanguageProvider = ({ children }) => {
         return { bn: '', en: p1 || p2 };
       }
 
-      if (s.includes(' / ')) {
-        const parts = s.split(' / ').map(p => p.trim());
+      if (s.includes('/')) {
+        const parts = s.split('/').map(p => p.trim());
         const bnPart = parts.find(p => /[\u0980-\u09FF]/.test(p));
         const enPart = parts.find(p => /[a-zA-Z]/.test(p));
-        return { bn: bnPart || '', en: enPart || '' };
+        if (bnPart || enPart) {
+          return { bn: bnPart || '', en: enPart || '' };
+        }
       }
 
-      if (/[\u0980-\u09FF]/.test(s)) return { bn: s, en: '' };
+      if (s.includes(' - ') || s.includes(' – ') || s.includes(' — ')) {
+        const parts = s.split(/\s+[-–—]\s+/).map(p => p.trim());
+        const bnPart = parts.find(p => /[\u0980-\u09FF]/.test(p));
+        const enPart = parts.find(p => /[a-zA-Z]/.test(p));
+        if (bnPart || enPart) {
+          return { bn: bnPart || '', en: enPart || '' };
+        }
+      }
+
+      const hasBn = /[\u0980-\u09FF]/.test(s);
+      const hasEn = /[a-zA-Z]/.test(s);
+
+      // If both scripts exist, extract clean separate representations
+      if (hasBn && hasEn) {
+        const m1 = s.match(/^([\u0980-\u09FF\s.,'-]+?)\s+([a-zA-Z][a-zA-Z0-9\s.,'-]*)$/);
+        if (m1) return { bn: m1[1].trim(), en: m1[2].trim() };
+        const m2 = s.match(/^([a-zA-Z][a-zA-Z0-9\s.,'-]*?)\s+([\u0980-\u09FF][\u0980-\u09FF0-9\s.,'-]*)$/);
+        if (m2) return { bn: m2[2].trim(), en: m2[1].trim() };
+
+        // Fallback: strip the other language's characters and punctuation
+        const bnOnly = s.replace(/[a-zA-Z][a-zA-Z0-9.,'-]*/g, '').replace(/[()\[\]\/\\–—\-]/g, ' ').replace(/\s+/g, ' ').trim();
+        const enOnly = s.replace(/[\u0980-\u09FF][\u0980-\u09FF0-9.,'-]*/g, '').replace(/[()\[\]\/\\–—\-]/g, ' ').replace(/\s+/g, ' ').trim();
+        return { bn: bnOnly, en: enOnly };
+      }
+
+      if (hasBn) return { bn: s, en: '' };
       return { bn: '', en: s };
     };
 
@@ -251,25 +366,26 @@ export const LanguageProvider = ({ children }) => {
     const parsedRaw = parse(raw);
 
     // Candidate Bengali and English names
-    const resolvedBn = parsedNb.bn || (nb && /[\u0980-\u09FF]/.test(nb) ? nb : '') || parsedRaw.bn;
-    const resolvedEn = parsedNe.en || (ne && /[a-zA-Z]/.test(ne) ? ne : '') || parsedRaw.en;
+    const resolvedBn = parsedNb.bn || (!/[a-zA-Z]/.test(nb) && /[\u0980-\u09FF]/.test(nb) ? nb : '') || parsedRaw.bn || parsedNe.bn;
+    const resolvedEn = parsedNe.en || (!/[\u0980-\u09FF]/.test(ne) && /[a-zA-Z]/.test(ne) ? ne : '') || parsedRaw.en || parsedNb.en;
 
     if (useBn) {
       // 1. Preferred: Bengali
       if (resolvedBn) return resolvedBn;
       // 2. Fallback to present one (English or clean raw)
       if (resolvedEn) return resolvedEn;
-      if (nb) return nb;
-      if (ne) return ne;
       return parsedRaw.bn || parsedRaw.en || raw;
     } else {
       // 1. Preferred: English
       if (resolvedEn) return resolvedEn;
-      // 2. Fallback to present one (Bengali or clean raw)
-      if (resolvedBn) return resolvedBn;
-      if (ne) return ne;
-      if (nb) return nb;
-      return parsedRaw.en || parsedRaw.bn || raw;
+      // 2. If Bengali name exists, transliterate it to clean English script
+      const fallbackBn = resolvedBn || parsedRaw.bn || (raw && /[\u0980-\u09FF]/.test(raw) ? raw : '');
+      if (fallbackBn) {
+        const transliterated = transliterateBengali(fallbackBn);
+        if (transliterated) return transliterated;
+        return fallbackBn;
+      }
+      return parsedRaw.en || raw;
     }
   }, [isBn]);
 

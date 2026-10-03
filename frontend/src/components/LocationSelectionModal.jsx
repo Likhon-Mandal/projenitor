@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronRight, Map, Home, X, MapPin, ExternalLink } from 'lucide-react';
 import api from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
+import VerifiedBadge from './VerifiedBadge';
 
-const LocationSelectionModal = ({ isOpen, onClose, onSelectMember }) => {
+const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive = false }) => {
+    const { formatName, t, isBn } = useLanguage();
     const [options, setOptions] = useState([]);
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -216,29 +219,53 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember }) => {
                                                     <div className="h-px flex-1 bg-orange-200"></div>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                                    {levelMembers.map(member => (
+                                                    {levelMembers.map(member => {
+                                                        const memberDisplayName = formatName(member);
+                                                        const isActive = member.is_active || member.user_status === 'active';
+                                                        const isDisabled = disableActive && isActive;
+                                                        return (
                                                         <button
                                                             key={member.id}
-                                                            onClick={() => handleMemberSelect(member)}
-                                                            className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm hover:border-orange-400 hover:ring-2 hover:ring-orange-100 transition-all flex items-center gap-4 text-left group"
+                                                            disabled={isDisabled}
+                                                            onClick={() => !isDisabled && handleMemberSelect(member)}
+                                                            className={`p-4 rounded-xl border transition-all flex items-center gap-4 text-left group ${
+                                                                isDisabled
+                                                                    ? 'bg-stone-50/80 border-stone-200 opacity-70 cursor-not-allowed'
+                                                                    : 'bg-white border-stone-200 shadow-sm hover:border-orange-400 hover:ring-2 hover:ring-orange-100 cursor-pointer'
+                                                            }`}
                                                         >
                                                             <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-100 shrink-0 border border-orange-200">
                                                                 {member.profile_image_url ? (
-                                                                    <img src={member.profile_image_url} alt={member.full_name} className="w-full h-full object-cover" />
+                                                                    <img src={member.profile_image_url} alt={memberDisplayName} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center text-orange-800 font-bold font-serif text-lg">
-                                                                        {member.full_name.charAt(0)}
+                                                                        {(memberDisplayName || '?').charAt(0)}
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <div>
-                                                                <h4 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors">{member.full_name}</h4>
-                                                                <p className="text-xs text-stone-500 uppercase tracking-widest mt-1 opacity-70">
-                                                                    Level {member.level}
-                                                                </p>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                    <h4 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors truncate">{memberDisplayName}</h4>
+                                                                    {isActive && <VerifiedBadge size={16} />}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <span className="text-xs text-stone-500 uppercase tracking-widest opacity-70">
+                                                                        Level {member.level}
+                                                                    </span>
+                                                                    {isActive && (
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                            isDisabled
+                                                                                ? 'text-blue-700 bg-blue-100 border border-blue-200'
+                                                                                : 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                                                                        }`}>
+                                                                            {isDisabled ? (isBn ? 'ইতিমধ্যে সক্রিয়' : 'Already Active') : (isBn ? 'সক্রিয়' : 'Active')}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </button>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         );

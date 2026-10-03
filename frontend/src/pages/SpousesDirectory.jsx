@@ -3,12 +3,11 @@ import { Heart, Sparkles, ChevronRight, Home as HomeIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import SpousesDirectoryView from '../components/SpousesDirectoryView';
-import MemberProfileModal from '../components/MemberProfileModal';
+import Profile from './Profile';
 
 const SpousesDirectory = () => {
   const { t } = useLanguage();
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
@@ -52,21 +51,17 @@ const SpousesDirectory = () => {
       {/* Main View Component */}
       <SpousesDirectoryView 
         onViewProfile={(member) => {
-          setSelectedMember(member);
-          setIsProfileOpen(true);
+          setSelectedMemberId(member.id);
         }}
       />
 
-      {/* Member Profile Modal */}
-      <MemberProfileModal
-        isOpen={isProfileOpen}
-        member={selectedMember}
-        relationType="spouse"
-        onClose={() => {
-          setIsProfileOpen(false);
-          setSelectedMember(null);
-        }}
-      />
+      {/* Profile Card from Search Section */}
+      {selectedMemberId && (
+        <Profile
+          memberId={selectedMemberId}
+          onClose={() => setSelectedMemberId(null)}
+        />
+      )}
     </div>
   );
 };

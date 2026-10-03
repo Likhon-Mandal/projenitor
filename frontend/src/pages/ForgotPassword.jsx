@@ -31,7 +31,7 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen bg-orange-50 flex items-center justify-center px-4">
+        <div className="min-h-[70vh] flex items-center justify-center py-6 sm:py-10 px-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-serif font-bold text-orange-900">Projenitor</h1>

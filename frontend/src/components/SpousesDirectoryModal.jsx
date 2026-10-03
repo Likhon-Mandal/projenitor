@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Heart } from 'lucide-react';
 import SpousesDirectoryView from './SpousesDirectoryView';
-import MemberProfileModal from './MemberProfileModal';
+import Profile from '../pages/Profile';
 
 const SpousesDirectoryModal = ({
   isOpen,
@@ -11,16 +11,14 @@ const SpousesDirectoryModal = ({
   onSelectMember,
   onEdit
 }) => {
-  const [selectedProfileMember, setSelectedProfileMember] = useState(null);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedProfileMemberId, setSelectedProfileMemberId] = useState(null);
 
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (isProfileModalOpen) {
-          setIsProfileModalOpen(false);
-          setSelectedProfileMember(null);
+        if (selectedProfileMemberId) {
+          setSelectedProfileMemberId(null);
         } else if (isOpen) {
           onClose();
         }
@@ -28,7 +26,7 @@ const SpousesDirectoryModal = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isProfileModalOpen, onClose]);
+  }, [isOpen, selectedProfileMemberId, onClose]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -85,8 +83,7 @@ const SpousesDirectoryModal = ({
               currentHome={currentHome}
               currentVillage={currentVillage}
               onViewProfile={(member) => {
-                setSelectedProfileMember(member);
-                setIsProfileModalOpen(true);
+                setSelectedProfileMemberId(member.id);
                 if (onSelectMember) {
                   onSelectMember(member);
                 }
@@ -97,17 +94,15 @@ const SpousesDirectoryModal = ({
         </div>
       </div>
 
-      {/* Full Details Modal on Top */}
-      <MemberProfileModal
-        isOpen={isProfileModalOpen}
-        member={selectedProfileMember}
-        relationType="spouse"
-        onClose={() => {
-          setIsProfileModalOpen(false);
-          setSelectedProfileMember(null);
-        }}
-        onEdit={onEdit}
-      />
+      {/* Profile Card from Search Section */}
+      {selectedProfileMemberId && (
+        <Profile
+          memberId={selectedProfileMemberId}
+          onClose={() => setSelectedProfileMemberId(null)}
+          zIndex="z-[120]"
+          onEdit={onEdit}
+        />
+      )}
     </>
   );
 };

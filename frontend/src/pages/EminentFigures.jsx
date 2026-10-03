@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Award, GraduationCap, Flame, Star, Plus, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import EminentFormModal from '../components/EminentFormModal';
-import MemberProfileModal from '../components/MemberProfileModal';
+import BrilliantStudentRequestModal from '../components/BrilliantStudentRequestModal';
+import Profile from './Profile';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,7 +16,7 @@ const categories = [
 ];
 
 const EminentFigures = () => {
-    const { isAdmin } = useAuth();
+    const { user, isAdmin } = useAuth();
     const { t, isBn, formatOccupation, formatName } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     const [figures, setFigures] = useState([]);
@@ -35,9 +36,9 @@ const EminentFigures = () => {
     });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [editingFigure, setEditingFigure] = useState(null);
-    const [selectedMember, setSelectedMember] = useState(null);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [selectedMemberId, setSelectedMemberId] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, figure: null });
 
     const handleTabChange = (catId) => {
@@ -51,25 +52,14 @@ const EminentFigures = () => {
     };
 
     const handleViewProfile = (figure) => {
-        setSelectedMember({
-            id: figure.member_id,
-            full_name: figure.full_name,
-            name_bangla: figure.name_bangla,
-            name_english: figure.name_english,
-            profile_image_url: figure.profile_image_url,
-            occupation: figure.occupation,
-            education: figure.education,
-            eminent_category: figure.category,
-            category: figure.category
-        });
-        setIsProfileModalOpen(true);
+        setSelectedMemberId(figure.member_id || figure.id);
     };
 
     const fetchFigures = async () => {
         try {
             setLoading(true);
             const res = await api.get('/eminent');
-            setFigures(res.data);
+            setFigures(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
             console.error(error);
         } finally {
@@ -118,8 +108,8 @@ const EminentFigures = () => {
         setIsModalOpen(true);
     };
 
-    const displayFigures = figures.filter(f => f.category === activeTab);
-    const currentCategoryInfo = categories.find(c => c.id === activeTab);
+    const displayFigures = Array.isArray(figures) ? figures.filter(f => (f.category || '').trim() === (activeTab || '').trim()) : [];
+    const currentCategoryInfo = categories.find(c => c.id === activeTab) || categories[0];
     const Icon = currentCategoryInfo.icon;
     const activeCategoryLabel = isBn ? currentCategoryInfo.bnLabel : currentCategoryInfo.enLabel;
 
@@ -142,39 +132,79 @@ const EminentFigures = () => {
                     </div>
 
                     {isAdmin && (
-                        <button
-                            onClick={handleCreateNew}
-                            className="group bg-white hover:bg-stone-50 px-6 py-3 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl active:scale-95 flex items-center gap-2 whitespace-nowrap"
-                        >
-                            <Plus size={20} className="text-orange-600 group-hover:rotate-90 transition-transform" />
-                            <span className="text-orange-900">{t('ব্যক্তিত্ব যুক্ত করুন', 'Add Figure')}</span>
-                        </button>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <button
+                                onClick={handleCreateNew}
+                                className="group bg-white hover:bg-stone-50 px-6 py-3 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl active:scale-95 flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                            >
+                                <Plus size={20} className="text-orange-600 group-hover:rotate-90 transition-transform" />
+                                <span className="text-orange-900">{t('ব্যক্তিত্ব যুক্ত করুন', 'Add Figure')}</span>
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-10 relative z-20">
                 {/* Tabs */}
-                <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-col sm:flex-row justify-center gap-2 mb-12 border border-stone-100">
+                <div className="bg-white rounded-2xl shadow-lg p-1.5 sm:p-2 flex flex-col sm:flex-row justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8 border border-stone-100">
                     {categories.map(cat => {
                         const TabIcon = cat.icon;
                         const isActive = activeTab === cat.id;
                         const catLabel = isBn ? cat.bnLabel : cat.enLabel;
+                        const catCount = Array.isArray(figures) ? figures.filter(f => (f.category || '').trim() === (cat.id || '').trim()).length : 0;
                         return (
                             <button
                                 key={cat.id}
                                 onClick={() => handleTabChange(cat.id)}
-                                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer ${isActive
-                                    ? 'bg-orange-50 text-orange-800 shadow-sm border border-orange-100 scale-[1.02]'
+                                className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer ${isActive
+                                    ? 'bg-orange-50 text-orange-800 shadow-sm border border-orange-100 scale-[1.01] sm:scale-[1.02]'
                                     : 'text-stone-500 hover:bg-stone-50 hover:text-stone-800'
                                     }`}
                             >
                                 <TabIcon size={18} className={isActive ? 'animate-pulse' : ''} />
-                                {catLabel}
+                                <span>{catLabel}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-bold transition-colors ${isActive
+                                    ? 'bg-orange-200/80 text-orange-900 border border-orange-300/50'
+                                    : catCount > 0
+                                        ? 'bg-stone-100 text-stone-700'
+                                        : 'bg-stone-100 text-stone-400'
+                                    }`}>
+                                    {catCount}
+                                </span>
                             </button>
                         );
                     })}
                 </div>
+
+                {/* Brilliant Student Encouragement Banner */}
+                {activeTab === 'কৃতি শিক্ষার্থী' && (
+                    <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md border border-blue-400/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
+                                <GraduationCap className="w-6 h-6 text-yellow-300" />
+                            </div>
+                            <div>
+                                <h4 className="font-serif font-bold text-base sm:text-lg text-white">
+                                    {t('আপনার পরিবারের সন্তান কি কৃতি শিক্ষার্থী?', 'Is someone in your family an exceptional student?')}
+                                </h4>
+                                <p className="text-xs sm:text-sm text-blue-200/90 font-light mt-0.5">
+                                    {t(
+                                        'এসএসসি/এইচএসসিতে GPA 5.00, পাবলিক বিশ্ববিদ্যালয়/মেডিকেল/বুয়েটে চান্স বা মেধা বৃত্তির তথ্য প্রদান করে কৃতি শিক্ষার্থী হিসেবে স্বীকৃতির আবেদন করুন।',
+                                        'Submit proof of GPA 5.00, university admission, or scholarships to be recognized as an Eminent Figure.'
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsRequestModalOpen(true)}
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 shrink-0 active:scale-95 cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                            <GraduationCap size={16} />
+                            <span>{t('এখনই আবেদন করুন', 'Apply Now')}</span>
+                        </button>
+                    </div>
+                )}
 
                 {/* Content */}
                 {loading ? (
@@ -182,13 +212,13 @@ const EminentFigures = () => {
                         {t('তথ্য লোড হচ্ছে...', 'Loading recognitions...')}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {displayFigures.length > 0 ? (
                             displayFigures.map(figure => (
-                                <div key={figure.id} className="group bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative focus-within:ring-2 ring-orange-400">
+                                <div key={figure.id} className="group bg-white rounded-2xl sm:rounded-3xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative focus-within:ring-2 ring-orange-400 flex flex-col justify-between">
                                     {/* Action Buttons Overlay — Admin Only */}
                                     {isAdmin && (
-                                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/80 backdrop-blur px-2 py-1 rounded-xl shadow-sm border border-stone-100">
+                                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 bg-white/90 backdrop-blur px-2 py-1 rounded-xl shadow-xs border border-stone-200/60">
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -212,23 +242,23 @@ const EminentFigures = () => {
 
                                     <div 
                                         onClick={() => handleViewProfile(figure)} 
-                                        className="block p-6 cursor-pointer"
+                                        className="block p-4 sm:p-5 md:p-6 cursor-pointer"
                                     >
                                     {(() => {
                                         const figureDisplayName = formatName(figure);
                                         return (
-                                            <div className="flex items-start gap-4 mb-4">
-                                                <div className="w-16 h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
+                                            <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                                <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
                                                     {figure.profile_image_url ? (
-                                                        <img src={figure.profile_image_url} alt={figureDisplayName} className="w-full h-full object-cover" />
+                                                        <img src={figure.profile_image_url} alt={figureDisplayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-stone-200 text-stone-400 font-serif font-bold text-xl">
+                                                        <div className="w-full h-full flex items-center justify-center bg-stone-200 text-stone-400 font-serif font-bold text-lg sm:text-xl">
                                                             {figureDisplayName.charAt(0)}
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-serif font-bold text-lg text-stone-800 leading-tight mb-1 group-hover:text-orange-700 transition-colors">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="font-serif font-bold text-base sm:text-lg text-stone-800 leading-tight mb-1 group-hover:text-orange-700 transition-colors truncate">
                                                         {figureDisplayName}
                                                     </h3>
                                                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${currentCategoryInfo.badge}`}>
@@ -240,12 +270,12 @@ const EminentFigures = () => {
                                     })()}
 
                                         {figure.title && (
-                                            <div className="bg-orange-50/50 text-orange-900 text-sm p-3 rounded-xl border border-orange-100 mb-4 font-medium italic">
+                                            <div className="bg-orange-50/50 text-orange-900 text-xs sm:text-sm p-2.5 sm:p-3 rounded-xl border border-orange-100 mb-3 sm:mb-4 font-medium italic">
                                                 "{figure.title}"
                                             </div>
                                         )}
 
-                                        <div className="space-y-2 text-xs text-stone-500">
+                                        <div className="space-y-1.5 sm:space-y-2 text-xs text-stone-500">
                                             {figure.education && (
                                                 <div className="flex items-start gap-2">
                                                     <GraduationCap size={14} className="shrink-0 mt-0.5 text-stone-400" />
@@ -271,8 +301,29 @@ const EminentFigures = () => {
                                         ? `${activeCategoryLabel} বিভাগে এখনো কোনো সদস্য অন্তর্ভুক্ত করা হয়নি।`
                                         : `No members have been added to the ${activeCategoryLabel} category yet.`}
                                 </p>
+                                {Array.isArray(figures) && figures.length > 0 && (
+                                    <div className="mt-5 pt-4 border-t border-stone-100 flex flex-col items-center">
+                                        <span className="text-xs text-stone-400 mb-2.5">{t('অন্যান্য বিভাগে সংরক্ষিত ব্যক্তিত্ব দেখুন:', 'View figures in other categories:')}</span>
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            {categories.filter(c => c.id !== activeTab).map(c => {
+                                                const count = figures.filter(f => f.category === c.id).length;
+                                                if (count === 0) return null;
+                                                return (
+                                                    <button
+                                                        key={c.id}
+                                                        onClick={() => handleTabChange(c.id)}
+                                                        className="px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200/80 text-xs font-bold transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                                                    >
+                                                        <span>{isBn ? c.bnLabel : c.enLabel}</span>
+                                                        <span className="px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 text-[10px] font-bold">{count}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                                 {isAdmin && (
-                                    <button onClick={handleCreateNew} className="mt-6 text-orange-600 font-bold hover:underline flex items-center gap-1">
+                                    <button onClick={handleCreateNew} className="mt-6 text-orange-600 font-bold hover:underline flex items-center gap-1 cursor-pointer">
                                         <Plus size={16} /> {t('প্রথম ব্যক্তিত্ব যুক্ত করুন', 'Add the first one')}
                                     </button>
                                 )}
@@ -291,16 +342,18 @@ const EminentFigures = () => {
                 activeCategory={activeTab}
             />
 
-            <MemberProfileModal
-                isOpen={isProfileModalOpen}
-                onClose={() => {
-                    setIsProfileModalOpen(false);
-                    setSelectedMember(null);
-                }}
-                member={selectedMember}
-                relationType={selectedMember?.gender === 'Male' ? 'son' : selectedMember?.gender === 'Female' ? 'daughter' : null}
-                showActions={false}
+            <BrilliantStudentRequestModal
+                isOpen={isRequestModalOpen}
+                onClose={() => setIsRequestModalOpen(false)}
+                onSuccess={() => fetchFigures()}
             />
+
+            {selectedMemberId && (
+                <Profile
+                    memberId={selectedMemberId}
+                    onClose={() => setSelectedMemberId(null)}
+                />
+            )}
 
             {/* Custom Centered Deletion Confirmation Modal */}
             <ConfirmModal
@@ -316,7 +369,7 @@ const EminentFigures = () => {
                         : t('আপনি কি নিশ্চিতভাবে এই সম্মাননাটি মুছে ফেলতে চান?', 'Are you sure you want to remove this recognition?')
                 }
                 confirmText={t('মুছে ফেলুন', 'Remove')}
-                requireCheckbox={false}
+                requireCheckbox={false} 
             />
         </div>
     );

@@ -25,10 +25,12 @@ import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ChangePassword from './pages/ChangePassword';
+import UserAuth from './pages/UserAuth';
 
 // Dashboard Pages (no Layout wrapper)
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/UserDashboard';
 
 function App() {
   return (
@@ -36,18 +38,6 @@ function App() {
       <AuthProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          {/* Auth pages — standalone (no header/footer) */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/change-password" element={
-            <ProtectedRoute requiredRole="admin">
-              <ChangePassword />
-            </ProtectedRoute>
-          } />
-
-
-
           {/* Main app pages — with Layout (header + footer) */}
           <Route path="/*" element={
             <ErrorBoundary>
@@ -82,6 +72,22 @@ function App() {
                   <Route path="/dashboard/admin" element={
                     <ProtectedRoute requiredRole="admin">
                       <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/dashboard/user" element={
+                    <ProtectedRoute>
+                      <UserDashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Auth pages — now rendered with Navbar (Header) & Footer */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/user-auth" element={<UserAuth />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/change-password" element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ChangePassword />
                     </ProtectedRoute>
                   } />
                 </Routes>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import MemberSelector from './MemberSelector';
 import api from '../api/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
+    const { formatName, t } = useLanguage();
     const [name, setName] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -26,8 +28,11 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                     initialData.members.forEach(m => {
                         if (!grouped[m.role]) grouped[m.role] = [];
                         grouped[m.role].push({
-                            id: m.member_id,
+                            ...m,
+                            id: m.member_id || m.id,
                             full_name: m.full_name,
+                            name_bangla: m.name_bangla,
+                            name_english: m.name_english,
                             profile_image_url: m.profile_image_url,
                             occupation: m.occupation,
                             district: m.district
@@ -253,22 +258,25 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                         </div>
 
                                         <div className="pl-9 space-y-2">
-                                            {(roleObj.members || []).map(m => (
+                                            {(roleObj.members || []).map(m => {
+                                                const memberDisplayName = formatName(m);
+                                                return (
                                                 <div key={m.id} className="flex items-center justify-between bg-orange-50/50 border border-orange-100 p-2 rounded-lg">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 shrink-0 flex items-center justify-center">
                                                             {m.profile_image_url ?
-                                                                <img src={m.profile_image_url} alt={m.full_name} className="w-full h-full object-cover" /> :
-                                                                <span className="font-serif font-bold text-stone-500 text-sm">{m.full_name.charAt(0)}</span>
+                                                                <img src={m.profile_image_url} alt={memberDisplayName} className="w-full h-full object-cover" /> :
+                                                                <span className="font-serif font-bold text-stone-500 text-sm">{(memberDisplayName || '?').charAt(0)}</span>
                                                             }
                                                         </div>
-                                                        <span className="text-sm font-bold text-stone-800">{m.full_name.replace(' (Root)', '')}</span>
+                                                        <span className="text-sm font-bold text-stone-800">{memberDisplayName}</span>
                                                     </div>
-                                                    <button type="button" onClick={() => handleRemoveMemberFromRole(roleObj.id, m.id)} className="text-stone-400 hover:text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors" title="Remove Member">
+                                                    <button type="button" onClick={() => handleRemoveMemberFromRole(roleObj.id, m.id)} className="text-stone-400 hover:text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors cursor-pointer" title="Remove Member">
                                                         <X size={16} />
                                                     </button>
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
 
                                             <div className="mt-2 pt-2 border-t border-stone-100/50">
                                                 <MemberSelector

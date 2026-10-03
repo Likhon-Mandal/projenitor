@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Home, MapPin, Calendar, Bell, Star, Shield, LogOut, Key, RefreshCw } from 'lucide-react';
+import { Users, Home, MapPin, Calendar, Bell, Star, Shield, LogOut, Key, RefreshCw, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
 import ProfileTab from '../components/ProfileTab';
 import DashboardCharts from '../components/DashboardCharts';
+import UserManagement from '../components/UserManagement';
+import BrilliantStudentRequestsAdmin from '../components/BrilliantStudentRequestsAdmin';
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
     <div className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3 hover:shadow-md transition-shadow group">
@@ -20,6 +23,7 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
+    const { t, formatNumber } = useLanguage();
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [chartData, setChartData] = useState(null);
@@ -46,29 +50,42 @@ const AdminDashboard = () => {
     const handleLogout = () => { logout(); navigate('/login'); };
 
     const statCards = [
-        { icon: Users, label: 'Total Members', value: stats?.totalMembers, color: 'bg-orange-700' },
-        { icon: Home, label: 'Total Homes', value: stats?.totalHomes, color: 'bg-red-800' },
-        { icon: MapPin, label: 'Villages', value: stats?.totalVillages, color: 'bg-yellow-600' },
-        { icon: Calendar, label: 'Events', value: stats?.totalEvents, color: 'bg-emerald-700' },
-        { icon: Bell, label: 'Notices', value: stats?.totalNotices, color: 'bg-indigo-700' },
-        { icon: Star, label: 'Eminent Figures', value: stats?.totalEminentFigures, color: 'bg-purple-700' },
+        { icon: Users, label: t('মোট সদস্য', 'Total Members'), value: stats?.totalMembers !== undefined ? formatNumber(stats.totalMembers) : null, color: 'bg-orange-700' },
+        { icon: Home, label: t('মোট বাড়ি', 'Total Homes'), value: stats?.totalHomes !== undefined ? formatNumber(stats.totalHomes) : null, color: 'bg-red-800' },
+        { icon: MapPin, label: t('গ্রামসমূহ', 'Villages'), value: stats?.totalVillages !== undefined ? formatNumber(stats.totalVillages) : null, color: 'bg-yellow-600' },
+        { icon: Calendar, label: t('অনুষ্ঠানসমূহ', 'Events'), value: stats?.totalEvents !== undefined ? formatNumber(stats.totalEvents) : null, color: 'bg-emerald-700' },
+        { icon: Bell, label: t('বিজ্ঞপ্তিসমূহ', 'Notices'), value: stats?.totalNotices !== undefined ? formatNumber(stats.totalNotices) : null, color: 'bg-indigo-700' },
+        { icon: Star, label: t('বিশিষ্ট ব্যক্তিবর্গ', 'Eminent Figures'), value: stats?.totalEminentFigures !== undefined ? formatNumber(stats.totalEminentFigures) : null, color: 'bg-purple-700' },
+    ];
+
+    const tabs = [
+        { id: 'overview', label: t('সারসংক্ষেপ', 'Overview') },
+        { id: 'brilliant-requests', label: t('কৃতি শিক্ষার্থী আবেদন', 'Student Requests'), icon: GraduationCap },
+        { id: 'users', label: t('ব্যবহারকারী পরিচালনা', 'User Accounts') },
+        { id: 'profile', label: t('প্রোফাইল ও নিরাপত্তা', 'Profile & Security') }
     ];
 
     return (
         <div className="min-h-screen bg-orange-50">
-
-
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-serif font-bold text-stone-800">Welcome back, {user?.name?.split(' ')[0]}! 👋</h1>
-                    <p className="text-stone-500 text-sm mt-1">Here's a snapshot of the Projenitor system.</p>
+                    <h1 className="text-2xl font-serif font-bold text-stone-800">
+                        {t('স্বাগতম,', 'Welcome back,')} {user?.name?.split(' ')[0]}! 👋
+                    </h1>
+                    <p className="text-stone-500 text-sm mt-1">
+                        {t('বংশতালিকা সিস্টেমের সংক্ষিপ্ত পরিসংখ্যান ও তথ্যচিত্র।', "Here's a snapshot of the Projenitor system.")}
+                    </p>
                 </div>
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 bg-white border border-orange-100 rounded-xl p-1.5 shadow-sm w-fit">
-                    {['overview', 'profile'].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all capitalize ${activeTab === tab ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'}`}>
-                            {tab}
+                    {tabs.map((tab) => (
+                        <button 
+                            key={tab.id} 
+                            onClick={() => setActiveTab(tab.id)} 
+                            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50 cursor-pointer'}`}
+                        >
+                            {tab.label}
                         </button>
                     ))}
                 </div>
@@ -76,9 +93,11 @@ const AdminDashboard = () => {
                 {activeTab === 'overview' && (
                     <>
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-serif font-semibold text-stone-700">System Overview</h2>
-                            <button onClick={fetchStats} className="flex items-center gap-1 text-sm text-orange-700 hover:text-orange-900 transition-colors">
-                                <RefreshCw className="w-4 h-4" /> Refresh
+                            <h2 className="text-lg font-serif font-semibold text-stone-700">
+                                {t('সিস্টেম সারসংক্ষেপ', 'System Overview')}
+                            </h2>
+                            <button onClick={fetchStats} className="flex items-center gap-1 text-sm text-orange-700 hover:text-orange-900 transition-colors cursor-pointer">
+                                <RefreshCw className="w-4 h-4" /> {t('রিফ্রেশ', 'Refresh')}
                             </button>
                         </div>
 
@@ -96,11 +115,15 @@ const AdminDashboard = () => {
 
                         <div className="mt-8 bg-orange-100 border border-orange-200 rounded-xl p-5 text-center">
                             <p className="text-orange-800 text-sm font-medium">
-                                You have Admin access. To manage admin accounts, contact a SuperAdmin.
+                                {t('আপনার কাছে এডমিন অ্যাক্সেস রয়েছে। অন্যান্য এডমিন অ্যাকাউন্ট পরিচালনা করতে সুপারএডমিনের সাথে যোগাযোগ করুন।', 'You have Admin access. To manage admin accounts, contact a SuperAdmin.')}
                             </p>
                         </div>
                     </>
                 )}
+
+                {activeTab === 'brilliant-requests' && <BrilliantStudentRequestsAdmin />}
+
+                {activeTab === 'users' && <UserManagement />}
 
                 {activeTab === 'profile' && <ProfileTab />}
             </div>

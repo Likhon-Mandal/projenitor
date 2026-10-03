@@ -27,7 +27,7 @@ exports.addNotice = async (req, res) => {
             VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), COALESCE($5, 'Admin'))
             RETURNING *
         `;
-        const result = await pool.query(query, [title, type, content, date, posted_by]);
+        const result = await pool.query(query, [title, type, content, date || null, posted_by]);
         res.status(201).json({ message: 'Added successfully', data: result.rows[0] });
     } catch (err) {
         console.error('Error adding notice:', err);
@@ -52,11 +52,11 @@ exports.updateNotice = async (req, res) => {
     try {
         const query = `
             UPDATE notices
-            SET title = $1, type = $2, content = $3, date = $4, posted_by = $5
+            SET title = $1, type = $2, content = $3, date = COALESCE($4, date, CURRENT_DATE), posted_by = COALESCE($5, posted_by, 'Admin')
             WHERE id = $6
             RETURNING *
         `;
-        const result = await pool.query(query, [title, type, content, date, posted_by, id]);
+        const result = await pool.query(query, [title, type, content, date || null, posted_by, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Notice not found' });

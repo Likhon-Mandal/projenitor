@@ -4,17 +4,18 @@ import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
+import VerifiedBadge from './VerifiedBadge';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
     <style>{`
         @keyframes drawVertical {
-            from { height: 0; opacity: 0; }
-            to { height: 100%; opacity: 1; }
+            from { transform: scaleY(0); opacity: 0; }
+            to { transform: scaleY(1); opacity: 1; }
         }
         @keyframes expandWidth {
-            from { width: 0; opacity: 0; }
-            to { width: 100%; opacity: 1; }
+            from { transform: scaleX(0); opacity: 0; }
+            to { transform: scaleX(1); opacity: 1; }
         }
         @keyframes unfoldNode {
             from { opacity: 0; transform: translateY(-20px) scale(0.9); }
@@ -177,9 +178,14 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                         </div>
                     </div>
                     <div className="text-center relative z-10">
-                        <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 text-white leading-tight">
-                            {formatName(person)}
-                        </h2>
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
+                                {formatName(person)}
+                            </h2>
+                            {(person.is_active || person.user_status === 'active' || person.user_account?.status === 'active') && (
+                                <VerifiedBadge size={22} />
+                            )}
+                        </div>
                         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-6">
                             <div className="h-px w-4 sm:w-6 bg-white/30"></div>
                             <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] text-white/70">ID: {person.id}</p>
@@ -279,7 +285,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black shrink-0">{isBn ? 'পিতা' : 'F'}</span>
                                                 <span className="truncate text-stone-700">
-                                                    {formatName((person.father_id && memberMap && memberMap[String(person.father_id)]) || { full_name: person.father_name, name_bangla: person.father_name_bangla }) || t('অজানা', 'Unknown')}
+                                                    {formatName((person.father_id && memberMap && memberMap[String(person.father_id)]) || { full_name: person.father_name, name_bangla: person.father_name_bangla, name_english: person.father_name_english }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 min-w-0">
@@ -289,8 +295,8 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                                         if (person.mother_id && memberMap && memberMap[String(person.mother_id)]) {
                                                             return formatName(memberMap[String(person.mother_id)]);
                                                         }
-                                                        if (person.mother_name || person.mother_name_bangla) {
-                                                            return formatName({ full_name: person.mother_name, name_bangla: person.mother_name_bangla });
+                                                        if (person.mother_name || person.mother_name_bangla || person.mother_name_english) {
+                                                            return formatName({ full_name: person.mother_name, name_bangla: person.mother_name_bangla, name_english: person.mother_name_english });
                                                         }
                                                         if (person.father_id && memberMap && memberMap[String(person.father_id)]) {
                                                             const fatherSpouses = memberMap[String(person.father_id)].spouses || [];
@@ -366,9 +372,14 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                         <span>{t('সহধর্মিণী', 'Spouse')}</span>
                                     </div>
-                                    <h3 className="text-xl font-serif font-bold text-stone-900 leading-tight truncate">
-                                        {formatName(spouseData || activeSpouse)}
-                                    </h3>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <h3 className="text-xl font-serif font-bold text-stone-900 leading-tight truncate">
+                                            {formatName(spouseData || activeSpouse)}
+                                        </h3>
+                                        {(spouseData?.is_active || activeSpouse?.is_active || spouseData?.user_status === 'active' || activeSpouse?.user_status === 'active') && (
+                                            <VerifiedBadge size={16} />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -402,9 +413,17 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                             <Phone size={11} className="text-rose-500" /> {t('যোগাযোগ', 'Contact')}
                                         </span>
                                         {spouseData?.contact_number ? (
-                                            <a href={`tel:${spouseData.contact_number}`} className="font-bold text-rose-700 hover:underline truncate block">
-                                                {spouseData.contact_number}
-                                            </a>
+                                            <div className="flex flex-wrap gap-1 mt-0.5">
+                                                {spouseData.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
+                                                    const cleanNum = num.trim();
+                                                    if (!cleanNum) return null;
+                                                    return (
+                                                        <a key={i} href={`tel:${cleanNum}`} className="font-bold text-rose-700 hover:underline text-xs bg-rose-50 px-1.5 py-0.5 rounded">
+                                                            {cleanNum}
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
                                         ) : (
                                             <p className="text-stone-400 font-medium">N/A</p>
                                         )}
@@ -479,13 +498,13 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-bold">{isBn ? 'পিতা' : 'F'}</span>
                                                 <span className="truncate font-medium">
-                                                    {formatName((spouseData.father_id && memberMap && memberMap[String(spouseData.father_id)]) || { full_name: spouseData.father_name, name_bangla: spouseData.father_name_bangla }) || t('অজানা', 'Unknown')}
+                                                    {formatName((spouseData.father_id && memberMap && memberMap[String(spouseData.father_id)]) || { full_name: spouseData.father_name, name_bangla: spouseData.father_name_bangla, name_english: spouseData.father_name_english }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[8px] bg-pink-100 text-pink-700 px-1 rounded font-bold">{isBn ? 'মাতা' : 'M'}</span>
                                                 <span className="truncate font-medium">
-                                                    {formatName((spouseData.mother_id && memberMap && memberMap[String(spouseData.mother_id)]) || { full_name: spouseData.mother_name, name_bangla: spouseData.mother_name_bangla }) || t('অজানা', 'Unknown')}
+                                                    {formatName((spouseData.mother_id && memberMap && memberMap[String(spouseData.mother_id)]) || { full_name: spouseData.mother_name, name_bangla: spouseData.mother_name_bangla, name_english: spouseData.mother_name_english }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                         </div>
@@ -569,12 +588,12 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
     const fatherName = formatName(
         (person.father_id && memberMap && memberMap[String(person.father_id)]) ||
-        { full_name: person.father_name, name_bangla: person.father_name_bangla }
+        { full_name: person.father_name, name_bangla: person.father_name_bangla, name_english: person.father_name_english }
     );
 
     const motherName = formatName(
         (person.mother_id && memberMap && memberMap[String(person.mother_id)]) ||
-        { full_name: person.mother_name, name_bangla: person.mother_name_bangla }
+        { full_name: person.mother_name, name_bangla: person.mother_name_bangla, name_english: person.mother_name_english }
     );
 
     const SpouseInfoItem = ({ icon, label, value, onClick }) => (
@@ -620,9 +639,14 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
                 {/* Name and Location */}
                 <div className="mt-14 text-center px-6">
-                    <h2 className="text-2xl font-serif font-bold text-[#9a3412]">
-                        {formatName(person)}
-                    </h2>
+                    <div className="flex items-center justify-center gap-1.5">
+                        <h2 className="text-2xl font-serif font-bold text-[#9a3412]">
+                            {formatName(person)}
+                        </h2>
+                        {(person.is_active || person.user_status === 'active' || person.user_account?.status === 'active') && (
+                            <VerifiedBadge size={18} />
+                        )}
+                    </div>
                     <div className="flex items-center justify-center gap-1.5 text-stone-500 text-sm mt-1">
                         <MapPin size={14} className="text-[#9a3412]" />
                         <span>{person.village || person.location || 'N/A'}</span>
@@ -740,13 +764,14 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
 
     return (
         <div
+            id={`node-${node.id}`}
             ref={nodeRef}
-            className={`flex flex-col items-center relative ${layerIndex > 0 ? 'pt-12' : 'pt-2'} pb-6 animate-unfold origin-top shrink-0 ${className || ''}`}
+            className={`flex flex-col items-center relative ${layerIndex > 0 ? 'pt-8 sm:pt-12' : 'pt-2'} pb-6 animate-unfold origin-top shrink-0 ${className || ''}`}
             style={staggerStyle}
         >
-            {/* Connector Line UP - Extends up to meet the horizontal bus */}
+            {/* Connector Line UP — rises from top-0 of this node wrapper up to the horizontal bus */}
             {layerIndex > 0 && (
-                <div className="absolute top-0 left-1/2 -translate-x-[1px] w-[2px] h-full bg-orange-300 origin-top z-0 max-h-8 sm:max-h-12"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-[1px] w-[2px] h-8 sm:h-12 bg-orange-400 z-20" />
             )}
 
             {/* CARD */}
@@ -809,6 +834,17 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
                     )}
                 </div>
 
+                {/* Eminent Category / কৃতি ও স্মরণীয় ব্যক্তিত্ব Tag (Top-Left Corner) */}
+                {node.eminent_category && (
+                    <div
+                        className="absolute top-1.5 left-1.5 flex items-center gap-0.5 sm:gap-1 bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 border border-amber-300 text-[6.5px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap z-20 shadow-xs max-w-[48%] sm:max-w-[55%] hover:border-amber-400 hover:bg-amber-100 transition-colors"
+                        title={node.eminent_category}
+                    >
+                        <Award size={9} className="text-amber-600 shrink-0" />
+                        <span className="truncate leading-none">{node.eminent_category}</span>
+                    </div>
+                )}
+
                 {/* Profile Picture */}
                 <div
                     className="relative mb-2 sm:mb-3 group/avatar"
@@ -859,23 +895,21 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
 
                 {/* Basic Identity Info */}
                 <div className="w-full flex flex-col items-center text-center px-1.5">
-                    <h3 className={`text-xs sm:text-sm font-serif font-bold leading-tight w-full truncate mb-0.5 transition-colors ${isActive
-                        ? (_identity === 'son' ? 'text-sky-900' : _identity === 'daughter' ? 'text-rose-900' : 'text-orange-900')
-                        : 'text-stone-800'
-                    }`}>
-                        {formatName(node)}
-                    </h3>
+                    <div className="flex items-center justify-center gap-1 w-full max-w-full">
+                        <h3 className={`text-xs sm:text-sm font-serif font-bold leading-tight truncate mb-0.5 transition-colors ${isActive
+                            ? (_identity === 'son' ? 'text-sky-900' : _identity === 'daughter' ? 'text-rose-900' : 'text-orange-900')
+                            : 'text-stone-800'
+                        }`}>
+                            {formatName(node)}
+                        </h3>
+                        {(node.is_active || node.user_status === 'active') && (
+                            <VerifiedBadge size={13} />
+                        )}
+                    </div>
                     <div className="text-[9px] font-medium text-stone-400 uppercase tracking-wide">
                         {childrenCount > 0 ? (isBn ? `${formatNumber(childrenCount)} জন সন্তান` : `${childrenCount} Children`) : (isBn ? 'সন্তান নেই' : 'No Children')}
                     </div>
                 </div>
-
-                {node.eminent_category && (
-                    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-yellow-50 text-yellow-700 border border-yellow-200 text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap z-20">
-                        <Award size={8} className="text-yellow-600" />
-                        {node.eminent_category}
-                    </div>
-                )}
 
 
                 {/* Centered Add Button — only for male members (daughters are leaf nodes) */}
@@ -899,24 +933,24 @@ const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails
 
             </div>
 
-            {/* Connector Line DOWN - Extends down to touch the horizontal bus of next layer */}
+            {/* Connector Line DOWN — drops from bottom of card to meet the next layer's horizontal bus */}
             {isActive && hasChildren && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-[1px] w-[2px] h-10 bg-orange-400 z-0 animate-draw-v origin-top"></div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-[1px] w-[2px] h-8 sm:h-12 bg-orange-400 z-20 animate-draw-v origin-top" />
             )}
         </div>
     );
 };
 
 /* Main Component */
-const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, onViewDetails, isAdmin }) => {
+const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, onViewDetails, isAdmin, autoExpandId }) => {
     const { t } = useLanguage();
     const [activePathIds, setActivePathIds] = useState([]);
     const [selectedPerson, setSelectedPerson] = useState(null);
 
     // Transform Flat List to Hierarchy
-    const { roots, map } = useMemo(() => {
+    const { roots, map, spouseIds } = useMemo(() => {
         if (!members) {
-            return { roots: [], map: {} };
+            return { roots: [], map: {}, spouseIds: new Set() };
         }
 
         const map = {};
@@ -925,15 +959,26 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
 
         members.forEach(member => {
             map[String(member.id)] = { ...member, children: [] };
-            // Collect all IDs that are spouses or mothers (should not be roots)
-            if (member.spouse_id) spouseIds.add(String(member.spouse_id));
+            
+            // Collect IDs that act as spouses so they are not treated as independent roots.
+            // Since member_spouses is bidirectional, we only want the wives (females) to be in spouseIds
+            // so that the husbands (males) can properly be roots if they have no father.
+            if (member.gender === 'Male') {
+                if (member.spouse_id) spouseIds.add(String(member.spouse_id));
+                if (member.spouses) {
+                    member.spouses.forEach(s => {
+                        if (s && s.id) spouseIds.add(String(s.id));
+                    });
+                }
+            } else if (member.gender === 'Female') {
+                // If a female has a spouse_id, that's likely her husband. She herself is a spouse.
+                if (member.spouse_id) {
+                    spouseIds.add(String(member.id));
+                }
+            }
+
             if (member.mother_id) spouseIds.add(String(member.mother_id));
             if (member.motherId) spouseIds.add(String(member.motherId));
-            if (member.spouses) {
-                member.spouses.forEach(s => {
-                    if (s && s.id) spouseIds.add(String(s.id));
-                });
-            }
         });
 
         members.forEach(member => {
@@ -972,17 +1017,102 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
 
         return {
             roots: roots.sort(sortNodes),
-            map: map
+            map: map,
+            spouseIds: spouseIds
         };
     }, [members]);
 
+    useEffect(() => {
+        if (!autoExpandId || !members || members.length === 0 || Object.keys(map).length === 0 || roots.length === 0) return;
+
+        const targetId = String(autoExpandId);
+
+        // DFS path finder — uses String() on both sides to avoid number/string mismatch
+        const findPath = (nodes, target, currentPath) => {
+            for (const node of nodes) {
+                const nodeId = String(node.id);
+                const newPath = [...currentPath, nodeId];
+                if (nodeId === target) return newPath;
+                if (node.children && node.children.length > 0) {
+                    const found = findPath(node.children, target, newPath);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        // Resolve spouse target → main member's ID in tree hierarchy
+        let resolvedTargetId = targetId;
+        const targetMember = map[targetId];
+        
+        // If target acts as a spouse of a member in the tree, expand their partner's tree instead
+        const partner = members.find(m => String(m.id) !== targetId && (
+            String(m.spouse_id) === targetId ||
+            (m.spouses && m.spouses.some(s => String(s?.id) === targetId)) ||
+            (targetMember && String(targetMember.spouse_id) === String(m.id)) ||
+            (targetMember?.spouses && targetMember.spouses.some(s => String(s?.id) === String(m.id)))
+        ));
+
+        if (partner && (spouseIds.has(targetId) || !findPath(roots, targetId, []))) {
+            resolvedTargetId = String(partner.id);
+        }
+
+        // Strategy 1: DFS from roots (works when member is properly in hierarchy)
+        let path = findPath(roots, resolvedTargetId, []);
+
+        // Strategy 2: If DFS fails (member may be orphaned or mis-classified),
+        // walk up via father_id in flat map, then filter to only IDs that exist in the hierarchy
+        if (!path || path.length === 0) {
+            // Build ancestor chain from flat map
+            const ancestorChain = [];
+            let curr = map[resolvedTargetId];
+            const visited = new Set();
+            while (curr && !visited.has(String(curr.id))) {
+                visited.add(String(curr.id));
+                ancestorChain.unshift(String(curr.id));
+                const parentId = String(curr.father_id || curr.fatherId || '');
+                curr = parentId && parentId !== '0' ? map[parentId] : null;
+            }
+
+            // Now simulate the layer walk — only keep ancestor IDs that the tree can actually render
+            if (ancestorChain.length > 0) {
+                const validPath = [];
+                let currentNodes = roots;
+                for (const id of ancestorChain) {
+                    const found = currentNodes?.find(n => String(n.id) === id);
+                    if (found) {
+                        validPath.push(id);
+                        currentNodes = found.children || [];
+                    }
+                    // If not found at this level, skip it (ancestor may be in spouseIds)
+                }
+                if (validPath.length > 0) path = validPath;
+            }
+        }
+
+        if (!path || path.length === 0) {
+            console.warn('[FamilyTree] autoExpand: could not build path for id=', resolvedTargetId);
+            return;
+        }
+
+        setActivePathIds(path);
+
+        setTimeout(() => {
+            const el = document.getElementById(`node-${resolvedTargetId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' });
+            }
+        }, 700);
+    }, [autoExpandId, map, members, spouseIds, roots]);
+
     const handleNodeClick = (node, depth) => {
-        const isSameNode = activePathIds[depth] === node.id;
+        const nodeId = String(node.id);
+        const isSameNode = String(activePathIds[depth]) === nodeId;
         if (isSameNode) {
             setActivePathIds(activePathIds.slice(0, depth));
         } else {
             const newPath = activePathIds.slice(0, depth);
-            newPath.push(node.id);
+            newPath.push(nodeId);
             setActivePathIds(newPath);
         }
     };
@@ -992,7 +1122,8 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
         let currentNodes = roots;
 
         activePathIds.forEach((activeId) => {
-            const activeNode = currentNodes?.find(n => n.id === activeId);
+            // Use String() on both sides to handle number vs string ID mismatch from API
+            const activeNode = currentNodes?.find(n => String(n.id) === String(activeId));
             if (activeNode && activeNode.children && activeNode.children.length > 0) {
                 _layers.push(activeNode.children);
                 currentNodes = activeNode.children;
@@ -1004,8 +1135,9 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
     }, [roots, activePathIds]);
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] p-2 sm:p-4 md:p-8 font-sans flex flex-col items-center overflow-x-hidden">
-            <AnimationStyles />
+        <div className="w-full bg-transparent p-0 font-sans">
+            <div className="w-full min-h-screen flex flex-col items-center">
+                <AnimationStyles />
 
             {/* Person Detail Modal */}
             {selectedPerson && (
@@ -1025,59 +1157,46 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                 style={{ backgroundImage: 'linear-gradient(#9a3412 1px, transparent 1px), linear-gradient(90deg, #9a3412 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
             </div>
 
-            {/* Header */}
-            <div className="relative z-10 text-center mb-6 sm:mb-10 mt-2 sm:mt-4 animate-unfold">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100/50 border border-orange-200 text-orange-800 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest mb-2 sm:mb-3 backdrop-blur-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse"></span>
-                    {t('বংশতালিকা সংরক্ষণ ব্যবস্থা', 'Ancestral Record System')}
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-1 sm:mb-2">
-                    {t('বংশতালিকা পরিক্রমা', 'Ancestral Lineage')}
-                </h1>
-                <p className="text-stone-500 text-xs sm:text-sm max-w-[280px] sm:max-w-md mx-auto mb-6 sm:mb-8 tracking-tight">
-                    {t('প্রজন্ম থেকে প্রজন্মান্তরে জীবন্ত ইতিহাস আবিষ্কার করুন।', 'Explore the living history across generations.')}
-                </p>
-
-                {isAdmin && (
+            {/* Compact Admin Add Root Member Button */}
+            {isAdmin && onAddRoot && (
+                <div className="relative z-10 flex justify-center mb-3 mt-1">
                     <button
                         onClick={() => onAddRoot && onAddRoot()}
-                        className="group relative inline-flex items-center gap-2 px-8 py-3 bg-orange-800 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg transition-all active:scale-95 text-sm uppercase tracking-widest overflow-hidden cursor-pointer"
+                        className="group relative inline-flex items-center gap-1.5 px-4 py-1.5 bg-orange-800 hover:bg-orange-700 text-white font-bold rounded-xl shadow-xs transition-all active:scale-95 text-xs tracking-wider cursor-pointer"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                        <Plus size={18} strokeWidth={3} className="relative z-10" />
-                        <span className="relative z-10">{t('মূল সদস্য যোগ করুন', 'Add Root Member')}</span>
+                        <Plus size={14} strokeWidth={2.5} />
+                        <span>{t('মূল সদস্য যোগ করুন', 'Add Root Member')}</span>
                     </button>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Tree Content Area */}
-            <div className="w-full flex flex-col gap-0 pb-32">
+            <div className="w-full flex flex-col gap-0 pb-16">
                 {layers.map((layerNodes, layerIndex) => {
                     const activeNodeId = activePathIds[layerIndex];
                     const hasActiveNode = !!activeNodeId;
 
                     return (
-                        <div key={layerIndex} className="flex flex-col items-center relative w-full mb-0 overflow-visible">
+                        <div key={layerIndex} className="flex flex-col items-center relative w-full max-w-[100vw] mb-0">
 
-                            {/* Horizontal Bus Line - Fixed 80% Width across screen */}
-                            {layerIndex > 0 && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[2px] bg-orange-300 z-0 opacity-80 rounded-full animate-expand-w"></div>
+                            {/* Horizontal Bus Line - Full screen width, sits at the top of each child row */}
+                            {layerIndex > 0 && layerNodes.length > 0 && (
+                                <div className="absolute top-0 left-0 right-0 h-[2px] bg-orange-400 z-10 opacity-90" />
                             )}
 
-                            {/* Gen Row Container */}
-                            <div className="w-full relative group p-0 overflow-visible">
-                                <div className="gen-row-scroll flex flex-nowrap justify-start overflow-x-auto p-0 min-h-[160px] relative z-10 scroll-smooth px-8 sm:px-16">
+                            {/* Gen Row Container - Scrollable horizontally if children exceed screen */}
+                            <div className="w-full relative group p-0 overflow-x-auto custom-scrollbar text-center whitespace-nowrap">
 
-                                    {/* Content Wrapper - w-fit mx-auto for centering, flex-nowrap for row */}
-                                    <div className="w-fit mx-auto flex flex-nowrap gap-x-6 items-start relative pt-0">
+                                {/* Content Wrapper - inline-flex centers small content, scrollable for large */}
+                                <div className="inline-flex flex-nowrap gap-x-6 sm:gap-x-12 items-start relative pt-0 px-4 sm:px-8 min-h-[160px] z-10 text-left align-top">
 
                                         {layerNodes.map((node, index) => (
                                             <TreeNode
                                                 key={node.id}
                                                 node={node}
                                                 index={index}
-                                                isActive={activeNodeId === node.id}
-                                                isDimmed={hasActiveNode && node.id !== activeNodeId}
+                                                isActive={String(activeNodeId) === String(node.id)}
+                                                isDimmed={hasActiveNode && String(node.id) !== String(activeNodeId)}
                                                 onClick={() => handleNodeClick(node, layerIndex)}
                                                 onAddChild={onAddChild}
                                                 onViewDetails={setSelectedPerson}
@@ -1089,11 +1208,11 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                                             />
                                         ))}
                                     </div>
-                                </div>
                             </div>
                         </div>
                     );
                 })}
+            </div>
             </div>
         </div>
     );

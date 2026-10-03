@@ -245,6 +245,10 @@ const Home = () => {
                             <Link to="/explorer" className="px-10 py-4 bg-orange-700 hover:bg-orange-800 text-white rounded-full font-bold shadow-lg shadow-orange-900/10 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 text-sm uppercase tracking-wider">
                                 {t('জ্ঞাতিবর্গদের খুঁজুন', 'Find Relatives')} <ArrowRight size={18} />
                             </Link>
+                            <Link to="/relation" className="px-10 py-4 bg-orange-50 hover:bg-orange-100 text-orange-800 border-2 border-orange-200 rounded-full font-bold transition-all duration-300 text-sm uppercase tracking-wider hover:border-orange-300 shadow-sm hover:shadow-md hover:-translate-y-1 flex items-center gap-2">
+                                <Activity size={16} />
+                                {t('সম্পর্ক নির্ণয়', 'Find Relationship')}
+                            </Link>
                             <Link to="/history" className="px-10 py-4 bg-white hover:bg-orange-50 text-stone-800 border-2 border-orange-100/50 rounded-full font-bold transition-all duration-300 text-sm uppercase tracking-wider hover:border-orange-200 shadow-sm hover:shadow-md">
                                 {t('ইতিহাস জানুন', 'Explore History')}
                             </Link>

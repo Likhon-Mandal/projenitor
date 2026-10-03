@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+import VerifiedBadge from './VerifiedBadge';
 
 /* ─── Theme Definitions ─────────────────────────────────────────────────────── */
 // relationType: 'son' | 'daughter' | 'spouse' | 'default'
@@ -29,8 +30,8 @@ const THEMES = {
         backBtn: 'hover:bg-blue-50 hover:text-blue-900 border-blue-200',
         backIcon: 'text-blue-700',
         accent: '#1e40af',
-        label: 'পুত্র',
-        labelEn: 'Son',
+        label: 'পুরুষ',
+        labelEn: 'Male',
         labelIcon: '♂',
     },
     daughter: {
@@ -361,9 +362,20 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
 
                     {/* Eminent / Category badge */}
                     {(member.eminent_category || member.category) && (
-                        <div className={`mb-3 z-20 flex items-center gap-1.5 border rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
-                            <Award size={10} />
-                            {member.eminent_category || member.category}
+                        <div className="flex flex-col items-center gap-1.5 mb-3 z-20 max-w-[300px]">
+                            <div className={`flex items-center gap-1.5 border rounded-full px-3.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
+                                {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
+                                    <GraduationCap size={12} className="text-yellow-300" />
+                                ) : (
+                                    <Award size={10} />
+                                )}
+                                {member.eminent_category || member.category}
+                            </div>
+                            {member.eminent_title && (
+                                <div className="text-[11px] font-medium text-amber-200/90 text-center leading-tight drop-shadow-sm px-2.5 py-1 rounded-lg bg-black/25 backdrop-blur-xs border border-white/10">
+                                    "{member.eminent_title}"
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -391,9 +403,14 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
 
                     {/* Name & ID */}
                     <div className="text-center relative z-10">
-                        <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-2 text-white leading-tight">
-                            {displayName}
-                        </h2>
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
+                                {displayName}
+                            </h2>
+                            {(member.is_active || member.user_status === 'active' || member.user_account?.status === 'active') && (
+                                <VerifiedBadge size={22} />
+                            )}
+                        </div>
                         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
                             <div className={`h-px w-4 sm:w-6 ${theme.divider}`} />
                             <p className={`text-[8px] sm:text-[9px] uppercase tracking-[0.2em] ${theme.idText}`}>
@@ -487,9 +504,21 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                     label={t('যোগাযোগ নম্বর', 'Contact Number')} 
                                     value={
                                         member.contact_number ? (
-                                            <a href={`tel:${member.contact_number}`} className="text-orange-900 hover:underline font-bold">
-                                                {member.contact_number}
-                                            </a>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {member.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
+                                                    const cleanNum = num.trim();
+                                                    if (!cleanNum) return null;
+                                                    return (
+                                                        <a 
+                                                            key={i} 
+                                                            href={`tel:${cleanNum}`} 
+                                                            className="text-orange-900 hover:text-orange-950 hover:underline font-bold bg-orange-100/60 hover:bg-orange-100 px-2 py-0.5 rounded text-xs transition"
+                                                        >
+                                                            {cleanNum}
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
                                         ) : 'N/A'
                                     } 
                                 />
@@ -575,17 +604,18 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                                                 id: member.father_id,
                                                                 full_name: member.father_name,
                                                                 name_bangla: member.father_name_bangla,
+                                                                name_english: member.father_name_english,
                                                                 gender: 'Male'
                                                             }, 'father');
                                                         }}
                                                         className="truncate font-medium text-stone-700 hover:text-blue-800 hover:underline text-left cursor-pointer"
                                                         title={t('পিতার পরিচিতি কার্ড দেখুন', 'View Father Card')}
                                                     >
-                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla }) || t('অজানা', 'Unknown')}
+                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
                                                     </button>
                                                 ) : (
                                                     <span className="truncate text-stone-700">
-                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla }) || t('অজানা', 'Unknown')}
+                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
                                                     </span>
                                                 )}
                                             </div>
@@ -600,17 +630,18 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                                                 id: member.mother_id,
                                                                 full_name: member.mother_name,
                                                                 name_bangla: member.mother_name_bangla,
+                                                                name_english: member.mother_name_english,
                                                                 gender: 'Female'
                                                             }, 'mother');
                                                         }}
                                                         className="truncate font-medium text-stone-700 hover:text-rose-800 hover:underline text-left cursor-pointer"
                                                         title={t('মাতার পরিচিতি কার্ড দেখুন', 'View Mother Card')}
                                                     >
-                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla }) || t('অজানা', 'Unknown')}
+                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
                                                     </button>
                                                 ) : (
                                                     <span className="truncate text-stone-700">
-                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla }) || t('অজানা', 'Unknown')}
+                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
                                                     </span>
                                                 )}
                                             </div>
@@ -728,9 +759,21 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                             <Phone size={11} /> {t('যোগাযোগ', 'Contact')}
                                         </span>
                                         {overlayTarget?.contact_number ? (
-                                            <a href={`tel:${overlayTarget.contact_number}`} className={`font-bold hover:underline truncate block ${overlayTheme.textLink}`}>
-                                                {overlayTarget.contact_number}
-                                            </a>
+                                            <div className="flex flex-wrap gap-1 mt-0.5">
+                                                {overlayTarget.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
+                                                    const cleanNum = num.trim();
+                                                    if (!cleanNum) return null;
+                                                    return (
+                                                        <a 
+                                                            key={i} 
+                                                            href={`tel:${cleanNum}`} 
+                                                            className={`font-bold hover:underline text-xs bg-white/80 px-1.5 py-0.5 rounded shadow-2xs ${overlayTheme.textLink}`}
+                                                        >
+                                                            {cleanNum}
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
                                         ) : (
                                             <p className="text-stone-400 font-medium">N/A</p>
                                         )}
@@ -805,13 +848,13 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-bold">{isBn ? 'পিতা' : 'F'}</span>
                                                 <span className="truncate font-medium">
-                                                    {formatName({ full_name: overlayTarget.father_name, name_bangla: overlayTarget.father_name_bangla }) || t('অজানা', 'Unknown')}
+                                                    {formatName({ full_name: overlayTarget.father_name, name_bangla: overlayTarget.father_name_bangla, name_english: overlayTarget.father_name_english }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[8px] bg-rose-100 text-rose-700 px-1 rounded font-bold">{isBn ? 'মাতা' : 'M'}</span>
                                                 <span className="truncate font-medium">
-                                                    {formatName({ full_name: overlayTarget.mother_name, name_bangla: overlayTarget.mother_name_bangla }) || t('অজানা', 'Unknown')}
+                                                    {formatName({ full_name: overlayTarget.mother_name, name_bangla: overlayTarget.mother_name_bangla, name_english: overlayTarget.mother_name_english }) || t('অজানা', 'Unknown')}
                                                 </span>
                                             </div>
                                         </div>

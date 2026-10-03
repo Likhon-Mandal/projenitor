@@ -13,7 +13,7 @@ const tagsList = [
 ];
 
 const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
-    const { t } = useLanguage();
+    const { t, formatName } = useLanguage();
     const [title, setTitle] = useState('');
     const [tag, setTag] = useState('Advice');
     const [type, setType] = useState('alert');
@@ -117,7 +117,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                             onSelect={(member) => {
                                 setSelectedSeeker(member);
                                 if (member) {
-                                    setHelpSeeker(member.full_name.replace(' (Root)', ''));
+                                    setHelpSeeker(formatName(member));
                                 } else {
                                     setHelpSeeker('');
                                 }

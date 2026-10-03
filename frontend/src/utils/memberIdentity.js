@@ -29,8 +29,8 @@ export const getMemberIdentity = (member) => {
 export const MEMBER_THEMES = {
   son: {
     id: 'son',
-    labelBn: 'পুত্র',
-    labelEn: 'Son',
+    labelBn: 'পুরুষ',
+    labelEn: 'Male',
     symbol: '♂',
     // Card styles (MemberCard)
     cardBorder: 'border-sky-100 hover:border-sky-300',

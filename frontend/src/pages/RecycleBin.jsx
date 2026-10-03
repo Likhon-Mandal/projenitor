@@ -101,7 +101,7 @@ const RecycleBin = () => {
     // 1. Trigger Restore
     const triggerRestore = (item, table) => {
         const isMember = table === 'members';
-        const displayName = item.name || item.full_name || t('নির্বাচিত আইটেম', 'Selected Item');
+        const displayName = formatName(item) || item.name || item.full_name || t('নির্বাচিত আইটেম', 'Selected Item');
         const subCount = item.subtree_count || 1;
 
         let message = '';
@@ -142,7 +142,7 @@ const RecycleBin = () => {
             return;
         }
         const isMember = table === 'members';
-        const displayName = item.name || item.full_name || t('নির্বাচিত আইটেম', 'Selected Item');
+        const displayName = formatName(item) || item.name || item.full_name || t('নির্বাচিত আইটেম', 'Selected Item');
         const subCount = item.subtree_count || 1;
 
         let message = '';

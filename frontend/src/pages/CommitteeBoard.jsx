@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Calendar, ChevronDown, Plus, UserCircle2, MapPin, Briefcase, Pencil, Trash2 } from 'lucide-react';
 import CommitteeFormModal from '../components/CommitteeFormModal';
+import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
@@ -50,10 +51,12 @@ const CommitteeBoard = () => {
     const currentCommittee = committees.find(c => c.is_current);
     const pastCommittees = committees.filter(c => !c.is_current);
 
-    const handleDelete = async (id) => {
-        if (!window.confirm(t("আপনি কি নিশ্চিতভাবে এই কমিটিটি মুছে ফেলতে চান?", "Are you sure you want to delete this committee?"))) return;
+    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, committee: null });
+
+    const handleConfirmDelete = async () => {
+        if (!deleteConfirm.committee) return;
         try {
-            await api.delete(`/committee/${id}`);
+            await api.delete(`/committee/${deleteConfirm.committee.id}`);
             fetchCommittees();
         } catch (error) {
             console.error(error);
@@ -148,13 +151,13 @@ const CommitteeBoard = () => {
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
                 <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-orange-100 text-xs font-bold uppercase tracking-widest mb-3 backdrop-blur-md">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-orange-50 text-xs font-bold uppercase tracking-widest mb-4 backdrop-blur-md shadow-sm">
                             <Users size={14} /> {t('নেতৃত্ব ও প্রশাসন', 'Leadership & Administration')}
                         </div>
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight mb-2 drop-shadow-md">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-amber-200 drop-shadow-md mb-3 leading-normal pt-1">
                             {t('কার্যনির্বাহী পরিষদ', 'Committee Board')}
                         </h1>
-                        <p className="text-orange-100/80 max-w-xl text-base md:text-lg font-light">
+                        <p className="text-orange-100/90 max-w-2xl text-base md:text-lg font-light leading-relaxed">
                             {t('আমাদের সমাজের অগ্রগতি, ঐতিহ্য ও ভবিষ্যতের কাণ্ডারিদের শ্রদ্ধা ও স্বীকৃতি।', 'Honoring the dedicated individuals guiding our community, shaping our heritage, and leading our progress across generations.')}
                         </p>
                     </div>
@@ -201,7 +204,7 @@ const CommitteeBoard = () => {
                                             <button onClick={() => handleEdit(currentCommittee)} className="p-2 text-stone-500 hover:text-orange-600 bg-stone-50 hover:bg-orange-50 border border-stone-200 rounded-lg transition-colors" title={t('কমিটি সম্পাদনা', 'Edit Committee')}>
                                                 <Pencil size={18} />
                                             </button>
-                                            <button onClick={() => handleDelete(currentCommittee.id)} className="p-2 text-stone-500 hover:text-red-600 bg-stone-50 hover:bg-red-50 border border-stone-200 rounded-lg transition-colors" title={t('কমিটি মুছুন', 'Delete Committee')}>
+                                            <button onClick={() => setDeleteConfirm({ isOpen: true, committee: currentCommittee })} className="p-2 text-stone-500 hover:text-red-600 bg-stone-50 hover:bg-red-50 border border-stone-200 rounded-lg transition-colors cursor-pointer" title={t('কমিটি মুছুন', 'Delete Committee')}>
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
@@ -248,7 +251,7 @@ const CommitteeBoard = () => {
                                                                 <button onClick={() => handleEdit(committee)} className="p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-100 rounded transition-colors" title="Edit">
                                                                     <Pencil size={16} />
                                                                 </button>
-                                                                <button onClick={() => handleDelete(committee.id)} className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-100 rounded transition-colors" title="Delete">
+                                                                <button onClick={() => setDeleteConfirm({ isOpen: true, committee })} className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-100 rounded transition-colors cursor-pointer" title={t('কমিটি মুছুন', 'Delete Committee')}>
                                                                     <Trash2 size={16} />
                                                                 </button>
                                                             </div>
@@ -282,6 +285,20 @@ const CommitteeBoard = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => fetchCommittees()}
                 initialData={editingCommittee}
+            />
+
+            {/* Custom Centered Deletion Confirmation Modal */}
+            <ConfirmModal
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, committee: null })}
+                onConfirm={handleConfirmDelete}
+                title={t('কমিটি মুছে ফেলা নিশ্চিত করুন', 'Confirm Committee Deletion')}
+                message={deleteConfirm.committee?.session_name 
+                    ? (isBn 
+                        ? `আপনি কি নিশ্চিতভাবে "${deleteConfirm.committee.session_name}" কমিটিটি মুছে ফেলতে চান?` 
+                        : `Are you sure you want to delete the committee "${deleteConfirm.committee.session_name}"?`)
+                    : t('আপনি কি নিশ্চিতভাবে এই কমিটিটি মুছে ফেলতে চান?', 'Are you sure you want to delete this committee?')}
+                confirmText={t('মুছে ফেলুন', 'Delete')}
             />
         </div>
     );

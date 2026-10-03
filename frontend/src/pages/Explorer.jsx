@@ -19,6 +19,8 @@ const Explorer = () => {
     const { t, isBn, formatName } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
+    const searchParams = new URLSearchParams(location.search);
+    const expandId = searchParams.get('expand');
 
     const [options, setOptions] = useState([]);
     const [hierarchyData, setHierarchyData] = useState([]);
@@ -287,11 +289,11 @@ const Explorer = () => {
                 setHierarchyData([...hierarchyData]);
                 setActiveGraphPath(newPath);
 
-                // Scroll container into middle of screen
+                // Scroll container horizontally to the right to reveal new nodes
                 setTimeout(() => {
-                    const container = document.getElementById('explorer-graph-container');
-                    if (container) {
-                        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const scrollContainer = document.getElementById('location-tree-scroll');
+                    if (scrollContainer) {
+                        scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
                     }
                 }, 100);
             } catch (e) {
@@ -300,9 +302,9 @@ const Explorer = () => {
         } else {
             setActiveGraphPath(newPath);
             setTimeout(() => {
-                const container = document.getElementById('explorer-graph-container');
-                if (container) {
-                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const scrollContainer = document.getElementById('location-tree-scroll');
+                if (scrollContainer) {
+                    scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
                 }
             }, 100);
         }
@@ -382,8 +384,17 @@ const Explorer = () => {
         try {
             setLoading(true);
             const res = await api.get(`/members/${id}`);
-            const isMaleRoot = memberData.gender === 'Male' && !memberData.father_id && !memberData.mother_id && memberData.role !== 'spouse';
-            setAddChildContext({ ...memberData, isRoot: isMaleRoot });
+            const memberData = res.data;
+            const isMale = memberData.gender === 'Male';
+            const isSpouse = !isMale && Boolean(memberData.isSpouseFlag || memberData.role === 'spouse' || memberData.relationType === 'spouse');
+            const isMaleRoot = isMale && (!memberData.father_id && !memberData.mother_id);
+            setAddChildContext({ 
+                ...memberData, 
+                isSpouseFlag: isSpouse, 
+                role: isSpouse ? 'spouse' : (memberData.role === 'spouse' ? 'member' : memberData.role),
+                isRoot: Boolean(isMaleRoot), 
+                gender: isMale ? 'Male' : (isSpouse ? 'Female' : memberData.gender) 
+            });
         } catch (err) {
             console.error('Error switching member context:', err);
         } finally {
@@ -496,11 +507,11 @@ const Explorer = () => {
                                     {pathSegments.length > 0 && (
                                         <div
                                             onClick={() => resetToLevel(pathSegments.length - 1)}
-                                            className="bg-orange-50/60 hover:bg-orange-100/80 p-6 rounded-xl border-2 border-dashed border-orange-200 hover:border-orange-400 hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-2 cursor-pointer group select-none relative"
+                                            className="bg-orange-50/60 hover:bg-orange-100/80 p-3 sm:p-4 rounded-xl border-2 border-dashed border-orange-200 hover:border-orange-400 hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-2 cursor-pointer group select-none relative"
                                             title={t('পূর্ববর্তী স্তরে ফিরে যান', 'Go back to previous level')}
                                         >
-                                            <div className="w-12 h-12 rounded-full bg-white shadow-2xs border border-orange-200 flex items-center justify-center text-orange-700 group-hover:bg-orange-800 group-hover:text-white group-hover:border-orange-800 transition-all duration-200">
-                                                <ArrowLeft size={22} className="group-hover:-translate-x-1.5 transition-transform" />
+                                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-2xs border border-orange-200 flex items-center justify-center text-orange-700 group-hover:bg-orange-800 group-hover:text-white group-hover:border-orange-800 transition-all duration-200">
+                                                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1.5 transition-transform" />
                                             </div>
                                             <div>
                                                 <div className="font-bold text-sm sm:text-base text-orange-950 font-serif">
@@ -520,7 +531,8 @@ const Explorer = () => {
                                     return (
                                     <div
                                         key={idx}
-                                        className="bg-white p-6 rounded-lg shadow-sm border border-orange-100 hover:shadow-md hover:border-accent hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-3 group relative"
+                                        onClick={() => handleSelect(itemName)}
+                                        className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-orange-100 hover:shadow-md hover:border-accent hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center text-center space-y-1 group relative cursor-pointer"
                                         style={{ animationDelay: `${0.05 * idx}s` }}
                                     >
                                         {editingItem === itemName ? (
@@ -580,13 +592,13 @@ const Explorer = () => {
                                                     </div>
                                                 )}
 
-                                                <div onClick={() => handleSelect(itemName)} className="cursor-pointer flex flex-col items-center w-full mt-4">
+                                                <div className="flex flex-col items-center w-full mt-1 sm:mt-2">
                                                     {currentLevel === 'home' ? (
-                                                        <Home className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform duration-300 mb-3" />
+                                                        <Home className="h-5 w-5 sm:h-7 sm:w-7 text-secondary group-hover:scale-110 transition-transform duration-300 mb-1 sm:mb-2" />
                                                     ) : (
-                                                        <Map className="h-8 w-8 text-accent group-hover:scale-110 transition-transform duration-300 mb-3" />
+                                                        <Map className="h-5 w-5 sm:h-7 sm:w-7 text-accent group-hover:scale-110 transition-transform duration-300 mb-1 sm:mb-2" />
                                                     )}
-                                                    <span className="font-serif font-medium text-lg text-stone-800 group-hover:text-primary transition-colors hover:underline underline-offset-4">{itemName}</span>
+                                                    <span className="font-serif font-medium text-sm sm:text-base text-stone-800 group-hover:text-primary transition-colors group-hover:underline underline-offset-4">{itemName}</span>
                                                 </div>
 
                                                 {/* In every Bari card, show Google Map Option */}
@@ -690,102 +702,121 @@ const Explorer = () => {
                     )
                 ) : (
                     /* Household Members View - Family Tree Only */
-                    <div className="space-y-6 animate-slide-up">
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-orange-100 border-t-4 border-t-secondary text-center flex flex-col items-center relative">
-                            {/* Visual Back Navigation to Village / Baris */}
-                            <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-orange-100">
+                    <div className="space-y-3 animate-slide-up">
+                        {/* Compact Household Header & Navigation Bar */}
+                        <div className="bg-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-xs border border-orange-200/90 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2.5">
+                            {/* Left: Back Button */}
+                            <div className="flex items-center justify-start shrink-0">
                                 <button
                                     onClick={() => resetToLevel(pathSegments.length - 1)}
-                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 hover:shadow-2xs active:scale-95 group cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 rounded-xl text-xs font-bold transition-all duration-200 hover:shadow-2xs active:scale-95 group cursor-pointer shrink-0"
                                     title={t('গ্রামের বাড়ি তালিকায় ফিরে যান', 'Back to Village bari list')}
                                 >
-                                    <ArrowLeft size={16} className="text-orange-700 group-hover:-translate-x-1 transition-transform" />
-                                    <span>{isBn ? `${geoContext.village || 'গ্রামে'} ফিরে যান (বাড়ি তালিকা)` : `Back to ${geoContext.village || 'Village'} (Baris)`}</span>
+                                    <ArrowLeft size={14} className="text-orange-700 group-hover:-translate-x-1 transition-transform" />
+                                    <span>{isBn ? `${geoContext.village || 'গ্রামে'} ফিরে যান` : `Back to ${geoContext.village || 'Village'}`}</span>
                                 </button>
-                                <span className="text-xs text-stone-500 font-medium">
-                                    {[geoContext.village, geoContext.upazila, geoContext.district].filter(Boolean).join(' • ')}
-                                </span>
                             </div>
 
-                            <Home className="h-14 w-14 text-primary mx-auto mb-3" />
-                            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-1">{selection}</h2>
-                            <p className="text-stone-500 text-sm mb-3">{t('এই বাড়ির সদস্যবৃন্দ', 'Family Members in this Household')}</p>
-                            
-                            {/* Google Map Link Option for this Bari */}
-                            {(homeMapLink || isAdmin) && (
-                                <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
-                                    {homeMapLink ? (
-                                        <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
-                                            <a
-                                                href={homeMapLink.startsWith('http') ? homeMapLink : `https://${homeMapLink}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-850 hover:text-emerald-950 transition-colors group"
-                                                title={t('গুগল ম্যাপে বাড়িটির অবস্থান দেখুন', 'View home location on Google Maps')}
-                                            >
-                                                <MapPin size={16} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-                                                <span>{t('গুগল ম্যাপে অবস্থান', 'View on Google Maps')}</span>
-                                                <ExternalLink size={13} className="text-emerald-600/70 group-hover:text-emerald-800" />
-                                            </a>
-                                            {isAdmin && (
+                            {/* Center: Household Name & Location/Members info */}
+                            <div className="flex flex-col items-center justify-center text-center px-2 min-w-0">
+                                <div className="inline-flex items-center justify-center gap-2 max-w-full">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-orange-100/80 text-orange-800 flex items-center justify-center shrink-0 border border-orange-200/60 shadow-2xs">
+                                        <Home size={15} />
+                                    </div>
+                                    <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 leading-tight truncate" title={selection}>
+                                        {selection}
+                                    </h2>
+                                </div>
+                                <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-0.5 truncate max-w-full">
+                                    {[geoContext.village, geoContext.upazila, geoContext.district].filter(Boolean).join(' • ')}
+                                    {members && members.length > 0 && (
+                                        <span className="text-orange-900 font-bold ml-1.5">
+                                            ({members.length} {t('সদস্য', 'members')})
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Right: Map Link & Spouses Directory Button */}
+                            <div className="flex items-center gap-2 flex-wrap shrink-0 justify-center md:justify-end">
+                                {/* Google Map Link Option for this Bari */}
+                                {(homeMapLink || isAdmin) && (
+                                    <>
+                                        {homeMapLink ? (
+                                            <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-xl shadow-2xs">
+                                                <a
+                                                    href={homeMapLink.startsWith('http') ? homeMapLink : `https://${homeMapLink}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-850 hover:text-emerald-950 transition-colors group"
+                                                    title={t('গুগল ম্যাপে বাড়িটির অবস্থান দেখুন', 'View home location on Google Maps')}
+                                                >
+                                                    <MapPin size={13} className="text-emerald-600 group-hover:scale-110 transition-transform" />
+                                                    <span>{t('গুগল ম্যাপ', 'Google Map')}</span>
+                                                    <ExternalLink size={11} className="text-emerald-600/70 group-hover:text-emerald-800" />
+                                                </a>
+                                                {isAdmin && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setMapModalTarget({
+                                                                homeName: selection,
+                                                                villageName: geoContext.village || pathSegments[3] || '',
+                                                                currentLink: homeMapLink
+                                                            });
+                                                            setIsBariMapModalOpen(true);
+                                                        }}
+                                                        className="p-1 text-stone-400 hover:text-orange-800 hover:bg-white rounded-lg transition-colors ml-0.5 border border-transparent hover:border-orange-200 cursor-pointer"
+                                                        title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
+                                                    >
+                                                        <Edit2 size={12} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            isAdmin && (
                                                 <button
                                                     onClick={() => {
                                                         setMapModalTarget({
                                                             homeName: selection,
                                                             villageName: geoContext.village || pathSegments[3] || '',
-                                                            currentLink: homeMapLink
+                                                            currentLink: ''
                                                         });
                                                         setIsBariMapModalOpen(true);
                                                     }}
-                                                    className="p-1 text-stone-400 hover:text-orange-800 hover:bg-white rounded-lg transition-colors ml-1 border border-transparent hover:border-orange-200 cursor-pointer"
-                                                    title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-900 border border-dashed border-stone-300 hover:border-orange-300 transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs group"
+                                                    title={t('এই বাড়ির গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map link for this Bari')}
                                                 >
-                                                    <Edit2 size={13} />
+                                                    <MapPin size={12} className="text-orange-600 group-hover:scale-110 transition-transform" />
+                                                    <span>+ {t('ম্যাপ লিংক', 'Map Link')}</span>
                                                 </button>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        isAdmin && (
-                                            <button
-                                                onClick={() => {
-                                                    setMapModalTarget({
-                                                        homeName: selection,
-                                                        villageName: geoContext.village || pathSegments[3] || '',
-                                                        currentLink: ''
-                                                    });
-                                                    setIsBariMapModalOpen(true);
-                                                }}
-                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-900 border border-dashed border-stone-300 hover:border-orange-300 transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs group"
-                                                title={t('এই বাড়ির গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map link for this Bari')}
-                                            >
-                                                <MapPin size={14} className="text-orange-600 group-hover:scale-110 transition-transform" />
-                                                <span>+ {t('গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map Link')}</span>
-                                            </button>
-                                        )
-                                    )}
-                                </div>
-                            )}
+                                            )
+                                        )}
+                                    </>
+                                )}
 
-                            <button
-                                onClick={() => {
-                                    setSpouseModalHomeFilter(selection);
-                                    setIsSpousesModalOpen(true);
-                                }}
-                                className="inline-flex items-center gap-2.5 bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white font-serif font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:from-orange-700 hover:to-red-800 transition-all duration-300 active:scale-95 group border border-orange-950/30 text-sm cursor-pointer"
-                            >
-                                <Heart size={16} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-300" />
-                                <span>{isBn ? `সহধর্মিণী তালিকা` : `Spouses Directory`}</span>
-                            </button>
+                                <button
+                                    onClick={() => {
+                                        setSpouseModalHomeFilter(selection);
+                                        setIsSpousesModalOpen(true);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white font-serif font-semibold px-3 py-1.5 rounded-xl shadow-xs hover:shadow-md hover:from-orange-700 hover:to-red-800 transition-all duration-200 active:scale-95 group border border-orange-950/20 text-xs cursor-pointer"
+                                >
+                                    <Heart size={13} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-200" />
+                                    <span>{isBn ? `সহধর্মিণী তালিকা` : `Spouses Directory`}</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="animate-fade-in overflow-x-auto pb-4">
                             <FamilyTree
+                                autoExpandId={expandId}
                                 members={members}
                                 onAddChild={(parent) => {
                                     setAddChildContext({
                                         father_id: parent.id,
                                         level: (parent.level || 0) + 1,
-                                        isRoot: false // Explicitly not root
+                                        isRoot: false,
+                                        gender: ''
                                     });
                                     setIsFormOpen(true);
                                 }}
@@ -794,15 +825,27 @@ const Explorer = () => {
                                     setIsProfileOpen(true);
                                 }}
                                 onEditNode={(member) => {
-                                    const isMaleRoot = member.gender === 'Male' && !member.father_id && !member.mother_id && !member.isSpouseFlag && member.role !== 'spouse';
-                                    setAddChildContext({ ...member, isRoot: isMaleRoot });
+                                    const isMale = member.gender === 'Male';
+                                    const isSpouse = !isMale && Boolean(member.isSpouseFlag || member.role === 'spouse' || member.relationType === 'spouse');
+                                    const isMaleRoot = isMale && (!member.father_id && !member.mother_id);
+                                    setAddChildContext({ 
+                                        ...member, 
+                                        isSpouseFlag: isSpouse, 
+                                        role: isSpouse ? 'spouse' : (member.role === 'spouse' ? 'member' : member.role),
+                                        isRoot: Boolean(isMaleRoot), 
+                                        gender: isMale ? 'Male' : (isSpouse ? 'Female' : member.gender) 
+                                    });
                                     setIsFormOpen(true);
                                 }}
                                 onDeleteNode={handleDeleteMember}
                                 onAddRoot={() => {
                                     setAddChildContext({
+                                        father_id: null,
+                                        mother_id: null,
+                                        spouse_id: null,
                                         level: 1,
-                                        isRoot: true
+                                        isRoot: true,
+                                        gender: 'Male'
                                     });
                                     setIsFormOpen(true);
                                 }}
@@ -836,8 +879,16 @@ const Explorer = () => {
                 }}
                 onEdit={(member) => {
                     // Close profile, open form with member data for editing
-                    const isMaleRoot = member.gender === 'Male' && !member.father_id && !member.mother_id && !member.isSpouseFlag && member.role !== 'spouse';
-                    setAddChildContext({ ...member, isRoot: isMaleRoot });
+                    const isMale = member.gender === 'Male';
+                    const isSpouse = !isMale && Boolean(member.isSpouseFlag || member.role === 'spouse' || member.relationType === 'spouse');
+                    const isMaleRoot = isMale && (!member.father_id && !member.mother_id);
+                    setAddChildContext({ 
+                        ...member, 
+                        isSpouseFlag: isSpouse, 
+                        role: isSpouse ? 'spouse' : (member.role === 'spouse' ? 'member' : member.role),
+                        isRoot: Boolean(isMaleRoot), 
+                        gender: isMale ? 'Male' : (isSpouse ? 'Female' : member.gender) 
+                    });
                     setIsFormOpen(true);
                 }}
                 onDelete={(member) => {
@@ -848,8 +899,10 @@ const Explorer = () => {
                 onAddSpouse={(member) => {
                     setAddChildContext({
                         spouse_id: member.id,
-                        gender: member.gender === 'Male' ? 'Female' : 'Male',
-                        isRoot: false // Not exactly root if they have a spouse here
+                        gender: 'Female',
+                        role: 'spouse',
+                        isSpouseFlag: true,
+                        isRoot: false
                     });
                     setIsProfileOpen(false);
                     setIsFormOpen(true);

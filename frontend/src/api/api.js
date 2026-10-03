@@ -16,10 +16,12 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Always announce support for obfuscated payload
+    config.headers['x-api-obfuscated'] = 'true';
+
     // Encrypt request body if present
     if (config.data && !(config.data instanceof FormData)) {
         console.log('[Obfuscation] Encrypting outgoing request');
-        config.headers['x-api-obfuscated'] = 'true';
         config.data = {
             data: encrypt(config.data)
         };
@@ -33,10 +35,11 @@ api.interceptors.response.use(
     (response) => {
         // Decrypt if response is obfuscated
         if (response.data && response.data.obfuscated && response.data.data) {
-            console.log('[Obfuscation] Decrypting incoming response');
             const decryptedData = decrypt(response.data.data);
-            if (decryptedData !== null) {
+            if (decryptedData !== null && decryptedData !== undefined) {
                 response.data = decryptedData;
+            } else {
+                console.error('[Obfuscation] Decryption failed for payload on endpoint:', response.config?.url);
             }
         }
         return response;

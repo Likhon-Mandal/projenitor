@@ -64,8 +64,16 @@ exports.getAllMembers = async (req, res) => {
       v.name as village,
       h.name as home_name,
       ef.category as eminent_category,
+      ef.title as eminent_title,
       f.full_name as father_name,
+      f.name_bangla as father_name_bangla,
+      f.name_english as father_name_english,
       mo.full_name as mother_name,
+      mo.name_bangla as mother_name_bangla,
+      mo.name_english as mother_name_english,
+      u_acc.status as user_status,
+      (u_acc.status = 'active') as is_active,
+      (u_acc.id IS NOT NULL) as is_claimed,
       (
           SELECT json_agg(json_build_object('id', s_inner.id, 'full_name', s_inner.full_name, 'name_bangla', s_inner.name_bangla, 'name_english', s_inner.name_english, 'level', s_inner.level, 'profile_image_url', s_inner.profile_image_url))
           FROM (
@@ -78,6 +86,12 @@ exports.getAllMembers = async (req, res) => {
           ) s_inner
       ) as spouses
         FROM members m
+        LEFT JOIN (
+            SELECT DISTINCT ON (member_id) member_id, id, status, role 
+            FROM users 
+            WHERE member_id IS NOT NULL 
+            ORDER BY member_id, CASE WHEN status = 'active' THEN 1 WHEN status = 'approved' THEN 2 WHEN status = 'pending' THEN 3 ELSE 4 END
+        ) u_acc ON m.id = u_acc.member_id
         LEFT JOIN countries c ON m.country_id = c.id
         LEFT JOIN divisions d ON m.division_id = d.id
         LEFT JOIN districts di ON m.district_id = di.id
@@ -164,10 +178,13 @@ exports.getMemberById = async (req, res) => {
         v.name as village,
         h.name as home_name,
         ef.category as eminent_category,
+        ef.title as eminent_title,
         f.full_name as father_name,
         f.name_bangla as father_name_bangla,
+        f.name_english as father_name_english,
         mo.full_name as mother_name,
-        mo.name_bangla as mother_name_bangla
+        mo.name_bangla as mother_name_bangla,
+        mo.name_english as mother_name_english
       FROM members m
       LEFT JOIN countries c ON m.country_id = c.id
       LEFT JOIN divisions d ON m.division_id = d.id
@@ -230,6 +247,25 @@ exports.getMemberById = async (req, res) => {
       member.siblings = [];
     }
 
+    // Attach associated user account login mobile if this member has an account
+    const userAccRes = await pool.query(
+      "SELECT id, mobile_number, email, status, role FROM users WHERE member_id = $1 ORDER BY CASE WHEN status = 'active' THEN 1 WHEN status = 'approved' THEN 2 WHEN status = 'pending' THEN 3 ELSE 4 END LIMIT 1",
+      [id]
+    );
+    if (userAccRes.rows.length > 0) {
+      member.account_mobile = userAccRes.rows[0].mobile_number;
+      member.user_account = userAccRes.rows[0];
+      member.user_status = userAccRes.rows[0].status;
+      member.is_active = userAccRes.rows[0].status === 'active';
+      member.is_claimed = true;
+    } else {
+      member.account_mobile = null;
+      member.user_account = null;
+      member.user_status = null;
+      member.is_active = false;
+      member.is_claimed = false;
+    }
+
     res.json(member);
   } catch (err) {
     console.error(err);
@@ -282,19 +318,34 @@ exports.createMember = async (req, res) => {
     const trimmedEnglish = name_english?.trim() || null;
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
-    // Lock spouse generation level to her husband's level and gender to Female
+    // Gender & Level rules:
+    // 1. Spouses are strictly Female (and synced to husband's level)
+    // 2. Root members (no parents and not a spouse, or isRoot flag) are strictly Male
+    // 3. All other members MUST have gender selected ('Male' or 'Female')
     let finalLevel = level;
     let finalGender = gender;
-    if (spouse_id || req.body.isSpouseFlag || req.body.role === 'spouse') {
-      const husbandRes = await pool.query('SELECT level FROM members WHERE id = $1', [spouse_id]);
-      if (husbandRes.rows.length > 0) {
-        finalGender = 'Female';
-        if (husbandRes.rows[0].level !== null) {
+    const isExplicitSpouse = gender !== 'Male' && Boolean(
+      req.body.isSpouseFlag || 
+      req.body.role === 'spouse' || 
+      req.body.relationType === 'spouse' || 
+      (spouse_id && !father_id && !mother_id)
+    );
+    const isRootMember = !isExplicitSpouse && (Boolean(req.body.isRoot) || (!father_id && !mother_id && finalGender === 'Male'));
+
+    if (isExplicitSpouse) {
+      finalGender = 'Female';
+      if (spouse_id) {
+        const husbandRes = await pool.query("SELECT level FROM members WHERE id = $1 AND gender = 'Male' AND deleted_at IS NULL", [spouse_id]);
+        if (husbandRes.rows.length > 0 && husbandRes.rows[0].level !== null) {
           finalLevel = husbandRes.rows[0].level;
         }
-      } else if (req.body.isSpouseFlag || req.body.role === 'spouse') {
-        finalGender = 'Female';
       }
+    } else if (isRootMember) {
+      finalGender = 'Male';
+    }
+
+    if (!finalGender || !['Male', 'Female'].includes(finalGender)) {
+      return res.status(400).json({ error: 'Gender is required and must be either Male or Female' });
     }
 
     const query = `
@@ -319,7 +370,7 @@ exports.createMember = async (req, res) => {
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
-      father_id, mother_id, spouse_id,
+      isRootMember ? null : (father_id || null), isRootMember ? null : (mother_id || null), spouse_id,
       profile_image_url, bio, finalLevel, workplace, social_media
     ];
 
@@ -388,32 +439,95 @@ exports.updateMember = async (req, res) => {
     const existingGender = existingMemberRes.rows[0].gender;
 
     // Determine target level & gender:
-    // If the member is a spouse of a male member (or has a husband / spouse role),
-    // her generation level is ALWAYS strictly locked to her husband's level,
-    // and her gender is ALWAYS strictly fixed as 'Female'!
+    // 1. If spouse: gender is strictly Female, level locked to husband's level
+    // 2. If root member: gender is strictly Male
+    // 3. All other members: gender must be selected ('Male' or 'Female')
     let targetLevel = level;
     let finalGender = gender || existingGender;
 
-    const husbandRes = await pool.query(`
-      SELECT m.level 
-      FROM members m
-      WHERE m.gender = 'Male' AND m.deleted_at IS NULL AND (
-        m.id = $1::uuid
-        OR m.id IN (SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = $2::uuid)
-        OR m.id IN (SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = $2::uuid)
-        OR m.id = (SELECT spouse_id FROM members WHERE id = $2::uuid)
-      )
-      LIMIT 1
-    `, [spouse_id || null, id]);
+    // A member can NEVER be treated as an in-law spouse if their gender is Male
+    const isExplicitSpouse = finalGender !== 'Male' && Boolean(
+      req.body.isSpouseFlag ||
+      req.body.role === 'spouse' ||
+      req.body.relationType === 'spouse' ||
+      (existingGender === 'Female' && !father_id && !mother_id && (req.body.spouse_id || req.body.husband_id))
+    );
 
-    const isSpouseOfMale = husbandRes.rows.length > 0;
-    if (isSpouseOfMale || req.body.isSpouseFlag || req.body.role === 'spouse') {
-      finalGender = 'Female';
-      if (husbandRes.rows.length > 0 && husbandRes.rows[0].level !== null) {
-        targetLevel = husbandRes.rows[0].level;
+    let isSpouseOfMale = false;
+    let husbandLevel = null;
+
+    if (isExplicitSpouse || (finalGender === 'Female' && !father_id && !mother_id)) {
+      const husbandRes = await pool.query(`
+        SELECT m.level 
+        FROM members m
+        WHERE m.gender = 'Male' 
+          AND m.deleted_at IS NULL 
+          AND m.id != $2::uuid
+          AND (
+            m.id = $1::uuid
+            OR m.id IN (SELECT ms.spouse_id FROM member_spouses ms WHERE ms.member_id = $2::uuid)
+            OR m.id IN (SELECT ms.member_id FROM member_spouses ms WHERE ms.spouse_id = $2::uuid)
+            OR m.id = (SELECT spouse_id FROM members WHERE id = $2::uuid)
+          )
+        LIMIT 1
+      `, [spouse_id || null, id]);
+
+      if (husbandRes.rows.length > 0) {
+        isSpouseOfMale = true;
+        husbandLevel = husbandRes.rows[0].level;
       }
-    } else if (finalGender === 'Female' && husbandRes.rows.length > 0 && husbandRes.rows[0].level !== null) {
-      targetLevel = husbandRes.rows[0].level;
+    }
+
+    const isRootMember = !isSpouseOfMale && !isExplicitSpouse && (Boolean(req.body.isRoot) || (!father_id && !mother_id && finalGender === 'Male'));
+
+    if (isExplicitSpouse || (finalGender === 'Female' && isSpouseOfMale)) {
+      finalGender = 'Female';
+      if (husbandLevel !== null) {
+        targetLevel = husbandLevel;
+      }
+    } else if (isRootMember) {
+      finalGender = 'Male';
+    }
+
+    if (!finalGender || !['Male', 'Female'].includes(finalGender)) {
+      return res.status(400).json({ error: 'Gender is required and must be either Male or Female' });
+    }
+
+    // Check if this member has a linked user account with login mobile number
+    const userAccRes = await pool.query('SELECT id, mobile_number, email, status FROM users WHERE member_id = $1', [id]);
+    const linkedUser = userAccRes.rows[0];
+
+    const digits = (str) => (str || '').replace(/[^0-9]/g, '');
+    let newLoginMobile = null;
+    let smsNotice = null;
+
+    if (linkedUser && linkedUser.mobile_number) {
+      const incomingNumbers = (contact_number || '')
+        .split(/[,;\/\n\r]+/)
+        .map(n => n.trim())
+        .filter(Boolean);
+      
+      const targetLoginDigits = digits(linkedUser.mobile_number);
+      const loginNumberStillPresent = incomingNumbers.some(n => {
+        const d = digits(n);
+        return d === targetLoginDigits || (d.length >= 10 && targetLoginDigits.length >= 10 && (d.endsWith(targetLoginDigits) || targetLoginDigits.endsWith(d))) || n === linkedUser.mobile_number;
+      });
+
+      if (!loginNumberStillPresent) {
+        if (!req.body.confirm_account_mobile_change) {
+          return res.status(409).json({
+            error: 'ACCOUNT_MOBILE_AFFECTED',
+            requires_confirmation: true,
+            account_mobile: linkedUser.mobile_number,
+            message: `সতর্কতা: "${linkedUser.mobile_number}" নম্বরটি ব্যবহারকারীর অ্যাকাউন্ট লগইন হিসেবে ব্যবহৃত হচ্ছে। এটি মুছে ফেলা বা পরিবর্তন করার জন্য নিশ্চিতকরণ প্রয়োজন। (Warning: "${linkedUser.mobile_number}" is used for account login. Changing or removing it requires confirmation.)`
+          });
+        }
+
+        // Admin confirmed the change
+        newLoginMobile = req.body.new_account_mobile || incomingNumbers[0] || linkedUser.mobile_number;
+        smsNotice = `নিশ্চিতকরণ বার্তা: অ্যাকাউন্ট লগইন নম্বর পরিবর্তন করা হয়েছে (${linkedUser.mobile_number} → ${newLoginMobile})। কনফার্মেশন এসএমএস পাঠানো হয়েছে। (Confirmation SMS sent to ${linkedUser.mobile_number} and ${newLoginMobile}).`;
+        console.log(`[SMS SERVICE] Confirmation SMS notification sent: Login mobile updated from ${linkedUser.mobile_number} to ${newLoginMobile}`);
+      }
     }
 
     const query = `
@@ -432,7 +546,7 @@ exports.updateMember = async (req, res) => {
       birth_date || null, death_date || null, is_alive,
       contact_number, email, present_address, permanent_address,
       country_id, division_id, district_id, upazila_id, village_id, home_id,
-      father_id, mother_id, spouse_id,
+      isRootMember ? null : (father_id || null), isRootMember ? null : (mother_id || null), spouse_id,
       profile_image_url, bio, targetLevel, workplace, social_media,
       id
     ];
@@ -500,7 +614,51 @@ exports.updateMember = async (req, res) => {
       );
     }
 
-    res.json(result.rows[0]);
+    // Sync with users and admin_users if this member is associated with user/admin accounts
+    const updatedMember = result.rows[0];
+    try {
+      if (newLoginMobile) {
+        await pool.query(
+          `UPDATE users 
+           SET mobile_number = $1,
+               email = COALESCE($2, email)
+           WHERE member_id = $3`,
+          [newLoginMobile, updatedMember.email || null, id]
+        );
+      } else {
+        await pool.query(
+          `UPDATE users 
+           SET email = COALESCE($1, email)
+           WHERE member_id = $2`,
+          [updatedMember.email || null, id]
+        );
+      }
+      await pool.query(
+        `UPDATE admin_users
+         SET name = $1,
+             name_bangla = $2,
+             name_english = $3,
+             email = COALESCE($4, email),
+             profile_image_url = $5
+         WHERE member_id = $6`,
+        [
+          updatedMember.full_name,
+          updatedMember.name_bangla,
+          updatedMember.name_english,
+          updatedMember.email || null,
+          updatedMember.profile_image_url || null,
+          id
+        ]
+      );
+    } catch (syncErr) {
+      console.warn('Sync to user/admin accounts error:', syncErr.message);
+    }
+
+    res.json({
+      ...updatedMember,
+      account_mobile: newLoginMobile || linkedUser?.mobile_number || null,
+      ...(smsNotice ? { sms_notice: smsNotice } : {})
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error: ' + err.message, stack: err.stack });
@@ -523,6 +681,17 @@ exports.deleteMember = async (req, res) => {
 
     const target = targetCheck.rows[0];
     
+    // Check if target member is linked to a SuperAdmin
+    const superAdminCheck = await pool.query(
+      `SELECT id FROM admin_users WHERE member_id = $1 AND role = 'superadmin'
+       UNION
+       SELECT id FROM users WHERE member_id = $1 AND role = 'superadmin'`,
+      [id]
+    );
+    if (superAdminCheck.rows.length > 0) {
+      return res.status(403).json({ error: 'Cannot delete the ancestral profile of a SuperAdmin.' });
+    }
+
     // If spouseOnly flag is set, just delete the spouse without cascading
     if (req.query.spouseOnly === 'true') {
       await pool.query('UPDATE members SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
@@ -607,6 +776,11 @@ exports.deleteMember = async (req, res) => {
       SET deleted_at = CURRENT_TIMESTAMP
       WHERE id IN (SELECT id FROM full_subtree)
         AND deleted_at IS NULL
+        AND id NOT IN (
+          SELECT member_id FROM admin_users WHERE role = 'superadmin' AND member_id IS NOT NULL
+          UNION
+          SELECT member_id FROM users WHERE role = 'superadmin' AND member_id IS NOT NULL
+        )
       RETURNING id, full_name, name_bangla;
     `;
 
@@ -661,6 +835,19 @@ exports.addSpouseRelationship = async (req, res) => {
     // Also update redundant legacy spouse_id column for consistency
     await pool.query('UPDATE members SET spouse_id = $2 WHERE id = $1', [id, spouseId]);
     await pool.query('UPDATE members SET spouse_id = $1 WHERE id = $2', [id, spouseId]);
+
+    // Ensure spouse of a male member is automatically Female
+    await pool.query(`
+      UPDATE members
+      SET gender = 'Female'
+      WHERE id = $2 AND (SELECT gender FROM members WHERE id = $1) = 'Male'
+    `, [id, spouseId]);
+
+    await pool.query(`
+      UPDATE members
+      SET gender = 'Female'
+      WHERE id = $1 AND (SELECT gender FROM members WHERE id = $2) = 'Male'
+    `, [id, spouseId]);
 
     // Ensure female spouse's level matches her husband's level
     await pool.query(`

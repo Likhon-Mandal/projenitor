@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+import VerifiedBadge from './VerifiedBadge';
 
 const BN_GEN_LABELS = {
   1: '১ম প্রজন্ম',
@@ -539,10 +540,13 @@ const SpousesDirectoryView = ({
                           </div>
 
                           {/* Names */}
-                          <div className="mb-1.5">
+                          <div className="mb-1.5 flex items-center gap-1.5">
                             <h4 className="font-serif font-bold text-sm sm:text-base text-stone-900 group-hover:text-orange-800 transition-colors line-clamp-1 leading-snug">
                               {formatName(spouse)}
                             </h4>
+                            {(spouse.is_active || spouse.user_status === 'active') && (
+                              <VerifiedBadge size={15} />
+                            )}
                           </div>
 
                           {/* Husband Tag */}
@@ -581,15 +585,22 @@ const SpousesDirectoryView = ({
 
                             {/* Phone */}
                             {spouse.contact_number && (
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <Phone size={11} className="text-orange-800 shrink-0" />
-                                <a 
-                                  href={`tel:${spouse.contact_number}`} 
-                                  className="text-orange-900 hover:underline font-semibold"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {spouse.contact_number}
-                                </a>
+                                {spouse.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
+                                  const cleanNum = num.trim();
+                                  if (!cleanNum) return null;
+                                  return (
+                                    <a 
+                                      key={i}
+                                      href={`tel:${cleanNum}`} 
+                                      className="text-orange-900 hover:underline font-semibold"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {cleanNum}
+                                    </a>
+                                  );
+                                })}
                               </div>
                             )}
 

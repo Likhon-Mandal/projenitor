@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, X, ArchiveRestore, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, X, ArchiveRestore, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const ConfirmModal = ({ 
@@ -9,6 +9,8 @@ const ConfirmModal = ({
     message, 
     title, 
     confirmText,
+    cancelText,
+    type = 'danger', // 'danger' | 'approve' | 'reject' | 'restore' | 'warning'
     requireCheckbox = false,
     checkboxLabel,
     isPermanent = false
@@ -16,8 +18,18 @@ const ConfirmModal = ({
     const { t } = useLanguage();
     const [acknowledged, setAcknowledged] = useState(false);
 
-    const defaultTitle = t('মুছে ফেলা নিশ্চিত করুন', 'Confirm Deletion');
-    const defaultConfirmText = t('মুছে ফেলুন', 'Delete');
+    const defaultTitle = type === 'approve'
+        ? t('অনুমোদন নিশ্চিত করুন', 'Confirm Approval')
+        : type === 'reject'
+            ? t('প্রত্যাখ্যান নিশ্চিত করুন', 'Confirm Rejection')
+            : t('মুছে ফেলা নিশ্চিত করুন', 'Confirm Deletion');
+
+    const defaultConfirmText = type === 'approve'
+        ? t('অনুমোদন করুন', 'Approve')
+        : type === 'reject'
+            ? t('প্রত্যাখ্যান করুন', 'Reject')
+            : t('মুছে ফেলুন', 'Delete');
+
     const defaultCheckboxLabel = t(
         'আমি বুঝতে পেরেছি যে এই প্রক্রিয়াটি কোনোভাবেই আর ফিরিয়ে আনা সম্ভব নয়।',
         'I understand that this action cannot be undone.'
@@ -35,30 +47,43 @@ const ConfirmModal = ({
 
     if (!isOpen) return null;
 
-    const isRestore = confirmText === 'Restore';
-    const isDestructive = !isRestore;
+    const isRestore = type === 'restore' || confirmText === 'Restore';
+    const isApprove = type === 'approve';
+    const isReject = type === 'reject';
+    const isWarning = type === 'warning';
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-200 border border-stone-200">
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-colors cursor-pointer"
+                    aria-label="Close"
                 >
                     <X size={18} />
                 </button>
 
                 <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner ${
-                        isRestore 
-                            ? 'bg-green-100 text-green-700' 
-                            : isPermanent 
-                                ? 'bg-red-100 text-red-700 ring-8 ring-red-50' 
-                                : 'bg-red-100 text-red-600'
+                        isApprove
+                            ? 'bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50'
+                            : isReject
+                                ? 'bg-red-100 text-red-600 ring-8 ring-red-50'
+                                : isRestore 
+                                    ? 'bg-green-100 text-green-700 ring-8 ring-green-50' 
+                                    : isPermanent 
+                                        ? 'bg-red-100 text-red-700 ring-8 ring-red-50' 
+                                        : isWarning
+                                            ? 'bg-amber-100 text-amber-700 ring-8 ring-amber-50'
+                                            : 'bg-red-100 text-red-600 ring-8 ring-red-50'
                     }`}>
-                        {isRestore ? (
+                        {isApprove ? (
+                            <CheckCircle2 size={36} />
+                        ) : isReject ? (
+                            <XCircle size={36} />
+                        ) : isRestore ? (
                             <ArchiveRestore size={32} />
                         ) : isPermanent ? (
                             <ShieldAlert size={34} />
@@ -68,7 +93,7 @@ const ConfirmModal = ({
                     </div>
 
                     <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-2 ${
-                        isPermanent ? 'text-red-950' : 'text-stone-900'
+                        isApprove ? 'text-emerald-950' : (isReject || isPermanent) ? 'text-red-950' : 'text-stone-900'
                     }`}>
                         {modalTitle}
                     </h2>
@@ -98,7 +123,7 @@ const ConfirmModal = ({
                             onClick={onClose}
                             className="flex-1 py-3 px-4 bg-stone-100 text-stone-800 font-medium rounded-xl hover:bg-stone-200 transition-colors active:scale-95 text-sm cursor-pointer"
                         >
-                            {t('বাতিল', 'Cancel')}
+                            {cancelText || t('বাতিল', 'Cancel')}
                         </button>
                         <button
                             type="button"
@@ -108,11 +133,15 @@ const ConfirmModal = ({
                                 onClose();
                             }}
                             className={`flex-1 py-3 px-4 text-white font-medium rounded-xl shadow-md transition-all active:scale-95 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none ${
-                                isRestore
-                                    ? 'bg-green-700 hover:bg-green-800 shadow-green-700/20'
-                                    : isPermanent
-                                        ? 'bg-red-700 hover:bg-red-800 shadow-red-700/20 font-bold'
-                                        : 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
+                                isApprove
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20 font-bold'
+                                    : isReject
+                                        ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20 font-bold'
+                                        : isRestore
+                                            ? 'bg-green-700 hover:bg-green-800 shadow-green-700/20 font-bold'
+                                            : isPermanent
+                                                ? 'bg-red-700 hover:bg-red-800 shadow-red-700/20 font-bold'
+                                                : 'bg-red-600 hover:bg-red-700 shadow-red-600/20 font-bold'
                             }`}
                         >
                             {actionText}

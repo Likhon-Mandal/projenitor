@@ -29,8 +29,10 @@ const Login = () => {
             login(res.data.token, res.data.user);
             if (res.data.user.role === 'superadmin') {
                 navigate('/dashboard/superadmin');
-            } else {
+            } else if (res.data.user.role === 'admin') {
                 navigate('/dashboard/admin');
+            } else {
+                navigate('/');
             }
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed. Please try again.');
@@ -40,11 +42,11 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-orange-50 flex items-center justify-center px-4">
+        <div className="min-h-[70vh] flex items-center justify-center py-6 sm:py-10 px-4">
             <div className="w-full max-w-md">
                 {/* Logo Card */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-800 mb-4 shadow-lg">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-800 mb-4 shadow-lg ring-2 ring-yellow-400/40">
                         <Shield className="w-8 h-8 text-yellow-400" />
                     </div>
                     <h1 className="text-3xl font-serif font-bold text-orange-900">Projenitor</h1>
@@ -124,9 +126,14 @@ const Login = () => {
                     </form>
                 </div>
 
-                <p className="text-center text-stone-400 text-xs mt-6">
-                    Projenitor Ancestral Record System &copy; {new Date().getFullYear()}
-                </p>
+                <div className="text-center mt-6 space-y-2">
+                    <Link
+                        to="/user-auth"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-800 hover:text-orange-950 transition-colors"
+                    >
+                        <span>&larr; সাধারণ সদস্য লগইন বা একাউন্ট সক্রিয় করুন (Member Login / Activate)</span>
+                    </Link>
+                </div>
             </div>
         </div>
     );

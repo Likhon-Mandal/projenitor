@@ -20,12 +20,13 @@ const encryptionMiddleware = (req, res, next) => {
         // Only obfuscate if it's a successful JSON response
         // and not already obfuscated
         if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.log('[Obfuscation] Encrypting outgoing response');
             const encryptedData = encrypt(data);
-            return originalJson.call(this, {
-                data: encryptedData,
-                obfuscated: true
-            });
+            if (encryptedData) {
+                return originalJson.call(this, {
+                    data: encryptedData,
+                    obfuscated: true
+                });
+            }
         }
         return originalJson.call(this, data);
     };

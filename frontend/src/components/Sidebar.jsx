@@ -11,7 +11,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout, isAdmin, isSuperAdmin } = useAuth();
-    const { language, setLanguage, toggleLanguage, isBn, t } = useLanguage();
+    const { language, setLanguage, toggleLanguage, isBn, t, formatName } = useLanguage();
 
     const navItems = [
         { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon },
@@ -108,7 +108,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                                 <Shield className="w-4 h-4 text-orange-900" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-white text-sm font-medium truncate">{user.name}</p>
+                                <p className="text-white text-sm font-medium truncate">{formatName(user)}</p>
                                 <p className="text-orange-300 text-xs capitalize">{user.role}</p>
                             </div>
                         </div>
@@ -169,9 +169,24 @@ const Sidebar = ({ isOpen, onClose }) => {
                             </button>
                         </>
                     ) : (
-                        <Link to="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-yellow-500 text-orange-900 hover:bg-yellow-400 transition-all">
-                            <Shield className="w-4 h-4" /> {t('অ্যাডমিন লগইন', 'Admin Login')}
-                        </Link>
+                        <div className="space-y-1.5 pt-1">
+                            <Link
+                                to="/user-auth"
+                                state={{ mode: 'login' }}
+                                onClick={onClose}
+                                className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold bg-orange-800 text-yellow-400 hover:bg-orange-700 transition-all border border-orange-700 shadow-sm"
+                            >
+                                <Shield className="w-4 h-4" /> {t('লগইন করুন', 'Sign In')}
+                            </Link>
+                            <Link
+                                to="/user-auth"
+                                state={{ mode: 'register' }}
+                                onClick={onClose}
+                                className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold bg-red-700 text-white hover:bg-red-600 transition-all shadow-md"
+                            >
+                                <Shield className="w-4 h-4 text-yellow-400" /> {t('অ্যাকাউন্ট চালু করুন', 'Active Account')}
+                            </Link>
+                        </div>
                     )}
                 </div>
             </div>

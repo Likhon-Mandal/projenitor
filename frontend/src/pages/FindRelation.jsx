@@ -1,247 +1,312 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, Users } from 'lucide-react';
+import { ArrowLeftRight, GitBranch, Search, Sparkles } from 'lucide-react';
 import MemberSelector from '../components/MemberSelector';
 import { useLanguage } from '../context/LanguageContext';
+
+/* ─── Animation Styles ──────────────────────────────────────────────────── */
+const Styles = () => (
+    <style>{`
+        @keyframes fr-slideUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        @keyframes fr-pulseRing {
+            0%   { transform: scale(1);    opacity: 0.5; }
+            100% { transform: scale(1.5);  opacity: 0;   }
+        }
+        .fr-animate-in { animation: fr-slideUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+        .fr-glass {
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 40px rgba(154,52,18,0.09), 0 1.5px 0 rgba(255,255,255,0.9) inset;
+        }
+        .fr-swap { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background-color 0.2s; }
+        .fr-swap:hover { transform: rotate(180deg) scale(1.12); }
+        .fr-swap:active { transform: rotate(180deg) scale(0.94); }
+        .fr-ring-wrap { position: relative; }
+        .fr-ring-wrap::after {
+            content:'';
+            position:absolute; inset:-5px;
+            border-radius:9999px;
+            border:2px solid #ea580c;
+            animation: fr-pulseRing 1.8s ease-out infinite;
+            pointer-events:none;
+        }
+    `}</style>
+);
 
 const FindRelation = () => {
     const { t, isBn, formatNumber, formatName } = useLanguage();
     const [personA, setPersonA] = useState(null);
     const [personB, setPersonB] = useState(null);
 
-    // ─── Pure helpers ──────────────────────────────────────────────────────────
+    // --- Pure helpers ---
     const spousesOf = (x) => x.spouses || [];
-
     const areDirectSpouses = (a, b) =>
         spousesOf(a).some(s => s.id === b.id) || spousesOf(b).some(s => s.id === a.id);
 
-    // Helper: identify role in tree (Based on provided Master Reference logic)
-    // 1. Son (বংশের ছেলে): Male
-    // 2. Daughter (বংশের মেয়ে): Female with a blood parent in tree
-    // 3. Spouse (পুত্রবধূ): Female with no blood parent in tree
     const getRole = (p) => {
         if (p.gender !== 'Female') return 'son';
         if (p.father_id || p.mother_id) return 'daughter';
         return 'spouse';
     };
 
-    // ─── Relationship Engine ───────────────────────────────────────────────────
+    // --- Relationship Engine ---
     const calculateRelationship = () => {
         if (!personA || !personB) return null;
-
-        const A = personA;
-        const B = personB;
-
-        if (A.id === B.id) {
-            return { diff: 0, text: t('একই ব্যক্তি', 'Same person'), depthStr: '0' };
-        }
+        const A = personA, B = personB;
+        if (A.id === B.id) return { diff: 0, text: t('\u098f\u0995\u0987 \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'Same person'), depthStr: '0', emoji: '\ud83d\udc64' };
 
         const levelDiff = A.level - B.level;
         const gg = Math.abs(levelDiff);
-        const rel = (text) => ({ diff: levelDiff, text, depthStr: gg === 0 ? '0' : formatNumber(gg) });
+        const rel = (text, emoji = '\ud83d\udd17') => ({ diff: levelDiff, text, depthStr: gg === 0 ? '0' : formatNumber(gg), emoji });
 
-        // 1. Determine who is older (higher generation = smaller level number)
-        // If levels are equal, A is arbitrarily 'older' for logic mapping purposes.
-        const older = A.level <= B.level ? A : B;
+        const older   = A.level <= B.level ? A : B;
         const younger = A.level <= B.level ? B : A;
-
         const oRole = getRole(older);
         const yRole = getRole(younger);
 
-        // 2. Check Direct Connection (For gg=0 and gg=1 cases)
         const isDirect = (() => {
             if (gg === 0) return areDirectSpouses(A, B);
             if (gg === 1) {
-                // Direct blood child?
                 if (younger.father_id === older.id || younger.mother_id === older.id) return true;
-                // Daughter-in-law? (younger is spouse, older is parent of younger's husband)
                 if (yRole === 'spouse' && younger.spouses) {
-                    for (const sp of younger.spouses) {
+                    for (const sp of younger.spouses)
                         if (sp.father_id === older.id || sp.mother_id === older.id) return true;
-                    }
                 }
             }
             return false;
         })();
 
-        // 3. Helper to format result based on B's position
-        const result = (titles) => {
-            // titles = [ [olderBn, olderEn], [youngerBn, youngerEn] ]
+        const result = (titles, emoji) => {
             const titlePair = (B.id === older.id) ? titles[0] : titles[1];
-            return rel(t(titlePair[0], titlePair[1] || titlePair[0])); 
+            return rel(t(titlePair[0], titlePair[1] || titlePair[0]), emoji);
         };
 
-        // ── MASTER REFERENCE CHART MAPPING ─────────────────────────────────────
-        
-        if (gg >= 4) {
-            return result([
-                [`${formatNumber(gg)} প্রজন্ম আগের পূর্বসূরী`, `${gg} generations older Ancestor`], 
-                [`${formatNumber(gg)} প্রজন্ম নিচের উত্তরসূরী`, `${gg} generations younger Descendant`]
-            ]);
-        }
+        if (gg >= 4) return result([
+            [formatNumber(gg) + ' \u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae \u0986\u0997\u09c7\u09b0 \u09aa\u09c2\u09b0\u09cd\u09ac\u09b8\u09c2\u09b0\u09c0', gg + ' generations older Ancestor'],
+            [formatNumber(gg) + ' \u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae \u09a8\u09bf\u099a\u09c7\u09b0 \u0989\u09a4\u09cd\u09a4\u09b0\u09b8\u09c2\u09b0\u09c0', gg + ' generations younger Descendant']
+        ], '\ud83c\udf33');
 
         if (gg === 0) {
-            if (oRole === 'son' && yRole === 'son') return result([['ভাই (দাদা / ভাই)', 'Brother'], ['ভাই (দাদা / ভাই)', 'Brother']]);
-            if (oRole === 'daughter' && yRole === 'daughter') return result([['বোন (দিদি / বোন)', 'Sister'], ['বোন (দিদি / বোন)', 'Sister']]);
-            if (oRole === 'spouse' && yRole === 'spouse') return result([['জা', 'Co-sister-in-law'], ['জা', 'Co-sister-in-law']]);
-            
-            if (oRole === 'son' && yRole === 'daughter') return result([['ভাই (দাদা / ভাই)', 'Brother'], ['বোন (দিদি / বোন)', 'Sister']]);
-            if (oRole === 'daughter' && yRole === 'son') return result([['বোন (দিদি / বোন)', 'Sister'], ['ভাই (দাদা / ভাই)', 'Brother']]);
-
-            if (oRole === 'son' && yRole === 'spouse') return isDirect ? result([['স্বামী', 'Husband'], ['স্ত্রী', 'Wife']]) : result([['দেবর / ভাসুর', 'Brother-in-law'], ['বৌদি / ছোট ভাইয়ের বউ', 'Sister-in-law']]);
-            if (oRole === 'spouse' && yRole === 'son') return isDirect ? result([['স্ত্রী', 'Wife'], ['স্বামী', 'Husband']]) : result([['বৌদি / ছোট ভাইয়ের বউ', 'Sister-in-law'], ['দেবর / ভাসুর', 'Brother-in-law']]);
-
-            if (oRole === 'daughter' && yRole === 'spouse') return result([['ননদ', 'Sister-in-law (Nanad)'], ['বৌদি / ছোট ভাইয়ের বউ', 'Sister-in-law (Boudi)']]);
-            if (oRole === 'spouse' && yRole === 'daughter') return result([['বৌদি / ছোট ভাইয়ের বউ', 'Sister-in-law (Boudi)'], ['ননদ', 'Sister-in-law (Nanad)']]);
+            if (oRole==='son'     && yRole==='son')      return result([['\u09ad\u09be\u0987 (\u09a6\u09be\u09a6\u09be / \u09ad\u09be\u0987)','Brother'],['\u09ad\u09be\u0987 (\u09a6\u09be\u09a6\u09be / \u09ad\u09be\u0987)','Brother']], '\ud83e\udd1d');
+            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09ac\u09cb\u09a8 (\u09a6\u09bf\u09a6\u09bf / \u09ac\u09cb\u09a8)','Sister'],['\u09ac\u09cb\u09a8 (\u09a6\u09bf\u09a6\u09bf / \u09ac\u09cb\u09a8)','Sister']], '\ud83d\udc9e');
+            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u099c\u09be','Co-sister-in-law'],['\u099c\u09be','Co-sister-in-law']], '\ud83c\udf38');
+            if (oRole==='son'     && yRole==='daughter') return result([['\u09ad\u09be\u0987','Brother'],['\u09ac\u09cb\u09a8','Sister']], '\ud83e\udd1d');
+            if (oRole==='daughter'&& yRole==='son')      return result([['\u09ac\u09cb\u09a8','Sister'],['\u09ad\u09be\u0987','Brother']], '\ud83e\udd1d');
+            if (oRole==='son'     && yRole==='spouse')   return isDirect ? result([['\u09b8\u09cd\u09ac\u09be\u09ae\u09c0','Husband'],['\u09b8\u09cd\u09a4\u09cd\u09b0\u09c0','Wife']], '\ud83d\udc8d') : result([['\u09a6\u09c7\u09ac\u09b0 / \u09ad\u09be\u09b8\u09c1\u09b0','Brother-in-law'],['\u09ac\u09cc\u09a6\u09bf / \u099b\u09cb\u099f \u09ad\u09be\u0987\u09df\u09c7\u09b0 \u09ac\u0989','Sister-in-law']], '\ud83d\udd17');
+            if (oRole==='spouse'  && yRole==='son')      return isDirect ? result([['\u09b8\u09cd\u09a4\u09cd\u09b0\u09c0','Wife'],['\u09b8\u09cd\u09ac\u09be\u09ae\u09c0','Husband']], '\ud83d\udc8d') : result([['\u09ac\u09cc\u09a6\u09bf / \u099b\u09cb\u099f \u09ad\u09be\u0987\u09df\u09c7\u09b0 \u09ac\u0989','Sister-in-law'],['\u09a6\u09c7\u09ac\u09b0 / \u09ad\u09be\u09b8\u09c1\u09b0','Brother-in-law']], '\ud83d\udd17');
+            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09a8\u09a8\u09a6','Sister-in-law (Nanad)'],['\u09ac\u09cc\u09a6\u09bf','Sister-in-law (Boudi)']], '\ud83c\udf38');
+            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09ac\u09cc\u09a6\u09bf','Sister-in-law (Boudi)'],['\u09a8\u09a8\u09a6','Sister-in-law (Nanad)']], '\ud83c\udf38');
         }
 
         if (gg === 1) {
-            if (oRole === 'son' && yRole === 'son') return isDirect ? result([['বাবা', 'Father'], ['ছেলে', 'Son']]) : result([['কাকা / জেঠা', 'Uncle'], ['ভাইপো', 'Nephew']]);
-            if (oRole === 'son' && yRole === 'daughter') return isDirect ? result([['বাবা', 'Father'], ['মেয়ে', 'Daughter']]) : result([['কাকা / জেঠা', 'Uncle'], ['ভাইঝি', 'Niece']]);
-            if (oRole === 'spouse' && yRole === 'son') return isDirect ? result([['মা', 'Mother'], ['ছেলে', 'Son']]) : result([['কাকী / জেঠী', 'Aunt'], ['ভাইপো (ভাসুরপো / দেওরের ছেলে)', 'Nephew']]);
-            if (oRole === 'son' && yRole === 'spouse') return isDirect ? result([['শ্বশুর', 'Father-in-law'], ['পুত্রবধূ (বৌমা)', 'Daughter-in-law']]) : result([['কাকা / জেঠা শ্বশুর', 'Uncle-in-law'], ['ভাইপোর বউ (বৌমা)', 'Nephew\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'son') return result([['পিসি', 'Aunt (Paternal)'], ['ভাইপো', 'Nephew']]); 
-            
-            if (oRole === 'spouse' && yRole === 'spouse') return isDirect ? result([['শাশুড়ি', 'Mother-in-law'], ['পুত্রবধূ (বৌমা)', 'Daughter-in-law']]) : result([['কাকি / জেঠি শাশুড়ি', 'Aunt-in-law'], ['ভাইপোর বউ (বৌমা)', 'Nephew\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'daughter') return result([['পিসি', 'Aunt (Paternal)'], ['ভাইঝি', 'Niece']]); 
-            if (oRole === 'spouse' && yRole === 'daughter') return isDirect ? result([['মা', 'Mother'], ['মেয়ে', 'Daughter']]) : result([['কাকি / জেঠি', 'Aunt'], ['ভাইঝি (ভাসুরঝি / দেওরের মেয়ে)', 'Niece']]);
-            if (oRole === 'daughter' && yRole === 'spouse') return result([['পিসি শাশুড়ি', 'Aunt-in-law'], ['ভাইপোর বউ / বৌমা', 'Nephew\'s Wife']]);
+            if (oRole==='son'     && yRole==='son')      return isDirect ? result([['\u09ac\u09be\u09ac\u09be','Father'],['\u099b\u09c7\u09b2\u09c7','Son']], '\ud83d\udc68\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be','Uncle'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc68\u200d\ud83d\udc66');
+            if (oRole==='son'     && yRole==='daughter') return isDirect ? result([['\u09ac\u09be\u09ac\u09be','Father'],['\u09ae\u09c7\u09df\u09c7','Daughter']], '\ud83d\udc68\u200d\ud83d\udc67') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be','Uncle'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc68\u200d\ud83d\udc67');
+            if (oRole==='spouse'  && yRole==='son')      return isDirect ? result([['\u09ae\u09be','Mother'],['\u099b\u09c7\u09b2\u09c7','Son']], '\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09c0 / \u099c\u09c7\u09a0\u09c0','Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc69\u200d\ud83d\udc66');
+            if (oRole==='son'     && yRole==='spouse')   return isDirect ? result([['\u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Father-in-law'],['\u09aa\u09c1\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Daughter-in-law']], '\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be \u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Uncle-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
+            if (oRole==='daughter'&& yRole==='son')      return result([['\u09aa\u09bf\u09b8\u09bf','Aunt (Paternal)'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc69\u200d\ud83d\udc66');
+            if (oRole==='spouse'  && yRole==='spouse')   return isDirect ? result([['\u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Mother-in-law'],['\u09aa\u09c1\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Daughter-in-law']], '\ud83d\udc69\u200d\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09bf / \u099c\u09c7\u09a0\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Aunt-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
+            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09aa\u09bf\u09b8\u09bf','Aunt (Paternal)'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc69\u200d\ud83d\udc67');
+            if (oRole==='spouse'  && yRole==='daughter') return isDirect ? result([['\u09ae\u09be','Mother'],['\u09ae\u09c7\u09df\u09c7','Daughter']], '\ud83d\udc69\u200d\ud83d\udc67') : result([['\u0995\u09be\u0995\u09bf / \u099c\u09c7\u09a0\u09bf','Aunt'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc69\u200d\ud83d\udc67');
+            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09aa\u09bf\u09b8\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Aunt-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
         }
 
         if (gg === 2) {
-            if (oRole === 'son' && yRole === 'son') return result([['ঠাকুরদা', 'Grandfather'], ['নাতি', 'Grandson']]);
-            if (oRole === 'son' && yRole === 'daughter') return result([['ঠাকুরদা', 'Grandfather'], ['নাতিনী', 'Granddaughter']]);
-            if (oRole === 'spouse' && yRole === 'son') return result([['ঠাকুমা', 'Grandmother'], ['নাতি', 'Grandson']]);
-            if (oRole === 'son' && yRole === 'spouse') return result([['দাদুশ্বশুর (ঠাকুরদা শ্বশুর)', 'Grandfather-in-law'], ['নাতবউ', 'Grandson\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'son') return result([['পিস-ঠাকুমা (বুড়ি পিসি)', 'Great-Aunt'], ['ভাইপোর ছেলে (নাতি)', 'Grandnephew']]);
-            
-            if (oRole === 'spouse' && yRole === 'spouse') return result([['ঠাকুমা শাশুড়ি', 'Grandmother-in-law'], ['নাতবউ', 'Grandson\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'daughter') return result([['পিস-ঠাকুমা (বুড়ি পিসি)', 'Great-Aunt'], ['ভাইপোর মেয়ে (নাতিন)', 'Grandniece']]);
-            if (oRole === 'daughter' && yRole === 'spouse') return result([['পিস-ঠাকুমা শাশুড়ি', 'Great-Aunt-in-law'], ['ভাইপোর ছেলের বউ (নাতিবউ)', 'Grandnephew\'s Wife']]);
-            if (oRole === 'spouse' && yRole === 'daughter') return result([['ঠাকুমা', 'Grandmother'], ['নাতিনী', 'Granddaughter']]);
+            if (oRole==='son'     && yRole==='son')      return result([['\u09a0\u09be\u0995\u09c1\u09b0\u09a6\u09be','Grandfather'],['\u09a8\u09be\u09a4\u09bf','Grandson']], '\ud83d\udc74');
+            if (oRole==='son'     && yRole==='daughter') return result([['\u09a0\u09be\u0995\u09c1\u09b0\u09a6\u09be','Grandfather'],['\u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Granddaughter']], '\ud83d\udc74');
+            if (oRole==='spouse'  && yRole==='son')      return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be','Grandmother'],['\u09a8\u09be\u09a4\u09bf','Grandson']], '\ud83d\udc75');
+            if (oRole==='son'     && yRole==='spouse')   return result([['\u09a6\u09be\u09a6\u09c1\u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Grandfather-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandson\'s Wife']], '\ud83d\udd17');
+            if (oRole==='daughter'&& yRole==='son')      return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u099b\u09c7\u09b2\u09c7','Grandnephew']], '\ud83d\udc69\u200d\ud83d\udc66');
+            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Grandmother-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandson\'s Wife']], '\ud83d\udd17');
+            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ae\u09c7\u09df\u09c7','Grandniece']], '\ud83d\udc69\u200d\ud83d\udc67');
+            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Aunt-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandnephew\'s Wife']], '\ud83d\udd17');
+            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be','Grandmother'],['\u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Granddaughter']], '\ud83d\udc75');
         }
 
         if (gg === 3) {
-            if (oRole === 'son' && yRole === 'son') return result([['প্রপিতামহ (বড় ঠাকুরদা)', 'Great-Grandfather'], ['প্রপৌত্র (পুতি)', 'Great-Grandson']]);
-            if (oRole === 'son' && yRole === 'daughter') return result([['প্রপিতামহ (বড় ঠাকুরদা)', 'Great-Grandfather'], ['প্রপৌত্রী (পুতি)', 'Great-Granddaughter']]);
-            if (oRole === 'spouse' && yRole === 'son') return result([['বড় ঠাকুমা (বড়মা / প্রপিতামহী)', 'Great-Grandmother'], ['প্রপৌত্র (পুতি)', 'Great-Grandson']]);
-            if (oRole === 'son' && yRole === 'spouse') return result([['প্রপিতামহ শ্বশুর (বড় দাদু শ্বশুর)', 'Great-Grandfather-in-law'], ['প্রপৌত্রবধূ (পুতিবউ)', 'Great-Grandson\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'son') return result([['বড় পিসি (প্রপিতামহী পিসি)', 'Great-Great-Aunt'], ['ভাইপোর নাতি', 'Great-Grandnephew']]);
-            
-            if (oRole === 'spouse' && yRole === 'spouse') return result([['বড় ঠাকুমা শাশুড়ি', 'Great-Grandmother-in-law'], ['প্রপৌত্রবধূ (পুতিবউ)', 'Great-Grandson\'s Wife']]);
-            if (oRole === 'daughter' && yRole === 'daughter') return result([['বড় পিসি', 'Great-Great-Aunt'], ['ভাইপোর নাতিনী', 'Great-Grandniece']]);
-            if (oRole === 'daughter' && yRole === 'spouse') return result([['বড় পিসি শাশুড়ি', 'Great-Great-Aunt-in-law'], ['ভাইপোর নাতবউ', 'Great-Grandnephew\'s Wife']]);
-            if (oRole === 'spouse' && yRole === 'daughter') return result([['বড় ঠাকুমা (প্রপিতামহী)', 'Great-Grandmother'], ['প্রপৌত্রী (পুতি)', 'Great-Granddaughter']]);
+            if (oRole==='son'     && yRole==='son')      return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9','Great-Grandfather'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0','Great-Grandson']], '\ud83c\udf33');
+            if (oRole==='son'     && yRole==='daughter') return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9','Great-Grandfather'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09c0','Great-Granddaughter']], '\ud83c\udf33');
+            if (oRole==='spouse'  && yRole==='son')      return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Grandmother'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0','Great-Grandson']], '\ud83c\udf33');
+            if (oRole==='son'     && yRole==='spouse')   return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9 \u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Great-Grandfather-in-law'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Great-Grandson\'s Wife']], '\ud83c\udf33');
+            if (oRole==='daughter'&& yRole==='son')      return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf','Great-Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09a8\u09be\u09a4\u09bf','Great-Grandnephew']], '\ud83c\udf33');
+            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Grandmother-in-law'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Great-Grandson\'s Wife']], '\ud83c\udf33');
+            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf','Great-Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Great-Grandniece']], '\ud83c\udf33');
+            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Great-Aunt-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Great-Grandnephew\'s Wife']], '\ud83c\udf33');
+            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Grandmother'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09c0','Great-Granddaughter']], '\ud83c\udf33');
         }
 
-        return rel(t('অজানা সম্পর্ক', 'Unknown Relation'));
-    };
-
-    // ─── Display name helper ───────────────────────────────────────────────────
-    const getDisplayName = (target) => {
-        return formatName(target);
+        return rel(t('\u0985\u099c\u09be\u09a8\u09be \u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995', 'Unknown Relation'), '\u2753');
     };
 
     const relationResult = calculateRelationship();
+    const bothSelected = personA && personB;
+
+    const Avatar = ({ member, borderColor, textColor }) => (
+        <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 ${borderColor} bg-white overflow-hidden shadow-xl flex items-center justify-center shrink-0`}>
+            {member.profile_image_url
+                ? <img src={member.profile_image_url} alt="" className="w-full h-full object-cover" />
+                : <span className={`font-serif text-3xl font-bold ${textColor}`}>{(formatName(member) || '?').charAt(0)}</span>}
+        </div>
+    );
 
     return (
-        <div className="space-y-8 animate-fade-in pb-12">
+        <div className="min-h-screen pb-16 font-sans">
+            <Styles />
 
-            {/* Header */}
-            <div className="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-orange-100 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl -z-10 opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-50 rounded-full blur-3xl -z-10 opacity-50 -translate-x-1/2 translate-y-1/2"></div>
-                <div className="relative z-10 text-center md:text-left">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-4 tracking-tight drop-shadow-sm">
-                        {t('সম্পর্ক', 'Find')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700 block sm:inline">{t('নির্ণয়', 'Relationship')}</span>
-                    </h1>
-                    <p className="text-stone-500 max-w-lg text-lg font-light">
-                        {t('বংশগত স্তরের তুলনা করে যে কোনো দুজন পরিবারের সদস্যের মধ্যে প্রজন্মের ব্যবধান এবং সম্পর্ক জানুন।', 'Compare generational levels to discover the generational gap and relation between any two family members.')}
+            {/* Page Header */}
+            <div className="relative overflow-hidden mb-6">
+                <div className="absolute -top-20 -right-20 w-72 h-72 bg-orange-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
+                <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-red-100 rounded-full blur-3xl opacity-40 pointer-events-none" />
+                <div className="relative z-10 fr-glass rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row items-center gap-5">
+                    <div className="fr-ring-wrap shrink-0">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center shadow-xl shadow-orange-900/25">
+                            <GitBranch size={28} className="text-white" />
+                        </div>
+                    </div>
+                    <div className="text-center sm:text-left flex-1">
+                        <div className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-[0.2em] text-orange-600 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full mb-2">
+                            <Sparkles size={10} />
+                            {t('\u09ac\u0982\u09b6 \u09aa\u09b0\u09bf\u099a\u09df', 'Family Lineage Tool')}
+                        </div>
+                        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900 leading-tight mb-1">
+                            {t('\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 ', 'Find ')}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700">
+                                {t('\u09a8\u09bf\u09b0\u09cd\u09a3\u09df', 'Relationship')}
+                            </span>
+                        </h1>
+                        <p className="text-stone-500 text-sm max-w-lg leading-relaxed">
+                            {t(
+                                '\u09af\u09c7 \u0995\u09cb\u09a8\u09cb \u09a6\u09c1\u099c\u09a8 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0\u09c7\u09b0 \u09b8\u09a6\u09b8\u09cd\u09af\u09c7\u09b0 \u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae\u09c7\u09b0 \u09ac\u09cd\u09af\u09ac\u09a7\u09be\u09a8 \u0993 \u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 \u099c\u09be\u09a8\u09c1\u09a8\u0964',
+                                'Discover the generational gap & relationship between any two family members.'
+                            )}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Selector Grid */}
+            <div className="relative z-30 fr-glass rounded-3xl p-5 sm:p-7 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_52px_1fr] gap-4 items-start">
+                    <div className="space-y-2 relative z-20">
+                        <p className="text-[10px] uppercase font-bold tracking-[0.18em] text-orange-700 flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-orange-600 text-white text-[10px] font-black flex items-center justify-center">{t('\u09e7','1')}</span>
+                            {t('\u09aa\u09cd\u09b0\u09a5\u09ae \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'First Person')}
+                        </p>
+                        <div className="relative z-30">
+                            <MemberSelector label="" onSelect={setPersonA} selectedMember={personA} />
+                        </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center justify-center gap-1 pt-0 sm:pt-8">
+                        <button
+                            onClick={() => { const tmp = personA; setPersonA(personB); setPersonB(tmp); }}
+                            disabled={!bothSelected}
+                            className={`fr-swap w-11 h-11 rounded-full flex items-center justify-center shadow-md border-2
+                                ${bothSelected
+                                    ? 'bg-orange-600 hover:bg-orange-700 border-orange-400 text-white shadow-orange-300/40 cursor-pointer'
+                                    : 'bg-white border-stone-200 text-stone-300 cursor-not-allowed'}`}
+                            title={t('\u0985\u09a6\u09b2\u09ac\u09a6\u09b2 \u0995\u09b0\u09c1\u09a8', 'Swap')}
+                        >
+                            <ArrowLeftRight size={16} />
+                        </button>
+                    </div>
+
+                    <div className="space-y-2 relative z-10">
+                        <p className="text-[10px] uppercase font-bold tracking-[0.18em] text-red-700 flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-red-700 text-white text-[10px] font-black flex items-center justify-center">{t('\u09e8','2')}</span>
+                            {t('\u09a6\u09cd\u09ac\u09bf\u09a4\u09c0\u09df \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'Second Person')}
+                        </p>
+                        <div className="relative z-10">
+                            <MemberSelector label="" onSelect={setPersonB} selectedMember={personB} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Empty state */}
+            {!bothSelected && (
+                <div className="relative z-10 fr-glass rounded-3xl p-8 sm:p-10 text-center">
+                    <div className="w-14 h-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Search size={24} className="text-stone-300" />
+                    </div>
+                    <p className="text-stone-400 text-sm sm:text-base font-medium">
+                        {!personA && !personB
+                            ? t('\u0989\u09aa\u09b0\u09c7 \u09a6\u09c1\u099c\u09a8 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0\u09c7\u09b0 \u09b8\u09a6\u09b8\u09cd\u09af \u09a8\u09bf\u09b0\u09cd\u09ac\u09be\u099a\u09a8 \u0995\u09b0\u09c1\u09a8\u0964', 'Select two family members above to discover their relationship.')
+                            : t('\u098f\u09ac\u09be\u09b0 \u09a6\u09cd\u09ac\u09bf\u09a4\u09c0\u09df \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf \u09a8\u09bf\u09b0\u09cd\u09ac\u09be\u099a\u09a8 \u0995\u09b0\u09c1\u09a8\u0964', 'Now select the second person to compare.')}
                     </p>
                 </div>
-                <div className="w-24 h-24 bg-white rounded-full shadow-lg border-4 border-orange-50 flex items-center justify-center shrink-0 relative z-10 animate-pulse-slow">
-                    <Users size={40} className="text-orange-500" />
-                </div>
-            </div>
+            )}
 
-            {/* Person Selectors */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start relative z-20">
-                <div className="md:col-span-2 bg-white p-6 rounded-2xl shadow-md border border-stone-100 hover:shadow-lg transition-shadow duration-300 relative z-30">
-                    <MemberSelector
-                        label={t('প্রথম ব্যক্তি নির্বাচন করুন', 'Select First Person')}
-                        onSelect={setPersonA}
-                        selectedMember={personA}
-                    />
-                </div>
-
-                <div className="md:col-span-1 flex items-center justify-center h-full py-8 md:py-0 relative z-10">
-                    <div className="hidden md:block absolute left-0 right-0 top-1/2 h-1 bg-stone-200 -z-10 rounded-full w-full"></div>
-                    <button
-                        onClick={() => { const tmp = personA; setPersonA(personB); setPersonB(tmp); }}
-                        disabled={!personA && !personB}
-                        className={`w-16 h-16 rounded-full flex items-center justify-center border-4 shadow-md transition-all duration-500 cursor-pointer
-                            ${(personA || personB) ? 'hover:scale-105 active:scale-95' : ''}
-                            ${(personA && personB) ? 'bg-orange-500 hover:bg-orange-600 border-white text-white scale-110 shadow-orange-500/20' : 'bg-white border-stone-100 text-stone-300 scale-100'}`}
-                    >
-                        <ArrowRightLeft size={24} className={(personA && personB) ? 'animate-pulse' : ''} />
-                    </button>
-                </div>
-
-                <div className="md:col-span-2 bg-white p-6 rounded-2xl shadow-md border border-stone-100 hover:shadow-lg transition-shadow duration-300 relative z-30">
-                    <MemberSelector
-                        label={t('দ্বিতীয় ব্যক্তি নির্বাচন করুন', 'Select Second Person')}
-                        onSelect={setPersonB}
-                        selectedMember={personB}
-                    />
-                </div>
-            </div>
-
-            {/* Results */}
-            {relationResult && (
-                <div className="mt-8 animate-slide-up origin-top p-1">
-                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-orange-100/50">
-                        <div className="bg-stone-900 px-8 py-6 text-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 to-red-900/20"></div>
-                            <h2 className="text-sm font-bold tracking-[0.2em] text-orange-400 uppercase relative z-10">{t('সম্পর্কের দূরত্ব', 'Relationship Distance')}</h2>
+            {/* Result Card */}
+            {relationResult && bothSelected && (
+                <div className="relative z-10 fr-animate-in">
+                    <div className="fr-glass rounded-3xl overflow-hidden">
+                        <div className="h-1.5 bg-gradient-to-r from-orange-400 via-yellow-400 to-red-500" />
+                        <div className="bg-gradient-to-br from-stone-900 to-stone-800 px-5 sm:px-8 py-4 sm:py-5 flex items-center gap-3">
+                            <span className="text-3xl">{relationResult.emoji}</span>
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-orange-400 mb-0.5">
+                                    {t('\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995\u09c7\u09b0 \u09ab\u09b2\u09be\u09ab\u09b2', 'Relationship Result')}
+                                </p>
+                                <h2 className="text-white font-serif font-bold text-xl sm:text-2xl leading-tight">
+                                    {relationResult.text}
+                                </h2>
+                            </div>
                         </div>
-                        <div className="p-8 md:p-12 text-center bg-gradient-to-b from-[#fffcf5] to-white">
-                            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-10">
 
-                                <div className="flex flex-col items-center group">
-                                    <div className="w-24 h-24 rounded-full border-4 border-orange-200 bg-white overflow-hidden shadow-lg mb-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                                        {personA.profile_image_url
-                                            ? <img src={personA.profile_image_url} alt="" className="w-full h-full object-cover" />
-                                            : <span className="font-serif text-3xl text-orange-800 font-bold">{personA.full_name?.charAt(0)}</span>}
+                        <div className="p-5 sm:p-8 bg-gradient-to-b from-amber-50/50 to-white">
+                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-5">
+                                <div className="flex flex-col items-center gap-1.5 flex-1">
+                                    <Avatar member={personA} borderColor="border-orange-300" textColor="text-orange-800" />
+                                    <p className="font-bold text-stone-800 text-sm text-center leading-tight">{formatName(personA)}</p>
+                                    <span className="text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200 px-2 py-0.5 rounded-full">
+                                        {t('\u09b2\u09c7\u09ad\u09c7\u09b2', 'Lvl')} {formatNumber(personA.level)}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center justify-center px-2 sm:px-4">
+                                    <div className="flex flex-col items-center bg-white border-2 border-yellow-300 rounded-2xl px-4 py-2 shadow-md shadow-yellow-100 min-w-[60px]">
+                                        <span className="text-3xl sm:text-4xl font-serif font-black text-orange-600 leading-none">
+                                            {relationResult.depthStr}
+                                        </span>
+                                        <span className="text-[9px] uppercase tracking-widest font-bold text-stone-400 text-center mt-0.5 leading-tight">
+                                            {t('\u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae', 'Gen')}
+                                        </span>
                                     </div>
-                                    <span className="font-bold text-stone-800 text-lg">{getDisplayName(personA)}</span>
-                                    <span className="text-xs font-bold bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full mt-1">{t('লেভেল', 'Level')} {formatNumber(personA.level)}</span>
                                 </div>
 
-                                <div className="flex flex-col items-center text-orange-500 px-4">
-                                    <span className="text-5xl font-serif font-bold text-orange-600 drop-shadow-sm mb-1">{relationResult.depthStr}</span>
-                                    <span className="text-xs uppercase tracking-widest font-bold text-stone-400">{t('প্রজন্মের ব্যবধান', 'Generation Gap')}</span>
+                                <div className="flex flex-col items-center gap-1.5 flex-1">
+                                    <Avatar member={personB} borderColor="border-red-300" textColor="text-red-800" />
+                                    <p className="font-bold text-stone-800 text-sm text-center leading-tight">{formatName(personB)}</p>
+                                    <span className="text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full">
+                                        {t('\u09b2\u09c7\u09ad\u09c7\u09b2', 'Lvl')} {formatNumber(personB.level)}
+                                    </span>
                                 </div>
-
-                                <div className="flex flex-col items-center group">
-                                    <div className="w-24 h-24 rounded-full border-4 border-red-200 bg-white overflow-hidden shadow-lg mb-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                                        {personB.profile_image_url
-                                            ? <img src={personB.profile_image_url} alt="" className="w-full h-full object-cover" />
-                                            : <span className="font-serif text-3xl text-red-800 font-bold">{personB.full_name?.charAt(0)}</span>}
-                                    </div>
-                                    <span className="font-bold text-stone-800 text-lg">{getDisplayName(personB)}</span>
-                                    <span className="text-xs font-bold bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full mt-1">{t('লেভেল', 'Level')} {formatNumber(personB.level)}</span>
-                                </div>
-
                             </div>
 
-                            <div className="inline-block bg-orange-50 border border-orange-200 px-8 py-4 rounded-full shadow-inner relative max-w-2xl w-full mx-auto">
-                                <p className="text-xl md:text-2xl font-serif font-medium text-stone-800 leading-snug">
+                            <div className="bg-white border border-orange-100 rounded-2xl px-4 sm:px-6 py-4 shadow-inner text-center">
+                                <p className="text-base sm:text-lg font-serif font-medium text-stone-700 leading-relaxed">
                                     {isBn ? (
                                         <>
-                                            <span className="font-bold text-orange-700">{getDisplayName(personB)}</span> হলেন <span className="font-bold text-orange-700">{getDisplayName(personA)}</span> -এর <span className="font-bold text-red-700 border-b-2 border-red-200">{relationResult.text}</span>।
+                                            <span className="font-bold text-orange-700">{formatName(personB)}</span>
+                                            {' \u09b9\u09b2\u09c7\u09a8 '}
+                                            <span className="font-bold text-orange-700">{formatName(personA)}</span>
+                                            {'-\u098f\u09b0 '}
+                                            <span className="font-bold text-red-700 underline decoration-red-200 decoration-2 underline-offset-2">
+                                                {relationResult.text}
+                                            </span>।
                                         </>
                                     ) : (
                                         <>
-                                            <span className="font-bold text-orange-700">{getDisplayName(personB)}</span> is the <span className="font-bold text-red-700 border-b-2 border-red-200">{relationResult.text}</span> of <span className="font-bold text-orange-700">{getDisplayName(personA)}</span>.
+                                            <span className="font-bold text-orange-700">{formatName(personB)}</span>
+                                            {' is the '}
+                                            <span className="font-bold text-red-700 underline decoration-red-200 decoration-2 underline-offset-2">
+                                                {relationResult.text}
+                                            </span>
+                                            {' of '}
+                                            <span className="font-bold text-orange-700">{formatName(personA)}</span>.
                                         </>
                                     )}
                                 </p>
