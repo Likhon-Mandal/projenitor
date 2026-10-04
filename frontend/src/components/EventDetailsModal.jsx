@@ -275,59 +275,85 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                         </button>
                     </div>
 
-                    {/* Navigation Tabs and Location Map Link */}
-                    {(isPast || event.map_link || event.location) && (
-                        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-white/15">
-                            {isPast ? (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <button
-                                        onClick={() => setActiveTab('details')}
-                                        className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                                            activeTab === 'details'
-                                                ? 'bg-white text-orange-900 shadow-md scale-105'
-                                                : 'bg-white/10 hover:bg-white/20 text-white'
-                                        }`}
-                                    >
-                                        <Calendar size={15} />
-                                        {t('অনুষ্ঠানের বিবরণ', 'Event Details')}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('memories')}
-                                        className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 relative cursor-pointer ${
-                                            activeTab === 'memories'
-                                                ? 'bg-yellow-400 text-stone-900 shadow-md font-extrabold scale-105'
-                                                : 'bg-white/10 hover:bg-white/20 text-white'
-                                        }`}
-                                    >
-                                        <Heart size={15} className="fill-current text-red-500" />
-                                        {t('স্মৃতিমালা ও গ্যালারি', 'Memories & Gallery')}
-                                        {memories.length > 0 && (
-                                            <span className="ml-1 bg-red-600 text-white text-[11px] px-2 py-0.2 rounded-full font-bold">
-                                                {memories.length}
-                                            </span>
-                                        )}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div />
-                            )}
-
-                            {/* Map Link placed on the right side */}
-                            {(event.map_link || event.location) && (
-                                <a
-                                    href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 bg-white/15 hover:bg-white text-white hover:text-orange-950 border border-white/25 hover:border-white rounded-full text-xs font-bold shadow-xs hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer group ml-auto shrink-0"
-                                    title={t('গুগল ম্যাপে দেখুন', 'View on Google Maps')}
+                    {/* Three Justified Options: Event Details, Memories & Gallery, View Map */}
+                    {isPast && (
+                        <div className="w-full mt-4 pt-4 border-t border-white/15">
+                            <div className={`grid gap-2 sm:gap-3 w-full ${
+                                (event.map_link || event.location) ? 'grid-cols-3' : 'grid-cols-2'
+                            }`}>
+                                {/* Option 1: Event Details */}
+                                <button
+                                    onClick={() => setActiveTab('details')}
+                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs border ${
+                                        activeTab === 'details'
+                                            ? 'bg-white text-orange-950 border-white shadow-md font-extrabold scale-[1.02]'
+                                            : 'bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border-white/15'
+                                    }`}
                                 >
-                                    <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-orange-100 flex items-center justify-center text-yellow-300 group-hover:text-orange-700 transition-colors shrink-0">
-                                        <MapPin size={11} />
-                                    </div>
-                                    <span className="truncate">{t('ম্যাপে দেখুন', 'View Map')}</span>
-                                    <ExternalLink size={12} className="text-white/70 group-hover:text-orange-950 transition-colors shrink-0" />
-                                </a>
-                            )}
+                                    <Calendar size={15} className={`shrink-0 ${activeTab === 'details' ? 'text-orange-800' : 'text-orange-200'}`} />
+                                    <span className="truncate">
+                                        <span className="hidden sm:inline">{t('অনুষ্ঠানের বিবরণ', 'Event Details')}</span>
+                                        <span className="sm:hidden">{t('বিবরণ', 'Details')}</span>
+                                    </span>
+                                </button>
+
+                                {/* Option 2: Memories & Gallery */}
+                                <button
+                                    onClick={() => setActiveTab('memories')}
+                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 relative cursor-pointer shadow-xs border ${
+                                        activeTab === 'memories'
+                                            ? 'bg-yellow-400 text-stone-900 border-yellow-300 shadow-md font-extrabold scale-[1.02]'
+                                            : 'bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border-white/15'
+                                    }`}
+                                >
+                                    <Heart size={15} className={`shrink-0 ${activeTab === 'memories' ? 'fill-current text-red-600' : 'text-red-400'}`} />
+                                    <span className="truncate">
+                                        <span className="hidden sm:inline">{t('স্মৃতিমালা ও গ্যালারি', 'Memories & Gallery')}</span>
+                                        <span className="sm:hidden">{t('স্মৃতিমালা', 'Memories')}</span>
+                                    </span>
+                                    {memories.length > 0 && (
+                                        <span className={`text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ${
+                                            activeTab === 'memories' ? 'bg-red-600 text-white' : 'bg-white/20 text-white'
+                                        }`}>
+                                            {memories.length}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {/* Option 3: View on Map */}
+                                {(event.map_link || event.location) && (
+                                    <a
+                                        href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs bg-white/10 hover:bg-white/25 text-white hover:text-yellow-300 border border-white/15 hover:border-yellow-400/40 group scale-[1] hover:scale-[1.02] active:scale-95"
+                                        title={t('গুগল ম্যাপে লোকেশন দেখুন', 'View Location on Google Maps')}
+                                    >
+                                        <MapPin size={15} className="text-yellow-300 group-hover:text-yellow-200 transition-colors shrink-0" />
+                                        <span className="truncate">
+                                            <span className="hidden sm:inline">{t('গুগল ম্যাপ', 'Google Maps')}</span>
+                                            <span className="sm:hidden">{t('ম্যাপ', 'Map')}</span>
+                                        </span>
+                                        <ExternalLink size={12} className="text-white/60 group-hover:text-yellow-300 transition-colors shrink-0 hidden sm:inline" />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Upcoming event map link if applicable */}
+                    {!isPast && (event.map_link || event.location) && (
+                        <div className="flex justify-end mt-4 pt-4 border-t border-white/15">
+                            <a
+                                href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white hover:text-yellow-300 border border-white/15 hover:border-yellow-400/40 rounded-xl text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer group"
+                            >
+                                <MapPin size={15} className="text-yellow-300 group-hover:text-yellow-200 transition-colors shrink-0" />
+                                <span>{t('গুগল ম্যাপে দেখুন', 'View on Google Maps')}</span>
+                                <ExternalLink size={12} className="text-white/60 group-hover:text-yellow-300 transition-colors shrink-0" />
+                            </a>
                         </div>
                     )}
                 </div>
