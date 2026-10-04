@@ -275,36 +275,59 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                         </button>
                     </div>
 
-                    {/* Navigation Tabs if Previous Event */}
-                    {isPast && (
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-white/15">
-                            <button
-                                onClick={() => setActiveTab('details')}
-                                className={`px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
-                                    activeTab === 'details'
-                                        ? 'bg-white text-orange-900 shadow-md scale-105'
-                                        : 'bg-white/10 hover:bg-white/20 text-white'
-                                }`}
-                            >
-                                <Calendar size={15} />
-                                {t('অনুষ্ঠানের বিবরণ', 'Event Details')}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('memories')}
-                                className={`px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 relative ${
-                                    activeTab === 'memories'
-                                        ? 'bg-yellow-400 text-stone-900 shadow-md font-extrabold scale-105'
-                                        : 'bg-white/10 hover:bg-white/20 text-white'
-                                }`}
-                            >
-                                <Heart size={15} className="fill-current text-red-500" />
-                                {t('স্মৃতিমালা ও গ্যালারি', 'Memories & Gallery')}
-                                {memories.length > 0 && (
-                                    <span className="ml-1 bg-red-600 text-white text-[11px] px-2 py-0.2 rounded-full font-bold">
-                                        {memories.length}
-                                    </span>
-                                )}
-                            </button>
+                    {/* Navigation Tabs and Location Map Link */}
+                    {(isPast || event.map_link || event.location) && (
+                        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-white/15">
+                            {isPast ? (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <button
+                                        onClick={() => setActiveTab('details')}
+                                        className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                            activeTab === 'details'
+                                                ? 'bg-white text-orange-900 shadow-md scale-105'
+                                                : 'bg-white/10 hover:bg-white/20 text-white'
+                                        }`}
+                                    >
+                                        <Calendar size={15} />
+                                        {t('অনুষ্ঠানের বিবরণ', 'Event Details')}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('memories')}
+                                        className={`px-3.5 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 relative cursor-pointer ${
+                                            activeTab === 'memories'
+                                                ? 'bg-yellow-400 text-stone-900 shadow-md font-extrabold scale-105'
+                                                : 'bg-white/10 hover:bg-white/20 text-white'
+                                        }`}
+                                    >
+                                        <Heart size={15} className="fill-current text-red-500" />
+                                        {t('স্মৃতিমালা ও গ্যালারি', 'Memories & Gallery')}
+                                        {memories.length > 0 && (
+                                            <span className="ml-1 bg-red-600 text-white text-[11px] px-2 py-0.2 rounded-full font-bold">
+                                                {memories.length}
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div />
+                            )}
+
+                            {/* Map Link placed on the right side */}
+                            {(event.map_link || event.location) && (
+                                <a
+                                    href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 bg-white/15 hover:bg-white text-white hover:text-orange-950 border border-white/25 hover:border-white rounded-full text-xs font-bold shadow-xs hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer group ml-auto shrink-0"
+                                    title={t('গুগল ম্যাপে দেখুন', 'View on Google Maps')}
+                                >
+                                    <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-orange-100 flex items-center justify-center text-yellow-300 group-hover:text-orange-700 transition-colors shrink-0">
+                                        <MapPin size={11} />
+                                    </div>
+                                    <span className="truncate">{t('ম্যাপে দেখুন', 'View Map')}</span>
+                                    <ExternalLink size={12} className="text-white/70 group-hover:text-orange-950 transition-colors shrink-0" />
+                                </a>
+                            )}
                         </div>
                     )}
                 </div>
@@ -346,24 +369,6 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Location Map Link Button */}
-                            {(event.map_link || event.location) && (
-                                <div className="flex items-center -mt-3">
-                                    <a
-                                        href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 bg-white hover:bg-orange-50 text-orange-800 hover:text-orange-950 border border-orange-200/90 rounded-full text-xs font-bold shadow-2xs hover:shadow-xs transition-all duration-200 transform hover:scale-[1.02] active:scale-95 cursor-pointer group"
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 group-hover:bg-orange-200 transition-colors shrink-0">
-                                            <MapPin size={11} />
-                                        </div>
-                                        <span className="truncate">{t('গুগল ম্যাপে দেখুন', 'View on Google Maps')}</span>
-                                        <ExternalLink size={12} className="text-orange-400 group-hover:text-orange-700 transition-colors shrink-0" />
-                                    </a>
-                                </div>
-                            )}
 
                             {/* Description Section */}
                             <div className="bg-white p-5 rounded-2xl border border-orange-100 shadow-sm space-y-3">
