@@ -84,7 +84,7 @@ const Header = () => {
     <>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <header className="bg-orange-800 text-white shadow-lg sticky top-0 z-30 border-b border-orange-700/50 font-sans">
+      <header className="bg-orange-800 text-white shadow-lg sticky top-0 z-40 border-b border-orange-700/50 font-sans">
         <div className="container mx-auto px-4 py-2.5 flex justify-between items-center gap-2">
 
           {/* Logo + Hamburger */}
@@ -129,7 +129,7 @@ const Header = () => {
 
               {/* Dropdown Menu */}
               {dropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-56 bg-orange-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl py-2 animate-slide-up overflow-hidden z-50">
+                <div className="absolute top-full right-0 mt-2 w-56 bg-orange-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl py-2 animate-slide-up max-h-[calc(100vh-80px)] overflow-y-auto custom-scroll z-50">
                   {visibleSecondary.map(({ to, label, icon: Icon }) => (
                     <Link
                       key={to}

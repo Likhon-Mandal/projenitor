@@ -103,7 +103,7 @@ const FindRelation = () => {
             </div>
 
             {/* Selector Grid */}
-            <div className="relative z-30 fr-glass rounded-3xl p-5 sm:p-7 mb-6">
+            <div className="relative z-10 fr-glass rounded-3xl p-5 sm:p-7 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_52px_1fr] gap-4 items-start">
                     <div className="space-y-2 relative z-20">
                         <p className="text-[10px] uppercase font-bold tracking-[0.18em] text-orange-700 flex items-center gap-1.5">

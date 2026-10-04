@@ -54,13 +54,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         <>
             {/* Backdrop */}
             <div
-                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={onClose}
             />
 
             {/* Sidebar Panel */}
             <div
-                className={`fixed top-0 left-0 h-full w-72 bg-orange-900 z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className={`fixed top-0 left-0 h-full w-72 bg-orange-900 z-[70] flex flex-col shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-orange-800">
