@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { 
     ShieldAlert, LogOut, CheckCircle, Mail, Clock, ShieldCheck, 
     ArrowRight, User, Phone, Sparkles, AlertCircle, LayoutDashboard,
-    Pencil, MapPin, Home, Briefcase, GraduationCap, Droplet, RefreshCw, Calendar
+    Pencil, MapPin, Home, Briefcase, GraduationCap, Droplet, RefreshCw, Calendar, Key
 } from 'lucide-react';
 import api from '../api/api';
 import MemberForm from '../components/MemberForm';
@@ -276,17 +276,27 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Edit Profile Button in Top Header */}
-                        {activeMemberId && (
-                            <button
-                                onClick={() => setIsMemberFormOpen(true)}
-                                className="inline-flex items-center gap-2 bg-orange-800 hover:bg-orange-900 text-white px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0"
-                                title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
+                        {/* Header Action Buttons: Edit Profile & Change Password */}
+                        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 shrink-0">
+                            {activeMemberId && (
+                                <button
+                                    onClick={() => setIsMemberFormOpen(true)}
+                                    className="inline-flex items-center gap-2 bg-orange-800 hover:bg-orange-900 text-white px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                                    title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
+                                >
+                                    <Pencil className="w-4 h-4 text-yellow-400" />
+                                    <span>{t('প্রোফাইল সম্পাদনা', 'Edit Profile')}</span>
+                                </button>
+                            )}
+                            <Link
+                                to="/change-password"
+                                className="inline-flex items-center gap-2 bg-white hover:bg-orange-50 text-stone-700 hover:text-orange-950 border border-stone-200 hover:border-orange-300 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs hover:shadow-md active:scale-95 cursor-pointer"
+                                title={t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}
                             >
-                                <Pencil className="w-4 h-4 text-yellow-400" />
-                                <span>{t('প্রোফাইল সম্পাদনা', 'Edit Profile')}</span>
-                            </button>
-                        )}
+                                <Key className="w-4 h-4 text-orange-700" />
+                                <span>{t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 

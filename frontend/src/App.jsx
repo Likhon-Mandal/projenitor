@@ -86,7 +86,7 @@ function App() {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/change-password" element={
-                    <ProtectedRoute requiredRole="admin">
+                    <ProtectedRoute>
                       <ChangePassword />
                     </ProtectedRoute>
                   } />
