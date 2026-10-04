@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 import ConfirmModal from './ConfirmModal';
+import { formatDateDDMMYYYY } from '../utils/dateUtils';
 
 const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUpdated }) => {
     const { isAdmin, user } = useAuth();
@@ -327,11 +328,11 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs bg-white/10 hover:bg-white/25 text-white hover:text-yellow-300 border border-white/15 hover:border-yellow-400/40 group scale-[1] hover:scale-[1.02] active:scale-95"
-                                        title={t('গুগল ম্যাপে লোকেশন দেখুন', 'View Location on Google Maps')}
+                                        title={t('ম্যাপ খুলুন', 'Open Map')}
                                     >
                                         <MapPin size={15} className="text-yellow-300 group-hover:text-yellow-200 transition-colors shrink-0" />
                                         <span className="truncate">
-                                            <span className="hidden sm:inline">{t('গুগল ম্যাপ', 'Google Maps')}</span>
+                                            <span className="hidden sm:inline">{t('ম্যাপ খুলুন', 'Open Map')}</span>
                                             <span className="sm:hidden">{t('ম্যাপ', 'Map')}</span>
                                         </span>
                                         <ExternalLink size={12} className="text-white/60 group-hover:text-yellow-300 transition-colors shrink-0 hidden sm:inline" />
@@ -371,7 +372,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                     </div>
                                     <div>
                                         <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">{t('তারিখ', 'Date')}</p>
-                                        <p className="text-sm font-bold text-stone-800">{event.date}</p>
+                                        <p className="text-sm font-bold text-stone-800">{formatDateDDMMYYYY(event.date)}</p>
                                     </div>
                                 </div>
 
@@ -713,7 +714,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                                             {mem.uploaded_by || t('পরিবারের সদস্য', 'Family Member')}
                                                         </span>
                                                         <span>
-                                                            {new Date(mem.created_at).toLocaleDateString(isBn ? 'bn-BD' : 'en-US')}
+                                                            {formatDateDDMMYYYY(mem.created_at)}
                                                         </span>
                                                     </div>
                                                 </div>

@@ -11,6 +11,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+import { formatDateDDMMYYYY } from '../utils/dateUtils';
 
 const EventsAndNotices = () => {
     const { isAdmin } = useAuth();
@@ -83,18 +84,7 @@ const EventsAndNotices = () => {
 
     const formatNoticeDate = (dStr) => {
         if (!dStr) return '';
-        try {
-            const datePart = dStr.includes('T') ? dStr.split('T')[0] : dStr;
-            const [y, m, d] = datePart.split('-').map(Number);
-            const dateObj = new Date(y, m - 1, d);
-            return dateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        } catch {
-            return dStr;
-        }
+        return formatDateDDMMYYYY(dStr);
     };
 
     // ---- EVENTS LOGIC ----
@@ -363,7 +353,7 @@ const EventsAndNotices = () => {
                                         {/* Date Block (Compact width) */}
                                         <div className="bg-gradient-to-br from-orange-100 to-amber-100 px-3 py-3 rounded-xl flex sm:flex-col items-center justify-center w-full sm:w-24 shrink-0 text-orange-950 group-hover:from-orange-200 group-hover:to-amber-200 transition-colors border border-orange-200/60 shadow-inner gap-2 sm:gap-1">
                                             <Calendar className="h-5 w-5 text-orange-800 group-hover:scale-110 transition-transform duration-300 shrink-0" />
-                                            <span className="font-bold text-center leading-tight text-xs sm:text-xs">{event.date}</span>
+                                            <span className="font-bold text-center leading-tight text-xs sm:text-xs">{formatDateDDMMYYYY(event.date)}</span>
                                         </div>
 
                                         {/* Content Preview */}
@@ -474,7 +464,7 @@ const EventsAndNotices = () => {
                                         {/* Date Block (Compact width) */}
                                         <div className="bg-stone-100 px-3 py-3 rounded-xl flex sm:flex-col items-center justify-center w-full sm:w-24 shrink-0 text-stone-700 group-hover:bg-amber-100 group-hover:text-amber-950 transition-colors border border-stone-200 shadow-inner gap-2 sm:gap-1">
                                             <HistoryIcon className="h-5 w-5 text-stone-500 group-hover:text-amber-700 group-hover:scale-110 transition-transform duration-300 shrink-0" />
-                                            <span className="font-bold text-center leading-tight text-xs sm:text-xs">{event.date}</span>
+                                            <span className="font-bold text-center leading-tight text-xs sm:text-xs">{formatDateDDMMYYYY(event.date)}</span>
                                         </div>
 
                                         {/* Content Preview */}

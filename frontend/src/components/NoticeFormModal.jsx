@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, Megaphone, Calendar, AlignLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+import { formatDateDDMMYYYY } from '../utils/dateUtils';
 
 const getTodayDate = () => {
     const now = new Date();
@@ -11,20 +12,8 @@ const getTodayDate = () => {
     return `${y}-${m}-${d}`;
 };
 
-const formatDisplayDate = (dStr, isBengali) => {
-    if (!dStr) return '';
-    try {
-        const datePart = dStr.includes('T') ? dStr.split('T')[0] : dStr;
-        const [y, m, d] = datePart.split('-').map(Number);
-        const dateObj = new Date(y, m - 1, d);
-        return dateObj.toLocaleDateString(isBengali ? 'bn-BD' : 'en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    } catch {
-        return dStr;
-    }
+const formatDisplayDate = (dStr) => {
+    return formatDateDDMMYYYY(dStr);
 };
 
 const NoticeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
