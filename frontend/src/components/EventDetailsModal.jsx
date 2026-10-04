@@ -347,22 +347,20 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                 </div>
                             </div>
 
-                            {/* Location Map Link if available */}
+                            {/* Location Map Link Button */}
                             {(event.map_link || event.location) && (
-                                <div className="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs">
-                                    <span className="text-stone-600 flex items-center gap-1.5 font-medium truncate pr-2">
-                                        <MapPin size={14} className="text-orange-600 shrink-0" />
-                                        {event.map_link 
-                                            ? t('গুগল ম্যাপে নির্দিষ্ট লোকেশন দেখুন:', 'View exact location on Google Maps:') 
-                                            : t('গুগল ম্যাপে স্থানটি দেখতে পারেন:', 'View this location on Google Maps:')}
-                                    </span>
+                                <div className="flex items-center -mt-3">
                                     <a
                                         href={event.map_link ? event.map_link : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-orange-700 hover:text-orange-800 font-bold hover:underline shrink-0 bg-orange-100/60 px-2.5 py-1 rounded-lg"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 bg-white hover:bg-orange-50 text-orange-800 hover:text-orange-950 border border-orange-200/90 rounded-full text-xs font-bold shadow-2xs hover:shadow-xs transition-all duration-200 transform hover:scale-[1.02] active:scale-95 cursor-pointer group"
                                     >
-                                        {t('ম্যাপে দেখুন', 'Open Map')} <ExternalLink size={12} />
+                                        <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 group-hover:bg-orange-200 transition-colors shrink-0">
+                                            <MapPin size={11} />
+                                        </div>
+                                        <span className="truncate">{t('গুগল ম্যাপে দেখুন', 'View on Google Maps')}</span>
+                                        <ExternalLink size={12} className="text-orange-400 group-hover:text-orange-700 transition-colors shrink-0" />
                                     </a>
                                 </div>
                             )}
