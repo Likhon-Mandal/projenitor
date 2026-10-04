@@ -31,6 +31,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
 
     // Lightbox state
     const [lightboxImage, setLightboxImage] = useState(null);
+    const [confirmDeleteMemoryId, setConfirmDeleteMemoryId] = useState(null);
 
     // Reset and fetch memories when event opens
     useEffect(() => {
@@ -210,8 +211,6 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
             setIsUploading(false);
         }
     };
-
-    const [confirmDeleteMemoryId, setConfirmDeleteMemoryId] = useState(null);
 
     // Handle delete memory
     const performDeleteMemory = async (memoryId) => {
