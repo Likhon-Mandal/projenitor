@@ -1,3 +1,5 @@
+import colors from 'tailwindcss/colors';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -20,7 +22,10 @@ export default {
           foreground: '#292524',
         },
         background: '#fff7ed', // Parchment
-        stone: '#292524', // Text
+        stone: {
+          DEFAULT: '#292524', // Text
+          ...colors.stone,
+        },
         footer: '#431407', // Footer
       },
       fontFamily: {

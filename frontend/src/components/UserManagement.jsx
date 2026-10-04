@@ -3,7 +3,7 @@ import api from '../api/api';
 import { Search, CheckCircle, XCircle, Shield, Lock, Trash2, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import MemberProfileModal from './MemberProfileModal';
+import Profile from '../pages/Profile';
 import ConfirmModal from './ConfirmModal';
 
 const UserManagement = () => {
@@ -12,8 +12,7 @@ const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedProfileMember, setSelectedProfileMember] = useState(null);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [selectedProfileMemberId, setSelectedProfileMemberId] = useState(null);
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         id: null,
@@ -273,14 +272,7 @@ const UserManagement = () => {
                                                 disabled={!userItem.member_id}
                                                 onClick={() => {
                                                     if (userItem.member_id) {
-                                                        setSelectedProfileMember({
-                                                            id: userItem.member_id,
-                                                            full_name: userItem.member_name,
-                                                            name_bangla: userItem.name_bangla,
-                                                            name_english: userItem.name_english,
-                                                            profile_image_url: userItem.profile_image_url
-                                                        });
-                                                        setIsProfileModalOpen(true);
+                                                        setSelectedProfileMemberId(userItem.member_id);
                                                     }
                                                 }}
                                                 className={`flex items-center gap-3 text-left group transition-all duration-200 ${
@@ -412,15 +404,13 @@ const UserManagement = () => {
                 </table>
             </div>
 
-            <MemberProfileModal
-                isOpen={isProfileModalOpen}
-                onClose={() => {
-                    setIsProfileModalOpen(false);
-                    setSelectedProfileMember(null);
-                }}
-                member={selectedProfileMember}
-                showActions={false}
-            />
+            {/* Search-style Profile Modal for full inspection */}
+            {selectedProfileMemberId && (
+                <Profile
+                    memberId={selectedProfileMemberId}
+                    onClose={() => setSelectedProfileMemberId(null)}
+                />
+            )}
 
             {/* Custom Centered Confirmation Modal for Approval / Rejection / Deletion */}
             <ConfirmModal

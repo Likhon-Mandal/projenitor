@@ -7,7 +7,7 @@ import api from '../api/api';
 import ProfileTab from '../components/ProfileTab';
 import DashboardCharts from '../components/DashboardCharts';
 import UserManagement from '../components/UserManagement';
-import MemberProfileModal from '../components/MemberProfileModal';
+import Profile from './Profile';
 import BrilliantStudentRequestsAdmin from '../components/BrilliantStudentRequestsAdmin';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -154,8 +154,7 @@ const SuperAdminDashboard = () => {
     const [requestsLoading, setRequestsLoading] = useState(false);
     const [modal, setModal] = useState(null); // null | { type: 'create' | 'edit', admin?: {} }
     const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [selectedProfileMember, setSelectedProfileMember] = useState(null);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [selectedProfileMemberId, setSelectedProfileMemberId] = useState(null);
     const [adminActionModal, setAdminActionModal] = useState({
         isOpen: false,
         id: null,
@@ -424,14 +423,7 @@ const SuperAdminDashboard = () => {
                                                                 disabled={!req.member_id}
                                                                 onClick={() => {
                                                                     if (req.member_id) {
-                                                                        setSelectedProfileMember({
-                                                                            id: req.member_id,
-                                                                            full_name: reqDisplayName,
-                                                                            name_bangla: req.member_name_bangla,
-                                                                            name_english: req.member_name_english,
-                                                                            profile_image_url: req.profile_image_url
-                                                                        });
-                                                                        setIsProfileModalOpen(true);
+                                                                        setSelectedProfileMemberId(req.member_id);
                                                                     }
                                                                 }}
                                                                 className={`flex items-center gap-2.5 text-left group transition-all duration-200 ${
@@ -542,7 +534,41 @@ const SuperAdminDashboard = () => {
 
                                                 return (
                                                     <tr key={admin.id} className="border-b border-orange-50 hover:bg-orange-50/50 transition-colors">
-                                                        <td className="px-5 py-3 font-medium text-stone-800">{formatName(admin.name || admin)}</td>
+                                                        <td className="px-5 py-3 font-medium text-stone-800">
+                                                            {admin.member_id ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setSelectedProfileMemberId(admin.member_id)}
+                                                                    className="flex items-center gap-2.5 text-left group cursor-pointer hover:opacity-95 transition-all duration-200"
+                                                                    title={t('প্রোফাইল কার্ড দেখুন', 'View Profile Card')}
+                                                                >
+                                                                    <div className="w-8 h-8 rounded-full bg-orange-100 ring-2 ring-transparent group-hover:ring-orange-400 overflow-hidden flex items-center justify-center font-bold text-xs text-orange-800 shrink-0 transition-all duration-200 group-hover:scale-105 shadow-xs">
+                                                                        {admin.profile_image_url ? (
+                                                                            <img src={admin.profile_image_url} alt="" className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            (formatName(admin.name || admin) || '?').charAt(0)
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex flex-col min-w-0">
+                                                                        <span className="font-semibold text-stone-800 group-hover:text-orange-900 group-hover:underline underline-offset-2 transition-colors truncate">
+                                                                            {formatName(admin.name || admin)}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-stone-400 group-hover:text-orange-700 transition-colors font-mono">
+                                                                            {t('প্রোফাইল দেখুন →', 'View Profile →')}
+                                                                        </span>
+                                                                    </div>
+                                                                </button>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <div className="w-8 h-8 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center font-bold text-xs text-stone-600 shrink-0">
+                                                                        {(formatName(admin.name || admin) || '?').charAt(0)}
+                                                                    </div>
+                                                                    <span className="font-semibold text-stone-800 truncate">
+                                                                        {formatName(admin.name || admin)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </td>
                                                         <td className="px-5 py-3 text-stone-600">{admin.email}</td>
                                                         <td className="px-5 py-3">
                                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${admin.role === 'superadmin' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' : 'bg-orange-100 text-orange-800'}`}>
@@ -638,15 +664,13 @@ const SuperAdminDashboard = () => {
                 </div>
             )}
 
-            <MemberProfileModal
-                isOpen={isProfileModalOpen}
-                onClose={() => {
-                    setIsProfileModalOpen(false);
-                    setSelectedProfileMember(null);
-                }}
-                member={selectedProfileMember}
-                showActions={false}
-            />
+            {/* Search-style Profile Modal for full inspection */}
+            {selectedProfileMemberId && (
+                <Profile
+                    memberId={selectedProfileMemberId}
+                    onClose={() => setSelectedProfileMemberId(null)}
+                />
+            )}
 
             {/* Centered Modal for Admin Role Request Approval / Rejection */}
             <ConfirmModal

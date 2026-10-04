@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowLeftRight, GitBranch, Search, Sparkles } from 'lucide-react';
 import MemberSelector from '../components/MemberSelector';
 import { useLanguage } from '../context/LanguageContext';
+import { calculateRelationshipEngine } from '../utils/relationCalculator';
+import api from '../api/api';
 
 /* ─── Animation Styles ──────────────────────────────────────────────────── */
 const Styles = () => (
@@ -37,110 +40,23 @@ const Styles = () => (
 );
 
 const FindRelation = () => {
+    const location = useLocation();
     const { t, isBn, formatNumber, formatName } = useLanguage();
     const [personA, setPersonA] = useState(null);
     const [personB, setPersonB] = useState(null);
 
-    // --- Pure helpers ---
-    const spousesOf = (x) => x.spouses || [];
-    const areDirectSpouses = (a, b) =>
-        spousesOf(a).some(s => s.id === b.id) || spousesOf(b).some(s => s.id === a.id);
-
-    const getRole = (p) => {
-        if (p.gender !== 'Female') return 'son';
-        if (p.father_id || p.mother_id) return 'daughter';
-        return 'spouse';
-    };
-
-    // --- Relationship Engine ---
-    const calculateRelationship = () => {
-        if (!personA || !personB) return null;
-        const A = personA, B = personB;
-        if (A.id === B.id) return { diff: 0, text: t('\u098f\u0995\u0987 \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'Same person'), depthStr: '0', emoji: '\ud83d\udc64' };
-
-        const levelDiff = A.level - B.level;
-        const gg = Math.abs(levelDiff);
-        const rel = (text, emoji = '\ud83d\udd17') => ({ diff: levelDiff, text, depthStr: gg === 0 ? '0' : formatNumber(gg), emoji });
-
-        const older   = A.level <= B.level ? A : B;
-        const younger = A.level <= B.level ? B : A;
-        const oRole = getRole(older);
-        const yRole = getRole(younger);
-
-        const isDirect = (() => {
-            if (gg === 0) return areDirectSpouses(A, B);
-            if (gg === 1) {
-                if (younger.father_id === older.id || younger.mother_id === older.id) return true;
-                if (yRole === 'spouse' && younger.spouses) {
-                    for (const sp of younger.spouses)
-                        if (sp.father_id === older.id || sp.mother_id === older.id) return true;
-                }
-            }
-            return false;
-        })();
-
-        const result = (titles, emoji) => {
-            const titlePair = (B.id === older.id) ? titles[0] : titles[1];
-            return rel(t(titlePair[0], titlePair[1] || titlePair[0]), emoji);
-        };
-
-        if (gg >= 4) return result([
-            [formatNumber(gg) + ' \u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae \u0986\u0997\u09c7\u09b0 \u09aa\u09c2\u09b0\u09cd\u09ac\u09b8\u09c2\u09b0\u09c0', gg + ' generations older Ancestor'],
-            [formatNumber(gg) + ' \u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae \u09a8\u09bf\u099a\u09c7\u09b0 \u0989\u09a4\u09cd\u09a4\u09b0\u09b8\u09c2\u09b0\u09c0', gg + ' generations younger Descendant']
-        ], '\ud83c\udf33');
-
-        if (gg === 0) {
-            if (oRole==='son'     && yRole==='son')      return result([['\u09ad\u09be\u0987 (\u09a6\u09be\u09a6\u09be / \u09ad\u09be\u0987)','Brother'],['\u09ad\u09be\u0987 (\u09a6\u09be\u09a6\u09be / \u09ad\u09be\u0987)','Brother']], '\ud83e\udd1d');
-            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09ac\u09cb\u09a8 (\u09a6\u09bf\u09a6\u09bf / \u09ac\u09cb\u09a8)','Sister'],['\u09ac\u09cb\u09a8 (\u09a6\u09bf\u09a6\u09bf / \u09ac\u09cb\u09a8)','Sister']], '\ud83d\udc9e');
-            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u099c\u09be','Co-sister-in-law'],['\u099c\u09be','Co-sister-in-law']], '\ud83c\udf38');
-            if (oRole==='son'     && yRole==='daughter') return result([['\u09ad\u09be\u0987','Brother'],['\u09ac\u09cb\u09a8','Sister']], '\ud83e\udd1d');
-            if (oRole==='daughter'&& yRole==='son')      return result([['\u09ac\u09cb\u09a8','Sister'],['\u09ad\u09be\u0987','Brother']], '\ud83e\udd1d');
-            if (oRole==='son'     && yRole==='spouse')   return isDirect ? result([['\u09b8\u09cd\u09ac\u09be\u09ae\u09c0','Husband'],['\u09b8\u09cd\u09a4\u09cd\u09b0\u09c0','Wife']], '\ud83d\udc8d') : result([['\u09a6\u09c7\u09ac\u09b0 / \u09ad\u09be\u09b8\u09c1\u09b0','Brother-in-law'],['\u09ac\u09cc\u09a6\u09bf / \u099b\u09cb\u099f \u09ad\u09be\u0987\u09df\u09c7\u09b0 \u09ac\u0989','Sister-in-law']], '\ud83d\udd17');
-            if (oRole==='spouse'  && yRole==='son')      return isDirect ? result([['\u09b8\u09cd\u09a4\u09cd\u09b0\u09c0','Wife'],['\u09b8\u09cd\u09ac\u09be\u09ae\u09c0','Husband']], '\ud83d\udc8d') : result([['\u09ac\u09cc\u09a6\u09bf / \u099b\u09cb\u099f \u09ad\u09be\u0987\u09df\u09c7\u09b0 \u09ac\u0989','Sister-in-law'],['\u09a6\u09c7\u09ac\u09b0 / \u09ad\u09be\u09b8\u09c1\u09b0','Brother-in-law']], '\ud83d\udd17');
-            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09a8\u09a8\u09a6','Sister-in-law (Nanad)'],['\u09ac\u09cc\u09a6\u09bf','Sister-in-law (Boudi)']], '\ud83c\udf38');
-            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09ac\u09cc\u09a6\u09bf','Sister-in-law (Boudi)'],['\u09a8\u09a8\u09a6','Sister-in-law (Nanad)']], '\ud83c\udf38');
+    // Auto-populate personB if passed from profile card
+    useEffect(() => {
+        if (location.state?.targetMember) {
+            setPersonB(location.state.targetMember);
+        } else if (location.state?.targetMemberId) {
+            api.get(`/members/${location.state.targetMemberId}`)
+                .then(res => setPersonB(res.data))
+                .catch(err => console.error('Failed to load target member for relation:', err));
         }
+    }, [location.state]);
 
-        if (gg === 1) {
-            if (oRole==='son'     && yRole==='son')      return isDirect ? result([['\u09ac\u09be\u09ac\u09be','Father'],['\u099b\u09c7\u09b2\u09c7','Son']], '\ud83d\udc68\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be','Uncle'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc68\u200d\ud83d\udc66');
-            if (oRole==='son'     && yRole==='daughter') return isDirect ? result([['\u09ac\u09be\u09ac\u09be','Father'],['\u09ae\u09c7\u09df\u09c7','Daughter']], '\ud83d\udc68\u200d\ud83d\udc67') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be','Uncle'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc68\u200d\ud83d\udc67');
-            if (oRole==='spouse'  && yRole==='son')      return isDirect ? result([['\u09ae\u09be','Mother'],['\u099b\u09c7\u09b2\u09c7','Son']], '\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09c0 / \u099c\u09c7\u09a0\u09c0','Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc69\u200d\ud83d\udc66');
-            if (oRole==='son'     && yRole==='spouse')   return isDirect ? result([['\u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Father-in-law'],['\u09aa\u09c1\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Daughter-in-law']], '\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09be / \u099c\u09c7\u09a0\u09be \u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Uncle-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
-            if (oRole==='daughter'&& yRole==='son')      return result([['\u09aa\u09bf\u09b8\u09bf','Aunt (Paternal)'],['\u09ad\u09be\u0987\u09aa\u09cb','Nephew']], '\ud83d\udc69\u200d\ud83d\udc66');
-            if (oRole==='spouse'  && yRole==='spouse')   return isDirect ? result([['\u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Mother-in-law'],['\u09aa\u09c1\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Daughter-in-law']], '\ud83d\udc69\u200d\ud83d\udc69\u200d\ud83d\udc66') : result([['\u0995\u09be\u0995\u09bf / \u099c\u09c7\u09a0\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Aunt-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
-            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09aa\u09bf\u09b8\u09bf','Aunt (Paternal)'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc69\u200d\ud83d\udc67');
-            if (oRole==='spouse'  && yRole==='daughter') return isDirect ? result([['\u09ae\u09be','Mother'],['\u09ae\u09c7\u09df\u09c7','Daughter']], '\ud83d\udc69\u200d\ud83d\udc67') : result([['\u0995\u09be\u0995\u09bf / \u099c\u09c7\u09a0\u09bf','Aunt'],['\u09ad\u09be\u0987\u099d\u09bf','Niece']], '\ud83d\udc69\u200d\ud83d\udc67');
-            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09aa\u09bf\u09b8\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Aunt-in-law'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ac\u0989','Nephew\'s Wife']], '\ud83d\udd17');
-        }
-
-        if (gg === 2) {
-            if (oRole==='son'     && yRole==='son')      return result([['\u09a0\u09be\u0995\u09c1\u09b0\u09a6\u09be','Grandfather'],['\u09a8\u09be\u09a4\u09bf','Grandson']], '\ud83d\udc74');
-            if (oRole==='son'     && yRole==='daughter') return result([['\u09a0\u09be\u0995\u09c1\u09b0\u09a6\u09be','Grandfather'],['\u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Granddaughter']], '\ud83d\udc74');
-            if (oRole==='spouse'  && yRole==='son')      return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be','Grandmother'],['\u09a8\u09be\u09a4\u09bf','Grandson']], '\ud83d\udc75');
-            if (oRole==='son'     && yRole==='spouse')   return result([['\u09a6\u09be\u09a6\u09c1\u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Grandfather-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandson\'s Wife']], '\ud83d\udd17');
-            if (oRole==='daughter'&& yRole==='son')      return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u099b\u09c7\u09b2\u09c7','Grandnephew']], '\ud83d\udc69\u200d\ud83d\udc66');
-            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Grandmother-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandson\'s Wife']], '\ud83d\udd17');
-            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09ae\u09c7\u09df\u09c7','Grandniece']], '\ud83d\udc69\u200d\ud83d\udc67');
-            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09aa\u09bf\u09b8-\u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Aunt-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Grandnephew\'s Wife']], '\ud83d\udd17');
-            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09a0\u09be\u0995\u09c1\u09ae\u09be','Grandmother'],['\u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Granddaughter']], '\ud83d\udc75');
-        }
-
-        if (gg === 3) {
-            if (oRole==='son'     && yRole==='son')      return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9','Great-Grandfather'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0','Great-Grandson']], '\ud83c\udf33');
-            if (oRole==='son'     && yRole==='daughter') return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9','Great-Grandfather'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09c0','Great-Granddaughter']], '\ud83c\udf33');
-            if (oRole==='spouse'  && yRole==='son')      return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Grandmother'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0','Great-Grandson']], '\ud83c\udf33');
-            if (oRole==='son'     && yRole==='spouse')   return result([['\u09aa\u09cd\u09b0\u09aa\u09bf\u09a4\u09be\u09ae\u09b9 \u09b6\u09cd\u09ac\u09b6\u09c1\u09b0','Great-Grandfather-in-law'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Great-Grandson\'s Wife']], '\ud83c\udf33');
-            if (oRole==='daughter'&& yRole==='son')      return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf','Great-Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09a8\u09be\u09a4\u09bf','Great-Grandnephew']], '\ud83c\udf33');
-            if (oRole==='spouse'  && yRole==='spouse')   return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Grandmother-in-law'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09ac\u09a7\u09c2','Great-Grandson\'s Wife']], '\ud83c\udf33');
-            if (oRole==='daughter'&& yRole==='daughter') return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf','Great-Great-Aunt'],['\u09ad\u09be\u0987\u09aa\u09cb\u09b0 \u09a8\u09be\u09a4\u09bf\u09a8\u09c0','Great-Grandniece']], '\ud83c\udf33');
-            if (oRole==='daughter'&& yRole==='spouse')   return result([['\u09ac\u09dc \u09aa\u09bf\u09b8\u09bf \u09b6\u09be\u09b6\u09c1\u09dc\u09bf','Great-Great-Aunt-in-law'],['\u09a8\u09be\u09a4\u09ac\u0989','Great-Grandnephew\'s Wife']], '\ud83c\udf33');
-            if (oRole==='spouse'  && yRole==='daughter') return result([['\u09ac\u09dc \u09a0\u09be\u0995\u09c1\u09ae\u09be','Great-Grandmother'],['\u09aa\u09cd\u09b0\u09aa\u09cc\u09a4\u09cd\u09b0\u09c0','Great-Granddaughter']], '\ud83c\udf33');
-        }
-
-        return rel(t('\u0985\u099c\u09be\u09a8\u09be \u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995', 'Unknown Relation'), '\u2753');
-    };
-
-    const relationResult = calculateRelationship();
+    const relationResult = calculateRelationshipEngine(personA, personB, { t, formatNumber });
     const bothSelected = personA && personB;
 
     const Avatar = ({ member, borderColor, textColor }) => (

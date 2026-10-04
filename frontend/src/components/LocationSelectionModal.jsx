@@ -99,7 +99,7 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-unfold">
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-orange-100 bg-orange-50/50">

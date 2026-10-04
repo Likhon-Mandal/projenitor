@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
-import MemberProfileModal from './MemberProfileModal';
+import Profile from '../pages/Profile';
 import ConfirmModal from './ConfirmModal';
 
 const BrilliantStudentRequestsAdmin = () => {
@@ -32,11 +32,8 @@ const BrilliantStudentRequestsAdmin = () => {
         requestId: null
     });
 
-    // Profile modal inspection
-    const [profileModal, setProfileModal] = useState({
-        isOpen: false,
-        member: null
-    });
+    // Profile modal inspection (search section profile card)
+    const [selectedMemberId, setSelectedMemberId] = useState(null);
 
     // Submitter account inspection modal (for non-member accounts)
     const [submitterModal, setSubmitterModal] = useState({
@@ -146,37 +143,15 @@ const BrilliantStudentRequestsAdmin = () => {
     };
 
     const handleViewMember = (req) => {
-        setProfileModal({
-            isOpen: true,
-            member: {
-                id: req.member_id,
-                full_name: req.member_name,
-                name_bangla: req.member_name_bangla,
-                name_english: req.member_name_english,
-                profile_image_url: req.member_profile_image,
-                village: req.member_village,
-                father_name: req.member_father_name,
-                level: req.member_level
-            }
-        });
+        if (req.member_id) {
+            setSelectedMemberId(req.member_id);
+        }
     };
 
     const handleViewApplicant = (req) => {
         const applicantMemberId = req.applicant_resolved_member_id || req.applicant_member_id;
         if (applicantMemberId) {
-            setProfileModal({
-                isOpen: true,
-                member: {
-                    id: applicantMemberId,
-                    full_name: req.applicant_member_name || req.applicant_name,
-                    name_bangla: req.applicant_member_name_bangla,
-                    name_english: req.applicant_member_name_english,
-                    profile_image_url: req.applicant_profile_image,
-                    village: req.applicant_member_village,
-                    father_name: req.applicant_member_father_name,
-                    level: req.applicant_member_level
-                }
-            });
+            setSelectedMemberId(applicantMemberId);
         } else {
             setSubmitterModal({
                 isOpen: true,
@@ -706,13 +681,13 @@ const BrilliantStudentRequestsAdmin = () => {
                 </div>
             )}
 
-            {/* Member Profile Modal for full inspection */}
-            <MemberProfileModal
-                isOpen={profileModal.isOpen}
-                onClose={() => setProfileModal({ isOpen: false, member: null })}
-                member={profileModal.member}
-                showActions={false}
-            />
+            {/* Search-style Profile Modal for full inspection */}
+            {selectedMemberId && (
+                <Profile
+                    memberId={selectedMemberId}
+                    onClose={() => setSelectedMemberId(null)}
+                />
+            )}
 
             {/* Submitter User Details Modal (if not linked to a tree member) */}
             {submitterModal.isOpen && (
