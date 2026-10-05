@@ -143,6 +143,10 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
             if (!name_english && sanitizedData.full_name && /[A-Za-z]/.test(sanitizedData.full_name)) {
                 name_english = sanitizedData.full_name;
             }
+            // Auto-fallback to formatName (which auto-transliterates) if English name is not yet explicitly set
+            if (!name_english && (name_bangla || sanitizedData.full_name)) {
+                name_english = formatName(sanitizedData, false) || '';
+            }
 
             // A member is only an in-law spouse if explicitly designated as a female spouse (never a male member)
             const isExplicitSpouseFlag = Boolean(
@@ -249,6 +253,16 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
             }
             if (res.data.contact_number) {
                 setPhoneNumbers(parseNumbers(res.data.contact_number));
+            }
+
+            if (res.data) {
+                const fetchedEn = res.data.name_english || formatName(res.data, false) || '';
+                const fetchedBn = res.data.name_bangla || formatName(res.data, true) || '';
+                setFormData(prev => ({
+                    ...prev,
+                    name_english: prev.name_english || fetchedEn,
+                    name_bangla: prev.name_bangla || fetchedBn
+                }));
             }
 
             // Only if editing an in-law wife, sync level to her husband's level

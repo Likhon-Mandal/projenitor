@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { transliterateBengali } = require('../utils/transliterate');
 
 // Bilingual synonyms mapping for seamless cross-language search
 const OCCUPATION_SYNONYMS = {
@@ -107,8 +108,18 @@ exports.getAllMembers = async (req, res) => {
     const params = [];
 
     if (name) {
-      params.push(`%${name}%`);
-      query += ` AND (m.full_name ILIKE $${params.length} OR m.name_bangla ILIKE $${params.length} OR m.name_english ILIKE $${params.length})`;
+      const trimmedName = name.trim();
+      params.push(`%${trimmedName}%`);
+      const pIdx = params.length;
+      let nameConditions = `m.full_name ILIKE $${pIdx} OR m.name_bangla ILIKE $${pIdx} OR m.name_english ILIKE $${pIdx}`;
+
+      // Support cross-script matching if search query can be transliterated
+      const transliterated = transliterateBengali(trimmedName);
+      if (transliterated && transliterated.toLowerCase() !== trimmedName.toLowerCase()) {
+        params.push(`%${transliterated}%`);
+        nameConditions += ` OR m.name_english ILIKE $${params.length}`;
+      }
+      query += ` AND (${nameConditions})`;
     }
     if (workplace) {
       const trimmed = workplace.trim();
@@ -315,7 +326,10 @@ exports.createMember = async (req, res) => {
     // Note: If any ID is missing but name was provided, it means data inconsistency or location not added yet.
 
     const trimmedBangla = name_bangla?.trim() || null;
-    const trimmedEnglish = name_english?.trim() || null;
+    let trimmedEnglish = name_english?.trim() || null;
+    if (!trimmedEnglish && (trimmedBangla || full_name)) {
+      trimmedEnglish = transliterateBengali(trimmedBangla || full_name) || null;
+    }
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
     // Gender & Level rules:
@@ -427,7 +441,10 @@ exports.updateMember = async (req, res) => {
     const home_id = await findId('homes', home_name, 'village_id', village_id);
 
     const trimmedBangla = name_bangla?.trim() || null;
-    const trimmedEnglish = name_english?.trim() || null;
+    let trimmedEnglish = name_english?.trim() || null;
+    if (!trimmedEnglish && (trimmedBangla || full_name)) {
+      trimmedEnglish = transliterateBengali(trimmedBangla || full_name) || null;
+    }
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
     // Get existing member to check if level changed

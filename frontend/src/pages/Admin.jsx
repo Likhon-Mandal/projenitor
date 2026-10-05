@@ -91,6 +91,8 @@ const Admin = () => {
             (m.full_name && m.full_name.toLowerCase().includes(searchLower)) ||
             (m.name_bangla && m.name_bangla.toLowerCase().includes(searchLower)) ||
             (m.name_english && m.name_english.toLowerCase().includes(searchLower)) ||
+            (formatName(m, false) && formatName(m, false).toLowerCase().includes(searchLower)) ||
+            (formatName(m, true) && formatName(m, true).toLowerCase().includes(searchLower)) ||
             (m.home_name && m.home_name.toLowerCase().includes(searchLower)) ||
             (m.contact_number && m.contact_number.toLowerCase().includes(searchLower));
 
