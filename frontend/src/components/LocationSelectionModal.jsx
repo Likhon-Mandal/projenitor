@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronRight, Map, Home, X, MapPin, ExternalLink } from 'lucide-react';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
+import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import VerifiedBadge from './VerifiedBadge';
 
 const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive = false }) => {
@@ -223,6 +224,8 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                                                         const memberDisplayName = formatName(member);
                                                         const isActive = member.is_active || member.user_status === 'active';
                                                         const isDisabled = disableActive && isActive;
+                                                        const identity = getMemberIdentity(member);
+                                                        const theme = MEMBER_THEMES[identity] || MEMBER_THEMES.default;
                                                         return (
                                                         <button
                                                             key={member.id}
@@ -231,22 +234,28 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                                                             className={`p-4 rounded-xl border transition-all flex items-center gap-4 text-left group ${
                                                                 isDisabled
                                                                     ? 'bg-stone-50/80 border-stone-200 opacity-70 cursor-not-allowed'
-                                                                    : 'bg-white border-stone-200 shadow-sm hover:border-orange-400 hover:ring-2 hover:ring-orange-100 cursor-pointer'
+                                                                    : `bg-white ${theme.cardBorder} shadow-xs hover:shadow-md ${theme.cardGlow} ${theme.cardBgHover} cursor-pointer`
                                                             }`}
                                                         >
-                                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-100 shrink-0 border border-orange-200">
+                                                            <div className={`w-12 h-12 rounded-full overflow-hidden ${theme.avatarBg} shrink-0 border ${theme.avatarBorder} ${theme.avatarHoverBorder} flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
                                                                 {member.profile_image_url ? (
                                                                     <img src={member.profile_image_url} alt={memberDisplayName} className="w-full h-full object-cover" />
                                                                 ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-orange-800 font-bold font-serif text-lg">
+                                                                    <div className={`font-bold font-serif text-lg ${theme.iconColor}`}>
                                                                         {(memberDisplayName || '?').charAt(0)}
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                                    <h4 className="font-bold text-stone-800 group-hover:text-orange-800 transition-colors truncate">{memberDisplayName}</h4>
-                                                                    {isActive && <VerifiedBadge size={16} />}
+                                                                <div className="flex items-start justify-between gap-1.5 mb-0.5">
+                                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                                        <h4 className={`font-bold font-serif ${theme.nameText} transition-colors truncate`}>{memberDisplayName}</h4>
+                                                                        {isActive && <VerifiedBadge size={16} />}
+                                                                    </div>
+                                                                    <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-2xs shrink-0 whitespace-nowrap ${theme.badge}`}>
+                                                                        <span>{theme.symbol}</span>
+                                                                        <span>{isBn ? theme.labelBn : theme.labelEn}</span>
+                                                                    </span>
                                                                 </div>
                                                                 <div className="flex items-center gap-2 mt-1">
                                                                     <span className="text-xs text-stone-500 uppercase tracking-widest opacity-70">
