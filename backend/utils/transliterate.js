@@ -24,14 +24,7 @@ const COMMON_SURNAMES_MAP = {
   'চ্যাটার্জী': 'Chatterjee',
   'মল্লিক': 'Mallick',
   'মজুমদার': 'Majumder',
-  'চৌধুরী': 'Chowdhury',
-  'খান': 'Khan',
-  'শেখ': 'Sheikh',
-  'আলী': 'Ali',
-  'হোসেন': 'Hossain',
-  'উদ্দিন': 'Uddin',
-  'আহমেদ': 'Ahmed',
-  'রহমান': 'Rahman'
+  'চৌধুরী': 'Chowdhury'
 };
 
 const BN_TO_EN_CHARS = {
