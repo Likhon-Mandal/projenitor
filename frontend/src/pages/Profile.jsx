@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit, Heart, Globe, Facebook, Twitter, Instagram, Linkedin, Lock, Network, ShieldCheck, GitBranch, ArrowRight } from 'lucide-react';
+import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit, Heart, Globe, Facebook, Twitter, Instagram, Linkedin, Lock, Network, ShieldCheck, GitBranch, ArrowRight, Award, Star, Flame } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
@@ -208,6 +208,44 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
                   <VerifiedBadge size={20} />
                 )}
               </div>
+
+              {/* Eminent Figure Badge */}
+              {(member.eminent_category || member.category) && (
+                <div className="flex flex-col items-center gap-1 my-1.5 px-2 animate-fade-in">
+                  <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border shadow-xs transition-all duration-300 hover:scale-105 ${
+                    (member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী'
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-800'
+                      : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি'
+                      ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 text-emerald-800'
+                      : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-900'
+                  }`}>
+                    {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
+                      <GraduationCap className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                    ) : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি' ? (
+                      <Flame className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Star className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    )}
+                    <span>
+                      {isBn
+                        ? (member.eminent_category || member.category)
+                        : (member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী'
+                        ? 'Brilliant Student'
+                        : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি'
+                        ? 'Posthumous Honor'
+                        : (member.eminent_category || member.category) === 'আজীবন জ্ঞাতি'
+                        ? 'Lifetime Honor'
+                        : (member.eminent_category || member.category)}
+                    </span>
+                  </div>
+
+                  {member.eminent_title && (
+                    <span className="text-[11px] sm:text-xs font-medium text-amber-800/90 italic text-center max-w-xs px-2.5 py-0.5 rounded-md bg-amber-50/80 border border-amber-200/60 shadow-2xs">
+                      "{member.eminent_title}"
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center text-stone-500 justify-center text-xs sm:text-sm text-center px-4">
                 <MapPin className={`h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 ${theme.iconColor} shrink-0`} />

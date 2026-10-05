@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, MapPin, Briefcase } from 'lucide-react';
+import { User, MapPin, Briefcase, GraduationCap, Award, Flame, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import VerifiedBadge from './VerifiedBadge';
@@ -47,6 +47,38 @@ const MemberCard = ({ member, onViewProfile }) => {
                 <span>{isBn ? theme.labelBn : theme.labelEn}</span>
               </span>
             </div>
+
+            {/* Eminent Figure Mini Badge */}
+            {(member.eminent_category || member.category) && (
+              <div className="flex items-center gap-1 mt-0.5 mb-1">
+                <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                  (member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী'
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    : 'bg-amber-50 border-amber-300 text-amber-800'
+                }`}>
+                  {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
+                    <GraduationCap className="h-2.5 w-2.5 text-blue-600 shrink-0" />
+                  ) : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি' ? (
+                    <Flame className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Star className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                  )}
+                  <span className="truncate max-w-[130px]">
+                    {isBn
+                      ? (member.eminent_category || member.category)
+                      : (member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী'
+                      ? 'Brilliant Student'
+                      : (member.eminent_category || member.category) === 'মরণোত্তর জ্ঞাতি'
+                      ? 'Posthumous'
+                      : (member.eminent_category || member.category) === 'আজীবন জ্ঞাতি'
+                      ? 'Lifetime Honor'
+                      : (member.eminent_category || member.category)}
+                  </span>
+                </span>
+              </div>
+            )}
 
             {/* Location */}
             <div className="text-[11px] sm:text-xs text-stone-500 flex items-center mt-1">
