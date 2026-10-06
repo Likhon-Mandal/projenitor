@@ -7,11 +7,11 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout, isAdmin, isSuperAdmin } = useAuth();
-    const { language, setLanguage, toggleLanguage, isBn, t, formatName } = useLanguage();
+    const { language, setLanguage, toggleLanguage, isBn, t, formatName, formatNumber } = useLanguage();
 
     const navItems = [
         { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon },
@@ -138,10 +138,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                             {/* Dashboard link */}
                             <Link
                                 to={isSuperAdmin ? '/dashboard/superadmin' : '/dashboard/admin'}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive('/dashboard') ? 'bg-yellow-500 text-orange-900 font-bold' : 'text-orange-100 hover:bg-orange-800 hover:text-white'}`}
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive('/dashboard') ? 'bg-yellow-500 text-orange-900 font-bold' : 'text-orange-100 hover:bg-orange-800 hover:text-white'}`}
                             >
-                                <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
-                                {t('ড্যাশবোর্ড', 'Dashboard')}
+                                <div className="flex items-center gap-3">
+                                    <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+                                    <span>{isSuperAdmin ? t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard') : t('ড্যাশবোর্ড', 'Dashboard')}</span>
+                                </div>
+                                {adminPendingCount > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
+                                        {formatNumber(adminPendingCount)}
+                                    </span>
+                                )}
                             </Link>
                             {adminNavItems.map(({ to, label, icon: Icon }) => (
                                 <Link

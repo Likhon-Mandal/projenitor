@@ -932,3 +932,72 @@ exports.getPublicStats = async (req, res) => {
         res.status(500).json({ error: 'Server error fetching public stats' });
     }
 };
+
+exports.getPublicNotifications = async (req, res) => {
+    try {
+        const [events, notices, helpRequests] = await Promise.all([
+            pool.query(`
+                SELECT id, title, created_at, date, 'event' AS type
+                FROM events
+                ORDER BY created_at DESC
+                LIMIT 10
+            `),
+            pool.query(`
+                SELECT id, title, created_at, date, 'notice' AS type
+                FROM notices
+                ORDER BY created_at DESC
+                LIMIT 10
+            `),
+            pool.query(`
+                SELECT id, title, created_at, 'help' AS type
+                FROM help_requests
+                ORDER BY created_at DESC
+                LIMIT 10
+            `)
+        ]);
+
+        // Normalize and merge items sorted by created_at descending
+        const items = [
+            ...events.rows.map(r => ({
+                id: `event-${r.id}`,
+                rawId: r.id,
+                title: r.title,
+                type: 'event',
+                target: '/board?tab=events',
+                created_at: r.created_at || r.date,
+                date: r.date
+            })),
+            ...notices.rows.map(r => ({
+                id: `notice-${r.id}`,
+                rawId: r.id,
+                title: r.title,
+                type: 'notice',
+                target: '/board?tab=notices',
+                created_at: r.created_at || r.date,
+                date: r.date
+            })),
+            ...helpRequests.rows.map(r => ({
+                id: `help-${r.id}`,
+                rawId: r.id,
+                title: r.title,
+                type: 'help',
+                target: '/help',
+                created_at: r.created_at
+            }))
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        res.json({
+            items,
+            counts: {
+                events: events.rows.length,
+                notices: notices.rows.length,
+                help: helpRequests.rows.length,
+                total: items.length
+            }
+        });
+    } catch (err) {
+        console.error('Public notifications error:', err);
+        res.status(500).json({ error: 'Server error fetching notifications' });
+    }
+};
+

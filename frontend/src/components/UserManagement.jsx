@@ -208,14 +208,22 @@ const UserManagement = () => {
         );
     });
 
+    const pendingUsersCount = users.filter(u => u.status === 'pending').length;
+
     return (
         <div className="bg-white rounded-xl shadow-md border border-orange-100 overflow-hidden">
             <div className="p-4 border-b border-orange-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-orange-50/50">
                 <div>
-                    <h2 className="text-xl font-serif text-stone-800 font-semibold">
-                        {t('ব্যবহারকারী অ্যাকাউন্ট ও আবেদনসমূহ', 'User Account Requests & Directory')}
+                    <h2 className="text-xl font-serif text-stone-800 font-semibold flex items-center gap-2.5 flex-wrap">
+                        <span>{t('ব্যবহারকারী অ্যাকাউন্ট ও আবেদনসমূহ', 'User Account Requests & Directory')}</span>
+                        {pendingUsersCount > 0 && (
+                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                                <span>{formatNumber(pendingUsersCount)} {t('নতুন আবেদন', 'Pending Requests')}</span>
+                            </span>
+                        )}
                     </h2>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-stone-500 mt-0.5">
                         {t('বংশতালিকার সদস্যদের অ্যাকাউন্ট সক্রিয়করণ আবেদন এবং পরিচালনা', 'Manage lineage member account activation requests and directory')}
                     </p>
                 </div>

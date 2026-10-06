@@ -4,6 +4,7 @@ const systemController = require('../controllers/systemController');
 const { authenticate, requireAdmin, requireSuperAdmin } = require('../middleware/authMiddleware');
 
 router.get('/stats', systemController.getPublicStats);
+router.get('/notifications', systemController.getPublicNotifications);
 
 // Admin only routes
 router.use(authenticate, requireAdmin);

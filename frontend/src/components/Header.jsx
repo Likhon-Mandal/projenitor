@@ -10,18 +10,36 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import NotificationBell from './NotificationBell';
+import api from '../api/api';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
-  const { language, setLanguage, toggleLanguage, isBn, t, formatName } = useLanguage();
+  const { language, setLanguage, toggleLanguage, isBn, t, formatName, formatNumber } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [adminStats, setAdminStats] = useState(null);
   const dropdownRef = useRef(null);
   const profileMenuRef = useRef(null);
+
+  // Fetch admin stats for pending notification badge on navbar
+  useEffect(() => {
+    if (user && isAdmin) {
+      api.get('/admin/stats')
+        .then(res => setAdminStats(res.data))
+        .catch(err => console.error('Error fetching admin stats for navbar:', err));
+    } else {
+      setAdminStats(null);
+    }
+  }, [user, isAdmin, location.pathname]);
+
+  const adminPendingCount = (adminStats?.totalPendingNotifications !== undefined && adminStats.totalPendingNotifications > 0)
+    ? adminStats.totalPendingNotifications
+    : ((adminStats?.pendingStudentRequests || 0) + (adminStats?.pendingUserAccounts || 0) + (adminStats?.pendingAdminRequests || 0));
 
   const isActive = (to, exact) => {
     if (exact) return location.pathname === to;
@@ -82,7 +100,7 @@ const Header = () => {
 
   return (
     <>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} adminPendingCount={adminPendingCount} />
 
       <header className="bg-orange-800 text-white shadow-lg sticky top-0 z-40 border-b border-orange-700/50 font-sans">
         <div className="container mx-auto px-4 py-2.5 flex justify-between items-center gap-2">
@@ -146,8 +164,8 @@ const Header = () => {
             </div>
           </nav>
 
-          {/* Right side: Language Switcher + Profile Icon with Popup Box */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right side: Language Switcher + Notification Bell + Admin Dashboard + Profile Icon */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Language Toggle Pill */}
             <div className="flex items-center bg-orange-950/70 border border-orange-700/70 rounded-full p-0.5 text-xs font-bold transition-all shadow-inner">
               <button
@@ -170,11 +188,14 @@ const Header = () => {
               </button>
             </div>
 
-            {/* Admin Dashboard Quick Link for Admin & SuperAdmin */}
+            {/* Notification Bell (for all users: counts new event, notice, help request) */}
+            <NotificationBell inNavbar={true} />
+
+            {/* Admin Dashboard Quick Link with Pending Requests Badge */}
             {user && isAdmin && (
               <Link
                 to={isSuperAdmin ? '/dashboard/superadmin' : '/dashboard/admin'}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group border border-yellow-400 select-none cursor-pointer"
+                className="relative flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 group border border-yellow-400 select-none cursor-pointer"
                 title={isSuperAdmin ? t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard') : t('এডমিন ড্যাশবোর্ড', 'Admin Dashboard')}
               >
                 <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-950 group-hover:scale-110 transition-transform shrink-0" />
@@ -184,6 +205,13 @@ const Header = () => {
                 <span className="md:hidden font-bold">
                   {t('ড্যাশবোর্ড', 'Dashboard')}
                 </span>
+
+                {/* Number representing sum of student requests + user accounts + admin management on top right corner */}
+                {adminPendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse border-2 border-orange-800 pointer-events-none">
+                    {adminPendingCount > 99 ? '99+' : formatNumber(adminPendingCount)}
+                  </span>
+                )}
               </Link>
             )}
 
@@ -291,7 +319,14 @@ const Header = () => {
                           >
                             <LayoutDashboard className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <div className="truncate">{t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard')}</div>
+                              <div className="flex items-center justify-between">
+                                <span className="truncate">{t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard')}</span>
+                                {adminPendingCount > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
+                                    {formatNumber(adminPendingCount)}
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-[11px] text-orange-300/60 font-normal truncate">{t('ইউজার ম্যানেজমেন্ট ও সিস্টেম কনট্রোল', 'User Management & Controls')}</div>
                             </div>
                           </Link>
@@ -307,7 +342,14 @@ const Header = () => {
                               >
                                 <LayoutDashboard className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <div className="truncate">{t('এডমিন ড্যাশবোর্ড', 'Admin Dashboard')}</div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="truncate">{t('এডমিন ড্যাশবোর্ড', 'Admin Dashboard')}</span>
+                                    {adminPendingCount > 0 && (
+                                      <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
+                                        {formatNumber(adminPendingCount)}
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="text-[11px] text-orange-300/60 font-normal truncate">{t('ইউজার রিকোয়েস্ট ও স্ট্যাটাস', 'User Requests & Status')}</div>
                                 </div>
                               </Link>

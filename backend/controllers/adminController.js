@@ -4,7 +4,7 @@ const { pool } = require('../config/db');
 // ─── Get Dashboard Stats ──────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
     try {
-        const [members, homes, villages, events, notices, eminent, admins] = await Promise.all([
+        const [members, homes, villages, events, notices, eminent, admins, pendingStudents, pendingUsers, pendingAdmins] = await Promise.all([
             pool.query("SELECT COUNT(*) FROM members WHERE deleted_at IS NULL"),
             pool.query("SELECT COUNT(*) FROM homes WHERE deleted_at IS NULL"),
             pool.query("SELECT COUNT(*) FROM villages WHERE deleted_at IS NULL"),
@@ -12,7 +12,15 @@ exports.getDashboardStats = async (req, res) => {
             pool.query("SELECT COUNT(*) FROM notices"),
             pool.query("SELECT COUNT(*) FROM eminent_figures"),
             pool.query("SELECT COUNT(*) FROM admin_users"),
+            pool.query("SELECT COUNT(*) FROM brilliant_student_requests WHERE status = 'pending'"),
+            pool.query("SELECT COUNT(*) FROM users WHERE status = 'pending'"),
+            pool.query("SELECT COUNT(*) FROM admin_requests WHERE status = 'pending'"),
         ]);
+
+        const pendingStudentCount = parseInt(pendingStudents.rows[0].count);
+        const pendingUserCount = parseInt(pendingUsers.rows[0].count);
+        const pendingAdminCount = parseInt(pendingAdmins.rows[0].count);
+        const totalPendingNotifications = pendingStudentCount + pendingUserCount + pendingAdminCount;
 
         res.json({
             totalMembers: parseInt(members.rows[0].count),
@@ -22,6 +30,10 @@ exports.getDashboardStats = async (req, res) => {
             totalNotices: parseInt(notices.rows[0].count),
             totalEminentFigures: parseInt(eminent.rows[0].count),
             totalAdmins: parseInt(admins.rows[0].count),
+            pendingStudentRequests: pendingStudentCount,
+            pendingUserAccounts: pendingUserCount,
+            pendingAdminRequests: pendingAdminCount,
+            totalPendingNotifications: totalPendingNotifications,
         });
     } catch (err) {
         console.error('Dashboard stats error:', err);

@@ -10,7 +10,7 @@ import Profile from '../pages/Profile';
 import ConfirmModal from './ConfirmModal';
 
 const BrilliantStudentRequestsAdmin = () => {
-    const { t, isBn, formatName } = useLanguage();
+    const { t, isBn, formatName, formatNumber } = useLanguage();
 
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -175,8 +175,9 @@ const BrilliantStudentRequestsAdmin = () => {
                         <GraduationCap className="w-5 h-5 text-orange-800" />
                         <span>{t('কৃতি শিক্ষার্থী স্বীকৃতির আবেদনসমূহ', 'Brilliant Student Recognition Requests')}</span>
                         {pendingCount > 0 && (
-                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                                {pendingCount} {t('নতুন পর্যালোচনাধীন', 'Pending')}
+                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                                <span>{formatNumber(pendingCount)} {t('নতুন পর্যালোচনাধীন', 'Pending Requests')}</span>
                             </span>
                         )}
                     </h2>

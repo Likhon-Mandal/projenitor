@@ -291,11 +291,31 @@ const SuperAdminDashboard = () => {
         { icon: Shield, label: t('এডমিন ব্যবহারকারী', 'Admin Users'), value: formatNumber(stats?.totalAdmins), color: 'bg-stone-700' },
     ];
 
+    const pendingStudentRequests = stats?.pendingStudentRequests || 0;
+    const pendingUserAccounts = stats?.pendingUserAccounts || 0;
+    const pendingAdminRequests = adminRequests.filter(r => r.status === 'pending').length || stats?.pendingAdminRequests || 0;
+    const totalAdminPending = (stats?.totalPendingNotifications !== undefined && stats.totalPendingNotifications > 0)
+        ? stats.totalPendingNotifications
+        : (pendingStudentRequests + pendingUserAccounts + pendingAdminRequests);
+
     const tabs = [
         { id: 'overview', label: t('সারসংক্ষেপ', 'Overview') },
-        { id: 'brilliant-requests', label: t('কৃতি শিক্ষার্থী আবেদন', 'Student Requests'), icon: GraduationCap },
-        { id: 'users', label: t('ব্যবহারকারী পরিচালনা', 'User Accounts') },
-        { id: 'admins', label: t('এডমিন পরিচালনা', 'Admin Management') },
+        { 
+            id: 'brilliant-requests', 
+            label: t('কৃতি শিক্ষার্থী আবেদন', 'Student Requests'), 
+            icon: GraduationCap,
+            badge: pendingStudentRequests 
+        },
+        { 
+            id: 'users', 
+            label: t('ব্যবহারকারী পরিচালনা', 'User Accounts'),
+            badge: pendingUserAccounts 
+        },
+        { 
+            id: 'admins', 
+            label: t('এডমিন পরিচালনা', 'Admin Management'),
+            badge: pendingAdminRequests 
+        },
         { id: 'profile', label: t('প্রোফাইল ও নিরাপত্তা', 'Profile & Security') }
     ];
 
@@ -304,9 +324,17 @@ const SuperAdminDashboard = () => {
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Welcome */}
                 <div className="mb-8">
-                    <h1 className="text-2xl font-serif font-bold text-stone-800">
-                        {t('স্বাগতম', 'Welcome back')}, {user?.name?.split(' ')[0]}! 👋
-                    </h1>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="text-2xl font-serif font-bold text-stone-800">
+                            {t('স্বাগতম', 'Welcome back')}, {user?.name?.split(' ')[0]}! 👋
+                        </h1>
+                        {totalAdminPending > 0 && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                                <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
+                                <span>{formatNumber(totalAdminPending)} {t('টি নতুন আবেদন', 'Pending Requests')}</span>
+                            </span>
+                        )}
+                    </div>
                     <p className="text-stone-500 text-sm mt-1">
                         {t('প্রোজেনিটর সিস্টেমের সার্বিক চিত্র ও পরিসংখ্যান।', "Here's what's happening across Projenitor.")}
                     </p>
@@ -314,25 +342,24 @@ const SuperAdminDashboard = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 bg-white border border-orange-100 rounded-xl p-1.5 shadow-sm w-fit flex-wrap">
-                    {tabs.map((tab) => {
-                        const pendingReqCount = adminRequests.filter(r => r.status === 'pending').length;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
-                                    activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'
-                                }`}
-                            >
-                                <span>{tab.label}</span>
-                                {tab.id === 'admins' && pendingReqCount > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
-                                        {formatNumber(pendingReqCount)}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
+                                activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'
+                            }`}
+                        >
+                            <span>{tab.label}</span>
+                            {tab.badge > 0 && (
+                                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                                    activeTab === tab.id ? 'bg-amber-400 text-stone-900' : 'bg-red-600 text-white animate-pulse'
+                                }`}>
+                                    {formatNumber(tab.badge)}
+                                </span>
+                            )}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Overview Tab */}
@@ -367,11 +394,12 @@ const SuperAdminDashboard = () => {
                         <div className="mb-8">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                                 <div>
-                                    <h3 className="text-base font-serif font-bold text-stone-800 flex items-center gap-2">
+                                    <h3 className="text-base font-serif font-bold text-stone-800 flex items-center gap-2 flex-wrap">
                                         <span>{t('সদস্যদের এডমিন পদের আবেদনসমূহ', 'Admin Role Requests from Members')}</span>
                                         {adminRequests.filter(r => r.status === 'pending').length > 0 && (
-                                            <span className="px-2 py-0.5 rounded-full text-xs font-black bg-red-100 text-red-800">
-                                                {formatNumber(adminRequests.filter(r => r.status === 'pending').length)} {t('অপেক্ষমান', 'Pending')}
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                                                <span>{formatNumber(adminRequests.filter(r => r.status === 'pending').length)} {t('নতুন আবেদন', 'Pending Requests')}</span>
                                             </span>
                                         )}
                                     </h3>
