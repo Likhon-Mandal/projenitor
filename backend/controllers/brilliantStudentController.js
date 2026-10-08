@@ -272,11 +272,11 @@ exports.handleRequestAction = async (req, res) => {
 
             // Insert into eminent_figures under 'কৃতি শিক্ষার্থী'
             await client.query(
-                `INSERT INTO eminent_figures (member_id, category, title)
-                 VALUES ($1, 'কৃতি শিক্ষার্থী', $2)
+                `INSERT INTO eminent_figures (member_id, category, title, reason, institution)
+                 VALUES ($1, 'কৃতি শিক্ষার্থী', $2, $3, $4)
                  ON CONFLICT (member_id, category) 
-                 DO UPDATE SET title = EXCLUDED.title`,
-                [request.member_id, title]
+                 DO UPDATE SET title = EXCLUDED.title, reason = EXCLUDED.reason, institution = EXCLUDED.institution`,
+                [request.member_id, title, request.achievement_type, request.institution]
             );
 
             await client.query('COMMIT');

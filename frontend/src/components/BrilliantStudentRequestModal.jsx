@@ -9,14 +9,14 @@ import api from '../api/api';
 import MemberSelector from './MemberSelector';
 
 const ACHIEVEMENT_OPTIONS = [
-    { id: 'এসএসসি (GPA-5.00)', bn: 'এসএসসি (GPA 5.00)', en: 'SSC (GPA 5.00)' },
-    { id: 'এইচএসসি (GPA-5.00)', bn: 'এইচএসসি (GPA 5.00)', en: 'HSC (GPA 5.00)' },
-    { id: 'পাবলিক বিশ্ববিদ্যালয়ে ভর্তি', bn: 'পাবলিক বিশ্ববিদ্যালয়ে ভর্তি', en: 'Public University Admission', isUni: true },
-    { id: 'প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয় (বুয়েট/কুয়েট/রুয়েট ইত্যাদি)', bn: 'প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয় (বুয়েট/ইত্যাদি)', en: 'Engineering University (BUET/etc.)', isUni: true },
-    { id: 'সরকারি মেডিকেল কলেজে ভর্তি', bn: 'সরকারি মেডিকেল কলেজে ভর্তি (এমবিবিএস)', en: 'Govt. Medical College (MBBS)', isUni: true },
+    { id: 'এসএসসি (GPA-5.00)', bn: 'এসএসসি (GPA 5.00)', en: 'Got GPA-5 in SSC' },
+    { id: 'এইচএসসি (GPA-5.00)', bn: 'এইচএসসি (GPA 5.00)', en: 'Got GPA-5 in HSC' },
+    { id: 'পাবলিক বিশ্ববিদ্যালয়ে ভর্তি', bn: 'পাবলিক বিশ্ববিদ্যালয়ে ভর্তি', en: 'Got Chance in Public University', isUni: true },
+    { id: 'প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয় (বুয়েট/কুয়েট/রুয়েট ইত্যাদি)', bn: 'প্রকৌশল ও প্রযুক্তি বিশ্ববিদ্যালয় (বুয়েট/ইত্যাদি)', en: 'Got Chance in Engineering University (BUET/etc.)', isUni: true },
+    { id: 'সরকারি মেডিকেল কলেজে ভর্তি', bn: 'সরকারি মেডিকেল কলেজে ভর্তি (এমবিবিএস)', en: 'Got Chance in Medical College', isUni: true },
     { id: 'জাতীয় / আন্তর্জাতিক বৃত্তিপ্রাপ্ত', bn: 'জাতীয় / আন্তর্জাতিক মেধা বৃত্তি', en: 'National / International Scholarship' },
-    { id: 'জেএসসি / জেডিসি (বৃত্তি / GPA-5)', bn: 'জেএসসি / জেডিসি (বৃত্তি / GPA 5.00)', en: 'JSC / JDC (Scholarship / GPA 5.00)' },
-    { id: 'পিএসসি / সমাপনী (বৃত্তি / GPA-5)', bn: 'পিএসসি / সমাপনী (বৃত্তি / GPA 5.00)', en: 'PSC / Primary (Scholarship / GPA 5.00)' },
+    { id: 'জেএসসি (বৃত্তি / GPA-5)', bn: 'জেএসসি (বৃত্তি / GPA 5.00)', en: 'Got GPA-5 in JSC' },
+    { id: 'পিএসসি / সমাপনী (বৃত্তি / GPA-5)', bn: 'পিএসসি / সমাপনী (বৃত্তি / GPA 5.00)', en: 'Got GPA-5 in PSC / Primary' },
     { id: 'অন্যান্য বিশেষ মেধা ও স্বীকৃতি', bn: 'অন্যান্য বিশেষ মেধা ও স্বীকৃতি', en: 'Other Academic Excellence' }
 ];
 

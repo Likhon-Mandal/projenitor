@@ -10,7 +10,7 @@ import Profile from '../pages/Profile';
 import ConfirmModal from './ConfirmModal';
 
 const BrilliantStudentRequestsAdmin = () => {
-    const { t, isBn, formatName, formatNumber } = useLanguage();
+    const { t, isBn, formatName, formatNumber, formatAchievement } = useLanguage();
 
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -427,7 +427,7 @@ const BrilliantStudentRequestsAdmin = () => {
                                             <div className="flex flex-wrap items-center gap-1.5">
                                                 <span className="bg-orange-800 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg shadow-2xs flex items-center gap-1">
                                                     <GraduationCap size={12} />
-                                                    {req.achievement_type}
+                                                    {formatAchievement(req.achievement_type)}
                                                 </span>
 
                                                 {req.result_grade && (

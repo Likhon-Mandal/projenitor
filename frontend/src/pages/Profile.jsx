@@ -238,12 +238,6 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
                         : (member.eminent_category || member.category)}
                     </span>
                   </div>
-
-                  {member.eminent_title && (
-                    <span className="text-[11px] sm:text-xs font-medium text-amber-800/90 italic text-center max-w-xs px-2.5 py-0.5 rounded-md bg-amber-50/80 border border-amber-200/60 shadow-2xs">
-                      "{member.eminent_title}"
-                    </span>
-                  )}
                 </div>
               )}
 

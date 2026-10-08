@@ -13,7 +13,7 @@ import BrilliantStudentRequestModal from '../components/BrilliantStudentRequestM
 
 const UserDashboard = () => {
     const { user, logout, isAdmin, isSuperAdmin, login, token, refreshProfile } = useAuth();
-    const { t, formatName } = useLanguage();
+    const { t, formatName, formatAchievement } = useLanguage();
     
     const [profile, setProfile] = useState(null);
     const [memberData, setMemberData] = useState(null);
@@ -408,9 +408,16 @@ const UserDashboard = () => {
                                 <GraduationCap className="w-6 h-6 text-orange-800" />
                             </div>
                             <div>
-                                <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-serif">
-                                    {t('কৃতি শিক্ষার্থী সম্মাননা আবেদন', 'Brilliant Student Recognition Requests')}
-                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-serif">
+                                        {t('কৃতি শিক্ষার্থী সম্মাননা আবেদন', 'Brilliant Student Recognition Requests')}
+                                    </h3>
+                                    {studentRequests.length > 0 && (
+                                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                                            {studentRequests.length}
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-xs text-stone-500">
                                     {t('নিজের বা পরিবারের যেকোনো সদস্যের জন্য কৃতি শিক্ষার্থী স্বীকৃতির আবেদন ও বর্তমান অবস্থা', 'Nominate academic achievers and track recognition status')}
                                 </p>
@@ -433,9 +440,9 @@ const UserDashboard = () => {
                             {t('আবেদনসমূহ লোড হচ্ছে...', 'Loading applications...')}
                         </div>
                     ) : studentRequests.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-3 max-h-[420px] sm:max-h-[440px] overflow-y-auto pr-1 sm:pr-1.5 custom-scrollbar">
                             {studentRequests.map(req => (
-                                <div key={req.id} className="p-4 rounded-2xl border border-stone-200 bg-stone-50/60 hover:bg-orange-50/20 transition-all">
+                                <div key={req.id} className="p-4 rounded-2xl border border-stone-200 bg-stone-50/60 hover:bg-orange-50/40 hover:border-orange-300 transition-all duration-200">
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                         <div className="flex items-center gap-2">
                                             <span className="font-serif font-bold text-sm text-stone-900">
@@ -446,7 +453,7 @@ const UserDashboard = () => {
                                                 })}
                                             </span>
                                             <span className="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded">
-                                                {req.achievement_type}
+                                                {formatAchievement(req.achievement_type)}
                                             </span>
                                         </div>
                                         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${

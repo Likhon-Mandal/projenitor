@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
     Calendar, HelpCircle, Plus, Trash2, Edit2, Megaphone, 
     ChevronDown, ChevronUp, MapPin, Clock, ArrowRight, ExternalLink,
@@ -16,6 +17,8 @@ import { formatDateDDMMYYYY } from '../utils/dateUtils';
 const EventsAndNotices = () => {
     const { isAdmin } = useAuth();
     const { t, isBn } = useLanguage();
+    const location = useLocation();
+    const [highlightedId, setHighlightedId] = useState(null);
 
     // ---- NOTICES LOGIC ----
     const [notices, setNotices] = useState([]);
@@ -141,6 +144,56 @@ const EventsAndNotices = () => {
         }
         return false;
     };
+
+    // Deep link scroll & highlight effect from notification click
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const targetId = location.state?.targetId || params.get('highlight') || location.hash.replace('#', '');
+        
+        if (!targetId) return;
+
+        // 1. If it's an event, automatically switch to correct event tab (upcoming vs previous)
+        if (targetId.startsWith('event-')) {
+            const rawEventId = parseInt(targetId.replace('event-', ''), 10);
+            if (events.length > 0 && !isNaN(rawEventId)) {
+                const targetEvent = events.find(e => e.id === rawEventId);
+                if (targetEvent) {
+                    if (isPreviousEvent(targetEvent)) {
+                        setEventTab('previous');
+                    } else {
+                        setEventTab('upcoming');
+                    }
+                }
+            }
+        } 
+        // 2. If it's a notice, auto-expand it so full details are visible
+        else if (targetId.startsWith('notice-')) {
+            const rawNoticeId = parseInt(targetId.replace('notice-', ''), 10);
+            if (!isNaN(rawNoticeId)) {
+                setExpandedNoticeId(rawNoticeId);
+            }
+        }
+
+        // 3. Scroll to the element and apply highlight effect
+        const timer = setTimeout(() => {
+            const el = document.getElementById(targetId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setHighlightedId(targetId);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [location.search, location.hash, location.state, events, notices]);
+
+    // Clear highlight effect after 5 seconds
+    useEffect(() => {
+        if (!highlightedId) return;
+        const timer = setTimeout(() => {
+            setHighlightedId(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, [highlightedId]);
 
     // Partition events into Upcoming and Previous
     const { upcomingEvents, previousEvents } = useMemo(() => {
@@ -319,8 +372,13 @@ const EventsAndNotices = () => {
                                 upcomingEvents.map((event, index) => (
                                     <div
                                         key={event.id}
+                                        id={`event-${event.id}`}
                                         onClick={() => handleOpenDetails(event)}
-                                        className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-orange-100 hover:border-orange-300 flex flex-col sm:flex-row gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up relative group cursor-pointer"
+                                        className={`bg-white p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up relative group cursor-pointer ${
+                                            highlightedId === `event-${event.id}`
+                                                ? 'border-2 border-orange-500 ring-4 ring-orange-400/40 shadow-xl -translate-y-1 bg-orange-50/40'
+                                                : 'border border-orange-100 hover:border-orange-300 shadow-sm'
+                                        }`}
                                         style={{ animationDelay: `${0.08 * (index + 1)}s` }}
                                     >
                                         {/* Admin Action Buttons */}
@@ -430,8 +488,13 @@ const EventsAndNotices = () => {
                                 previousEvents.map((event, index) => (
                                     <div
                                         key={event.id}
+                                        id={`event-${event.id}`}
                                         onClick={() => handleOpenDetails(event)}
-                                        className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-stone-200 hover:border-amber-400 flex flex-col sm:flex-row gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up relative group cursor-pointer"
+                                        className={`bg-white p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-slide-up relative group cursor-pointer ${
+                                            highlightedId === `event-${event.id}`
+                                                ? 'border-2 border-amber-500 ring-4 ring-amber-400/40 shadow-xl -translate-y-1 bg-amber-50/40'
+                                                : 'border border-stone-200 hover:border-amber-400 shadow-sm'
+                                        }`}
                                         style={{ animationDelay: `${0.08 * (index + 1)}s` }}
                                     >
                                         {/* Admin Action Buttons */}
@@ -573,7 +636,12 @@ const EventsAndNotices = () => {
                             notices.map((notice) => (
                                 <div
                                     key={notice.id}
-                                    className="group bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-all duration-300 relative overflow-hidden"
+                                    id={`notice-${notice.id}`}
+                                    className={`group bg-white p-4 sm:p-5 rounded-xl transition-all duration-300 relative overflow-hidden ${
+                                        highlightedId === `notice-${notice.id}`
+                                            ? 'border-2 border-orange-500 ring-4 ring-orange-400/40 shadow-xl bg-orange-50/40 scale-[1.01]'
+                                            : 'border border-stone-100 hover:shadow-md shadow-sm'
+                                    }`}
                                 >
                                     <div className={`absolute left-0 top-0 bottom-0 w-1 ${getTypeColor(notice.type).split(' ')[0]}`}></div>
 

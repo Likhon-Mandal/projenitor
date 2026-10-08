@@ -963,7 +963,7 @@ exports.getPublicNotifications = async (req, res) => {
                 rawId: r.id,
                 title: r.title,
                 type: 'event',
-                target: '/board?tab=events',
+                target: `/board?tab=events&highlight=event-${r.id}#event-${r.id}`,
                 created_at: r.created_at || r.date,
                 date: r.date
             })),
@@ -972,7 +972,7 @@ exports.getPublicNotifications = async (req, res) => {
                 rawId: r.id,
                 title: r.title,
                 type: 'notice',
-                target: '/board?tab=notices',
+                target: `/board?tab=notices&highlight=notice-${r.id}#notice-${r.id}`,
                 created_at: r.created_at || r.date,
                 date: r.date
             })),
@@ -981,7 +981,7 @@ exports.getPublicNotifications = async (req, res) => {
                 rawId: r.id,
                 title: r.title,
                 type: 'help',
-                target: '/help',
+                target: `/help?highlight=help-${r.id}#help-${r.id}`,
                 created_at: r.created_at
             }))
         ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

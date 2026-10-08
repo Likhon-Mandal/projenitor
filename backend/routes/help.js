@@ -3,9 +3,9 @@ const router = express.Router();
 const helpController = require('../controllers/helpController');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 
-// Public: Read and submit help requests
+// Protected: Authenticated users (user, admin, superadmin) can submit help requests
 router.get('/', helpController.getHelpRequests);
-router.post('/', helpController.addHelpRequest);
+router.post('/', authenticate, helpController.addHelpRequest);
 
 // Protected: Admin management actions only
 router.put('/:id', authenticate, requireAdmin, helpController.updateHelpRequest);

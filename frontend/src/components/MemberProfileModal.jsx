@@ -371,11 +371,6 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                 )}
                                 {member.eminent_category || member.category}
                             </div>
-                            {member.eminent_title && (
-                                <div className="text-[11px] font-medium text-amber-200/90 text-center leading-tight drop-shadow-sm px-2.5 py-1 rounded-lg bg-black/25 backdrop-blur-xs border border-white/10">
-                                    "{member.eminent_title}"
-                                </div>
-                            )}
                         </div>
                     )}
 

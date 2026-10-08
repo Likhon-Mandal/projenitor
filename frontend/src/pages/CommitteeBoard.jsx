@@ -135,10 +135,12 @@ const CommitteeBoard = () => {
         });
 
         return (
-            <div className="rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-                {Object.entries(grouped).map(([role, roleMembers]) => (
-                    <RoleGroupRow key={role} role={role} members={roleMembers} />
-                ))}
+            <div className="rounded-2xl border border-stone-200 overflow-hidden shadow-sm bg-white">
+                <div className="max-h-[320px] sm:max-h-[360px] overflow-y-auto custom-scrollbar">
+                    {Object.entries(grouped).map(([role, roleMembers]) => (
+                        <RoleGroupRow key={role} role={role} members={roleMembers} />
+                    ))}
+                </div>
             </div>
         );
     };
@@ -193,7 +195,14 @@ const CommitteeBoard = () => {
                                             </span>
                                             <span className="text-xs font-black uppercase tracking-widest text-green-600">{t('বর্তমান কার্যনির্বাহী পরিষদ', 'Current Administration')}</span>
                                         </div>
-                                        <h2 className="text-3xl font-serif font-bold text-stone-800">{currentCommittee.name}</h2>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-stone-800">{currentCommittee.name}</h2>
+                                            {currentCommittee.members?.length > 0 && (
+                                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                                                    {formatNumber(currentCommittee.members.length)} {t('সদস্য', 'Members')}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2 bg-orange-50 text-orange-800 px-4 py-2 rounded-lg font-medium border border-orange-100">
                                         <Calendar size={18} />

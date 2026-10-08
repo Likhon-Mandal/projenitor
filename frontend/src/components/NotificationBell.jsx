@@ -75,7 +75,16 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
         }
         setIsOpen(false);
         if (item.target) {
-            navigate(item.target);
+            let targetPath = item.target;
+            const elementId = item.id;
+            if (!targetPath.includes('highlight=') && elementId) {
+                const [pathAndQuery] = targetPath.split('#');
+                const [basePath, queryStr = ''] = pathAndQuery.split('?');
+                const params = new URLSearchParams(queryStr);
+                params.set('highlight', elementId);
+                targetPath = `${basePath}?${params.toString()}#${elementId}`;
+            }
+            navigate(targetPath, { state: { targetId: elementId, timestamp: Date.now() } });
         }
     };
 

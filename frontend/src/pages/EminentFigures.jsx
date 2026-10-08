@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, GraduationCap, Flame, Star, Plus, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Award, GraduationCap, Flame, Star, Plus, MapPin, Pencil, Trash2, Building2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import EminentFormModal from '../components/EminentFormModal';
 import BrilliantStudentRequestModal from '../components/BrilliantStudentRequestModal';
@@ -17,7 +17,7 @@ const categories = [
 
 const EminentFigures = () => {
     const { user, isAdmin } = useAuth();
-    const { t, isBn, formatOccupation, formatName } = useLanguage();
+    const { t, isBn, formatOccupation, formatName, formatAchievement } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     const [figures, setFigures] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -246,47 +246,108 @@ const EminentFigures = () => {
                                     >
                                     {(() => {
                                         const figureDisplayName = formatName(figure);
+
+                                        // Resolve reason and institution
+                                        let displayReason = figure.reason || '';
+                                        let displayInstitution = figure.institution || '';
+
+                                        if ((!displayReason || !displayInstitution) && figure.title) {
+                                            const parts = figure.title.split(' - ').map(p => p.trim()).filter(Boolean);
+                                            if (!displayReason && parts.length > 0) {
+                                                displayReason = parts[0];
+                                            }
+                                            if (!displayInstitution && parts.length > 1) {
+                                                displayInstitution = parts.slice(1).join(' - ');
+                                            }
+                                            if (!displayReason && !displayInstitution) {
+                                                displayReason = figure.title;
+                                            }
+                                        }
+
+                                        // Resolve address from member profile (matching Profile card: village, upazila, district)
+                                        const locationAddress = [figure.village, figure.upazila, figure.district].filter(Boolean).join(', ');
+                                        const profileAddress = locationAddress ||
+                                            figure.present_address?.trim() ||
+                                            figure.permanent_address?.trim() ||
+                                            '';
+
                                         return (
-                                            <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                                                <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
-                                                    {figure.profile_image_url ? (
-                                                        <img src={figure.profile_image_url} alt={figureDisplayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                            <>
+                                                <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                                    <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
+                                                        {figure.profile_image_url ? (
+                                                            <img src={figure.profile_image_url} alt={figureDisplayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-stone-200 text-stone-400 font-serif font-bold text-lg sm:text-xl">
+                                                                {figureDisplayName.charAt(0)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3 className="font-serif font-bold text-base sm:text-lg text-stone-800 leading-tight mb-1 group-hover:text-orange-700 transition-colors truncate">
+                                                            {figureDisplayName}
+                                                        </h3>
+                                                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${currentCategoryInfo.badge}`}>
+                                                            {activeCategoryLabel}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* 2-line Recognition Details: Reason & Institution */}
+                                                {(displayReason || displayInstitution || figure.title) && (
+                                                    <div className="bg-orange-50/80 text-orange-950 p-2.5 sm:p-3 rounded-xl border border-orange-200/80 mb-3 sm:mb-4 shadow-2xs group-hover:border-orange-300 transition-all space-y-1.5">
+                                                        {displayReason && (
+                                                            <div className="flex items-start gap-2">
+                                                                <GraduationCap size={15} className="shrink-0 mt-0.5 text-orange-800" />
+                                                                <span className="font-bold text-xs sm:text-sm text-stone-900 leading-snug">
+                                                                    {formatAchievement(displayReason)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {displayInstitution && (
+                                                            <div className="flex items-start gap-2 text-stone-600">
+                                                                <Building2 size={15} className="shrink-0 mt-0.5 text-amber-700" />
+                                                                <span className="text-xs sm:text-sm leading-snug font-medium text-stone-700">
+                                                                    {displayInstitution}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {!displayReason && !displayInstitution && figure.title && (
+                                                            <div className="text-xs sm:text-sm font-medium italic">
+                                                                "{formatAchievement(figure.title)}"
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Profile Details: Address, Education, Occupation */}
+                                                <div className="space-y-1.5 sm:space-y-2 text-xs text-stone-500">
+                                                    {profileAddress ? (
+                                                        <div className="flex items-start gap-2">
+                                                            <MapPin size={14} className="shrink-0 mt-0.5 text-red-700" />
+                                                            <span className="line-clamp-2 text-stone-700 font-medium">{profileAddress}</span>
+                                                        </div>
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-stone-200 text-stone-400 font-serif font-bold text-lg sm:text-xl">
-                                                            {figureDisplayName.charAt(0)}
+                                                        <div className="flex items-center gap-2 text-stone-400">
+                                                            <MapPin size={14} className="shrink-0 text-stone-300" />
+                                                            <span className="italic">{t('ঠিকানা প্রোফাইলে নেই', 'Address not listed in profile')}</span>
                                                         </div>
                                                     )}
+
+                                                    {figure.education && (
+                                                        <div className="flex items-start gap-2">
+                                                            <GraduationCap size={14} className="shrink-0 mt-0.5 text-stone-400" />
+                                                            <span className="line-clamp-2">{figure.education}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        <Award size={14} className="shrink-0 text-stone-400" />
+                                                        <span className="truncate">{formatOccupation(figure.occupation) || t('পেশা উল্লেখ নেই', 'Occupation not listed')}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <h3 className="font-serif font-bold text-base sm:text-lg text-stone-800 leading-tight mb-1 group-hover:text-orange-700 transition-colors truncate">
-                                                        {figureDisplayName}
-                                                    </h3>
-                                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${currentCategoryInfo.badge}`}>
-                                                        {activeCategoryLabel}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            </>
                                         );
                                     })()}
-
-                                        {figure.title && (
-                                            <div className="bg-orange-50/50 text-orange-900 text-xs sm:text-sm p-2.5 sm:p-3 rounded-xl border border-orange-100 mb-3 sm:mb-4 font-medium italic">
-                                                "{figure.title}"
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-1.5 sm:space-y-2 text-xs text-stone-500">
-                                            {figure.education && (
-                                                <div className="flex items-start gap-2">
-                                                    <GraduationCap size={14} className="shrink-0 mt-0.5 text-stone-400" />
-                                                    <span className="line-clamp-2">{figure.education}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-2">
-                                                <Award size={14} className="shrink-0 text-stone-400" />
-                                                <span className="truncate">{formatOccupation(figure.occupation) || t('পেশা উল্লেখ নেই', 'Occupation not listed')}</span>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             ))

@@ -10,3 +10,34 @@
     @apply font-serif text-primary;
   }
 }
+
+/* Custom smooth scrollbar with Projenitor warm saffron theme */
+.custom-scrollbar::-webkit-scrollbar,
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(154, 52, 18, 0.04);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #fdba74; /* orange-300 */
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #ea580c; /* orange-600 */
+}
+
+.custom-scrollbar,
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #fdba74 rgba(154, 52, 18, 0.04);
+}

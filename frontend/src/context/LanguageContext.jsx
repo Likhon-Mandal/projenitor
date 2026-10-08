@@ -66,6 +66,18 @@ const DICTIONARY = {
 
 const BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
+const ACHIEVEMENT_MAP = [
+  { match: /পাবলিক\s*বিশ্ববিদ্যাল[য়য]ে?\s*(?:ভর্তি)?|public\s*university(?:\s*admission)?|got\s*chance\s*in\s*public\s*university/i, bn: 'পাবলিক বিশ্ববিদ্যালয়ে ভর্তি', en: 'Got Chance in Public University' },
+  { match: /প্রকৌশল(?:\s*ও\s*প্রযুক্তি)?\s*বিশ্ববিদ্যাল[য়য]|বুয়েট|engineering\s*university|got\s*chance\s*in\s*engineering/i, bn: 'প্রকৌশল বিশ্ববিদ্যালয় (বুয়েট/ইত্যাদি)', en: 'Got Chance in Engineering University (BUET/etc.)' },
+  { match: /সরকারি\s*মেডিকেল\s*কলেজে?\s*(?:ভর্তি)?|মেডিকেল\s*কলেজ|medical\s*college|got\s*chance\s*in\s*medical/i, bn: 'সরকারি মেডিকেল কলেজে ভর্তি', en: 'Got Chance in Medical College' },
+  { match: /এসএসসি\s*(?:\(gpa-?5(?:\.00)?\))?|ssc(?:\s*\(gpa-?5(?:\.00)?\))?|got\s*gpa-?5\s*in\s*ssc/i, bn: 'এসএসসি (GPA 5.00)', en: 'Got GPA-5 in SSC' },
+  { match: /এইচএসসি\s*(?:\(gpa-?5(?:\.00)?\))?|hsc(?:\s*\(gpa-?5(?:\.00)?\))?|got\s*gpa-?5\s*in\s*hsc/i, bn: 'এইচএসসি (GPA 5.00)', en: 'Got GPA-5 in HSC' },
+  { match: /(?:জেএসসি|jsc)(?:\s*(?:\/|\s)\s*(?:জেডিসি|jdc))?|(?:জেডিসি|jdc)|got\s*gpa-?5\s*in\s*jsc/i, bn: 'জেএসসি (বৃত্তি / GPA 5.00)', en: 'Got GPA-5 in JSC' },
+  { match: /পিএসসি|সমাপনী|psc|got\s*gpa-?5\s*in\s*psc/i, bn: 'পিএসসি / সমাপনী (বৃত্তি / GPA 5.00)', en: 'Got GPA-5 in PSC / Primary' },
+  { match: /জাতীয়|জাতীয়\s*\/\s*আন্তর্জাতিক|মেধা\s*বৃত্তি|scholarship/i, bn: 'জাতীয় / আন্তর্জাতিক মেধা বৃত্তি', en: 'National / International Scholarship' },
+  { match: /অন্যান্য\s*বিশেষ\s*মেধা|academic\s*excellence/i, bn: 'অন্যান্য বিশেষ মেধা ও স্বীকৃতি', en: 'Other Academic Excellence' }
+];
+
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
     try {
@@ -140,6 +152,31 @@ export const LanguageProvider = ({ children }) => {
     const str = String(val);
     if (!isBn) return str;
     return str.replace(/[0-9]/g, digit => BN_DIGITS[parseInt(digit, 10)]);
+  }, [isBn]);
+
+  /**
+   * Format academic / brilliant student achievement string to current language
+   */
+  const formatAchievement = useCallback((raw) => {
+    if (!raw) return '';
+    const str = String(raw).trim();
+
+    // If it is in format "Reason - Institution", localize the reason part cleanly
+    if (str.includes(' - ')) {
+      const parts = str.split(' - ').map(s => s.trim());
+      for (const item of ACHIEVEMENT_MAP) {
+        if (item.match.test(parts[0])) {
+          return `${isBn ? item.bn : item.en} - ${parts.slice(1).join(' - ')}`;
+        }
+      }
+    }
+
+    for (const item of ACHIEVEMENT_MAP) {
+      if (item.match.test(str)) {
+        return isBn ? item.bn : item.en;
+      }
+    }
+    return str;
   }, [isBn]);
 
   /**
@@ -398,7 +435,8 @@ const transliterateBengali = (text) => {
     t,
     formatNumber,
     formatOccupation,
-    formatName
+    formatName,
+    formatAchievement
   };
 
   return (
