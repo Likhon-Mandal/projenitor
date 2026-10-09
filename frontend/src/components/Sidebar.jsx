@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home as HomeIcon, Map, Search, Users, Calendar, UsersRound,
-    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard, Heart, BookOpen
+    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard, Heart, BookOpen, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,6 +16,7 @@ const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
     const navItems = [
         { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon },
         { to: '/history', label: t('আমাদের ঐতিহ্য', 'Our Heritage'), icon: BookOpen },
+        { to: '/sammelan', label: t('সম্মেলন কথা', 'Sammelan Katha'), icon: Sparkles },
         { to: '/explorer', label: t('বংশতালিকা', 'Lineage Explorer'), icon: Map },
         { to: '/directory', label: t('সদস্য অনুসন্ধান', 'Search Members'), icon: Search },
         { to: '/spouses', label: t('সহধর্মিণী তালিকা', 'Spouses Directory'), icon: Heart },

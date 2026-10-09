@@ -103,9 +103,9 @@ const FindRelation = () => {
             </div>
 
             {/* Selector Grid */}
-            <div className="relative z-10 fr-glass rounded-3xl p-5 sm:p-7 mb-6">
+            <div className="relative z-30 fr-glass rounded-3xl p-5 sm:p-7 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_52px_1fr] gap-4 items-start">
-                    <div className="space-y-2 relative z-20">
+                    <div className="space-y-2 relative z-30">
                         <p className="text-[10px] uppercase font-bold tracking-[0.18em] text-orange-700 flex items-center gap-1.5">
                             <span className="w-5 h-5 rounded-full bg-orange-600 text-white text-[10px] font-black flex items-center justify-center">{t('\u09e7','1')}</span>
                             {t('\u09aa\u09cd\u09b0\u09a5\u09ae \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'First Person')}
@@ -129,12 +129,12 @@ const FindRelation = () => {
                         </button>
                     </div>
 
-                    <div className="space-y-2 relative z-10">
+                    <div className="space-y-2 relative z-20">
                         <p className="text-[10px] uppercase font-bold tracking-[0.18em] text-red-700 flex items-center gap-1.5">
                             <span className="w-5 h-5 rounded-full bg-red-700 text-white text-[10px] font-black flex items-center justify-center">{t('\u09e8','2')}</span>
                             {t('\u09a6\u09cd\u09ac\u09bf\u09a4\u09c0\u09df \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', 'Second Person')}
                         </p>
-                        <div className="relative z-10">
+                        <div className="relative z-20">
                             <MemberSelector label="" onSelect={setPersonB} selectedMember={personB} />
                         </div>
                     </div>
@@ -143,7 +143,7 @@ const FindRelation = () => {
 
             {/* Empty state */}
             {!bothSelected && (
-                <div className="relative z-10 fr-glass rounded-3xl p-8 sm:p-10 text-center">
+                <div className="relative z-0 fr-glass rounded-3xl p-8 sm:p-10 text-center">
                     <div className="w-14 h-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <Search size={24} className="text-stone-300" />
                     </div>
@@ -157,7 +157,7 @@ const FindRelation = () => {
 
             {/* Result Card */}
             {relationResult && bothSelected && (
-                <div className="relative z-10 fr-animate-in">
+                <div className="relative z-0 fr-animate-in">
                     <div className="fr-glass rounded-3xl overflow-hidden">
                         <div className="h-1.5 bg-gradient-to-r from-orange-400 via-yellow-400 to-red-500" />
                         <div className="bg-gradient-to-br from-stone-900 to-stone-800 px-5 sm:px-8 py-4 sm:py-5 flex items-center gap-3">

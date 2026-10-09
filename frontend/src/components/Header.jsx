@@ -84,6 +84,7 @@ const Header = () => {
   // Secondary items (grouped in dropdown on desktop)
   const secondaryNav = [
     { to: '/history', label: t('আমাদের ঐতিহ্য', 'Our Heritage'), icon: BookOpen },
+    { to: '/sammelan', label: t('সম্মেলন কথা', 'Sammelan Katha'), icon: Sparkles },
     { to: '/relation', label: t('সম্পর্ক অনুসন্ধান', 'Find Relation'), icon: Users },
     { to: '/spouses', label: t('সহধর্মিণী তালিকা', 'Spouses Directory'), icon: Heart },
     { to: '/board', label: t('বিজ্ঞপ্তি ও কার্যক্রম', 'Events & Notices'), icon: Calendar },

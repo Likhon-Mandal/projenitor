@@ -185,13 +185,13 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
             // 1. Spouses are strictly Female
             // 2. Root members are strictly Male
             // 3. For any other member, preserve their existing gender or let user choose
-            const determinedGender = isInitialSpouse 
-                ? 'Female' 
+            const determinedGender = isInitialSpouse
+                ? 'Female'
                 : (isRootVal ? 'Male' : (sanitizedData.gender || ''));
 
             const defaultEmptyForm = {
-                full_name: '', name_bangla: '', name_english: '', 
-                gender: determinedGender, 
+                full_name: '', name_bangla: '', name_english: '',
+                gender: determinedGender,
                 blood_group: '', occupation: '', education: '',
                 birth_date: '', death_date: '', is_alive: true,
                 contact_number: '', email: '', present_address: '', permanent_address: '',
@@ -346,8 +346,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         if (file.size > MAX_PROFILE_IMAGE_SIZE) {
             const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
             alert(
-                isBn 
-                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।` 
+                isBn
+                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।`
                     : `Profile picture size must not exceed 5MB. Your selected image is ${sizeInMB} MB. Please choose a smaller image.`
             );
             e.target.value = '';
@@ -477,8 +477,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
         if (file.size > MAX_PROFILE_IMAGE_SIZE) {
             const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
             alert(
-                isBn 
-                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।` 
+                isBn
+                    ? `প্রোফাইল ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট (5MB) হতে পারে। আপনার ছবির সাইজ ${sizeInMB} MB। অনুগ্রহ করে ছোট সাইজের ছবি নির্বাচন করুন।`
                     : `Profile picture size must not exceed 5MB. Your selected image is ${sizeInMB} MB. Please choose a smaller image.`
             );
             e.target.value = '';
@@ -578,9 +578,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
             payload.isSpouseFlag = true;
             payload.father_id = null;
             payload.mother_id = null;
-            const husband = currentSpouses.find(s => s.gender === 'Male') || 
-                            (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
-                            initialData.husband;
+            const husband = currentSpouses.find(s => s.gender === 'Male') ||
+                (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
+                initialData.husband;
             if (husband && husband.level) {
                 payload.level = husband.level;
             }
@@ -669,7 +669,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                             <h3 className="text-lg font-bold text-orange-800 border-b border-orange-100 pb-2 mb-3">
                                 {t('সাধারণ তথ্য', 'Basic Information')}
                             </h3>
-                            
+
                             {/* Two Name Fields: Bangla and English */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div className="bg-orange-50/40 p-3 rounded-xl border border-orange-100 transition-all hover:border-orange-300">
@@ -677,12 +677,12 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                         <span>{t('নাম (বাংলা)', 'Name (Bangla)')}</span>
                                         <span className="text-[10px] text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded font-medium">{t('বাংলা হরফে', 'Bangla Script')}</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full p-2.5 bg-white border border-stone-300 rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm" 
-                                        value={formData.name_bangla} 
+                                    <input
+                                        type="text"
+                                        className="w-full p-2.5 bg-white border border-stone-300 rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm"
+                                        value={formData.name_bangla}
                                         onChange={e => setFormData({ ...formData, name_bangla: e.target.value })}
-                                        placeholder={t('যেমন: রামগতি মণ্ডল', 'e.g. Ramgoti Mandal')} 
+                                        placeholder={t('যেমন: রামগতি মণ্ডল', 'e.g. Ramgoti Mandal')}
                                     />
                                 </div>
                                 <div className="bg-orange-50/40 p-3 rounded-xl border border-orange-100 transition-all hover:border-orange-300">
@@ -690,12 +690,12 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                         <span>{t('নাম (ইংরেজি)', 'Name (English)')}</span>
                                         <span className="text-[10px] text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded font-medium">{t('ইংরেজি হরফে', 'English')}</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full p-2.5 bg-white border border-stone-300 rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm" 
-                                        value={formData.name_english} 
+                                    <input
+                                        type="text"
+                                        className="w-full p-2.5 bg-white border border-stone-300 rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm"
+                                        value={formData.name_english}
                                         onChange={e => setFormData({ ...formData, name_english: e.target.value })}
-                                        placeholder={t('যেমন: Ramgoti Mandal', 'e.g. Ramgoti Mandal')} 
+                                        placeholder={t('যেমন: Ramgoti Mandal', 'e.g. Ramgoti Mandal')}
                                     />
                                 </div>
                             </div>
@@ -734,11 +734,10 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                         <select
                                             id="member-gender-select"
                                             required
-                                            className={`w-full p-2.5 border rounded-lg font-medium text-stone-800 outline-none transition-all shadow-sm ${
-                                                !formData.gender 
-                                                    ? 'border-amber-400 bg-amber-50/30 focus:ring-2 focus:ring-orange-500 focus:border-orange-500' 
+                                            className={`w-full p-2.5 border rounded-lg font-medium text-stone-800 outline-none transition-all shadow-sm ${!formData.gender
+                                                    ? 'border-amber-400 bg-amber-50/30 focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
                                                     : 'border-stone-300 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                                            }`}
+                                                }`}
                                             value={formData.gender || ''}
                                             onChange={e => setFormData({ ...formData, gender: e.target.value })}
                                         >
@@ -823,9 +822,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
 
                                     {/* Husband Display */}
                                     {(() => {
-                                        const husband = currentSpouses.find(s => s.gender === 'Male') || 
-                                                        (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
-                                                        initialData.husband;
+                                        const husband = currentSpouses.find(s => s.gender === 'Male') ||
+                                            (formData.spouse_id && members.find(m => m.id === formData.spouse_id)) ||
+                                            initialData.husband;
                                         return (isSpouseRole && husband) ? (
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
@@ -1042,11 +1041,10 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                                         <div className="relative flex-1">
                                                             <input
                                                                 type="text"
-                                                                className={`w-full p-2 pr-28 text-sm border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all ${
-                                                                    isLoginNumber
+                                                                className={`w-full p-2 pr-28 text-sm border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all ${isLoginNumber
                                                                         ? 'border-amber-400 bg-amber-50/40 text-amber-950 font-medium'
                                                                         : 'border-stone-300 bg-white text-stone-800'
-                                                                }`}
+                                                                    }`}
                                                                 value={phone}
                                                                 onChange={e => handlePhoneChange(idx, e.target.value)}
                                                                 placeholder="+8801XXXXXXXXX"

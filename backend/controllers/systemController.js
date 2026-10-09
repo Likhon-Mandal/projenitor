@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { deleteMultipleMediaFiles } = require('../utils/cloudinaryHelper');
 
 exports.getRecycleBin = async (req, res) => {
     try {
@@ -727,10 +728,17 @@ exports.permanentDeleteItem = async (req, res) => {
                           UNION
                           SELECT member_id FROM users WHERE role = 'superadmin' AND member_id IS NOT NULL
                       )
-                    RETURNING id, full_name;
+                    RETURNING id, full_name, profile_image_url;
                 `;
                 const delRes = await client.query(recursiveDeleteQuery, [id]);
                 await client.query('COMMIT');
+
+                // Clean up media files from Cloudinary / local storage
+                const imageUrls = delRes.rows.map(r => r.profile_image_url).filter(Boolean);
+                if (imageUrls.length > 0) {
+                    deleteMultipleMediaFiles(imageUrls).catch(e => console.error('Error cleaning profile photos on permanent delete:', e));
+                }
+
                 return res.json({
                     message: delRes.rows.length > 1
                         ? `সদস্য এবং পরিবারের আরও ${delRes.rows.length - 1} জন সদস্যকে চিরতরে মুছে ফেলা হয়েছে (Member and ${delRes.rows.length - 1} subtree members permanently deleted)`
@@ -889,7 +897,7 @@ exports.emptyRecycleBin = async (req, res) => {
                   UNION
                   SELECT member_id FROM users WHERE role = 'superadmin' AND member_id IS NOT NULL
               ) 
-            RETURNING id
+            RETURNING id, profile_image_url
         `);
         const delHomes = await client.query('DELETE FROM homes WHERE deleted_at IS NOT NULL RETURNING id');
         const delVillages = await client.query('DELETE FROM villages WHERE deleted_at IS NOT NULL RETURNING id');
@@ -898,6 +906,12 @@ exports.emptyRecycleBin = async (req, res) => {
         const delDivisions = await client.query('DELETE FROM divisions WHERE deleted_at IS NOT NULL RETURNING id');
         const delCountries = await client.query('DELETE FROM countries WHERE deleted_at IS NOT NULL RETURNING id');
         await client.query('COMMIT');
+
+        // Clean up all deleted member photos from Cloudinary
+        const memberPhotos = delMembers.rows.map(r => r.profile_image_url).filter(Boolean);
+        if (memberPhotos.length > 0) {
+            deleteMultipleMediaFiles(memberPhotos).catch(e => console.error('Error cleaning member photos on emptyRecycleBin:', e));
+        }
 
         const totalDeleted = delMembers.rows.length + delHomes.rows.length + delVillages.rows.length + delUpazilas.rows.length + delDistricts.rows.length + delDivisions.rows.length + delCountries.rows.length;
 

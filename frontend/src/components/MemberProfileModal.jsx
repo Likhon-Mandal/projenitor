@@ -332,6 +332,17 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                 className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-200 relative max-h-[92vh] md:h-[640px] flex flex-col md:flex-row border border-stone-100"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Mobile Close Button: placed at top-right of modal for mobile screens only */}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="md:hidden absolute top-3.5 right-3.5 z-30 p-2 text-white/90 hover:text-white bg-black/25 hover:bg-black/40 active:scale-95 rounded-full transition-all backdrop-blur-md border border-white/20 shadow-md cursor-pointer"
+                    title={t('বন্ধ করুন', 'Close')}
+                    aria-label="Close"
+                >
+                    <X size={18} />
+                </button>
+
                 {/* Main Card Content (Blurred when activeOverlayMember is open) */}
                 <div className={`w-full h-full flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden transition-all duration-300 ${activeOverlayMember ? 'filter blur-[6px] opacity-30 pointer-events-none select-none scale-[0.98]' : ''}`}>
                     {/* Back button */}
@@ -348,29 +359,29 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                     )}
 
                 {/* ── Left Panel ───────────────────────────────────────── */}
-                <div className={`md:w-[38%] ${theme.panel} p-6 sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
+                <div className={`md:w-[38%] ${theme.panel} p-6 pt-9 sm:p-8 md:p-6 md:sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
                     {/* Dot pattern overlay */}
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
-                    {/* Role badge */}
-                    {(themeKey !== 'default') && (
-                        <div className={`mb-3 z-20 flex items-center gap-1.5 border rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
-                            <span className="text-[11px]">{theme.labelIcon}</span>
-                            {isBn ? theme.label : theme.labelEn}
-                        </div>
-                    )}
-
-                    {/* Eminent / Category badge */}
-                    {(member.eminent_category || member.category) && (
-                        <div className="flex flex-col items-center gap-1.5 mb-3 z-20 max-w-[300px]">
-                            <div className={`flex items-center gap-1.5 border rounded-full px-3.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
-                                {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
-                                    <GraduationCap size={12} className="text-yellow-300" />
-                                ) : (
-                                    <Award size={10} />
-                                )}
-                                {member.eminent_category || member.category}
-                            </div>
+                    {/* Role & Eminent Badges: on mobile sit side-by-side with gap to prevent overlap */}
+                    {((themeKey !== 'default') || member.eminent_category || member.category) && (
+                        <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 z-20 px-10 md:px-0 max-w-[340px]">
+                            {(themeKey !== 'default') && (
+                                <div className={`flex items-center gap-1.5 border rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
+                                    <span className="text-[11px]">{theme.labelIcon}</span>
+                                    {isBn ? theme.label : theme.labelEn}
+                                </div>
+                            )}
+                            {(member.eminent_category || member.category) && (
+                                <div className={`flex items-center gap-1.5 border rounded-full px-3.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
+                                    {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
+                                        <GraduationCap size={12} className="text-yellow-300" />
+                                    ) : (
+                                        <Award size={10} />
+                                    )}
+                                    {member.eminent_category || member.category}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -449,10 +460,11 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
 
                 {/* ── Right Panel ──────────────────────────────────────── */}
                 <div className="md:w-[62%] p-5 sm:p-8 bg-white relative flex flex-col min-h-0 overflow-hidden">
+                    {/* Desktop Close Button: only shown on md+ screens */}
                     <button 
                         type="button"
                         onClick={onClose} 
-                        className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10 cursor-pointer"
+                        className="hidden md:block absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10 cursor-pointer"
                         title="Close"
                     >
                         <X size={18} />

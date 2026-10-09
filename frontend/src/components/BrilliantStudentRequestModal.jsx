@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    X, GraduationCap, Upload, FileText, CheckCircle2, AlertCircle, 
+import {
+    X, GraduationCap, Upload, FileText, CheckCircle2, AlertCircle,
     User, Search, Building2, BookOpen, Calendar, Award, Sparkles, Eye, ArrowRight, ExternalLink, RefreshCw, Plus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -53,7 +53,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                 if (doc.localUrl && doc.localUrl.startsWith('blob:')) {
                     try {
                         URL.revokeObjectURL(doc.localUrl);
-                    } catch (e) {}
+                    } catch (e) { }
                 }
             });
         };
@@ -181,9 +181,9 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                     const uploadedUrl = res.data?.filePath || res.data?.fileUrl;
 
                     if (uploadedUrl) {
-                        setDocuments(prev => prev.map(d => 
-                            d.id === item.id 
-                                ? { ...d, url: uploadedUrl, uploading: false } 
+                        setDocuments(prev => prev.map(d =>
+                            d.id === item.id
+                                ? { ...d, url: uploadedUrl, uploading: false }
                                 : d
                         ));
                     } else {
@@ -191,9 +191,9 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                     }
                 } catch (uploadErr) {
                     console.error('File upload failed for', item.name, uploadErr);
-                    setDocuments(prev => prev.map(d => 
-                        d.id === item.id 
-                            ? { ...d, uploading: false, error: 'Upload failed' } 
+                    setDocuments(prev => prev.map(d =>
+                        d.id === item.id
+                            ? { ...d, uploading: false, error: 'Upload failed' }
                             : d
                     ));
                     setError(t(`"${item.name}" আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।`, `Failed to upload "${item.name}". Please try again.`));
@@ -212,7 +212,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
             if (target?.localUrl && target.localUrl.startsWith('blob:')) {
                 try {
                     URL.revokeObjectURL(target.localUrl);
-                } catch (err) {}
+                } catch (err) { }
             }
             return prev.filter(d => d.id !== docId);
         });
@@ -312,7 +312,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
             <div className="fixed inset-0 bg-stone-950/70 backdrop-blur-xs transition-opacity animate-fade-in" />
 
             {/* Modal Card */}
-            <div 
+            <div
                 className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-auto border border-orange-100 animate-zoom-in max-h-[92vh] flex flex-col font-sans"
                 onClick={e => e.stopPropagation()}
             >
@@ -332,7 +332,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                             </p>
                         </div>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="relative z-10 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
                         title={t('বন্ধ করুন', 'Close')}
@@ -367,11 +367,10 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                             <button
                                 type="button"
                                 onClick={() => handleForWhomChange('self')}
-                                className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 text-sm font-bold transition-all cursor-pointer ${
-                                    forWhom === 'self'
+                                className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 text-sm font-bold transition-all cursor-pointer ${forWhom === 'self'
                                         ? 'bg-orange-50/80 border-orange-600 text-orange-900 shadow-sm'
                                         : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100 hover:border-stone-300'
-                                }`}
+                                    }`}
                             >
                                 <User size={18} className={forWhom === 'self' ? 'text-orange-700' : 'text-stone-400'} />
                                 <span>{t('আমার নিজের জন্য', 'For Myself')}</span>
@@ -380,11 +379,10 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                             <button
                                 type="button"
                                 onClick={() => handleForWhomChange('other')}
-                                className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 text-sm font-bold transition-all cursor-pointer ${
-                                    forWhom === 'other'
+                                className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 text-sm font-bold transition-all cursor-pointer ${forWhom === 'other'
                                         ? 'bg-orange-50/80 border-orange-600 text-orange-900 shadow-sm'
                                         : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100 hover:border-stone-300'
-                                }`}
+                                    }`}
                             >
                                 <Search size={18} className={forWhom === 'other' ? 'text-orange-700' : 'text-stone-400'} />
                                 <span>{t('অন্য কোনো সদস্যের জন্য', 'For Someone Else')}</span>
@@ -576,8 +574,8 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                                         {documents.map((doc) => {
                                             const isPdf = doc.isPdf || doc.type === 'document';
                                             return (
-                                                <div 
-                                                    key={doc.id} 
+                                                <div
+                                                    key={doc.id}
                                                     className="relative group shrink-0 animate-zoom-in"
                                                 >
                                                     {/* Cancel Cross Button */}
@@ -594,15 +592,14 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                                                     </button>
 
                                                     {/* Small Preview Box */}
-                                                    <div 
+                                                    <div
                                                         onClick={() => setActiveLightboxDoc(doc)}
-                                                        className={`w-18 h-20 sm:w-20 sm:h-22 rounded-2xl overflow-hidden border-2 relative flex flex-col items-center justify-center shadow-2xs cursor-pointer transition-all duration-200 group-hover:scale-105 group-hover:shadow-md ${
-                                                            doc.error 
-                                                                ? 'border-red-400 bg-red-50' 
-                                                                : isPdf 
-                                                                    ? 'border-red-200 bg-gradient-to-b from-red-50 via-white to-amber-50 group-hover:border-red-400' 
+                                                        className={`w-18 h-20 sm:w-20 sm:h-22 rounded-2xl overflow-hidden border-2 relative flex flex-col items-center justify-center shadow-2xs cursor-pointer transition-all duration-200 group-hover:scale-105 group-hover:shadow-md ${doc.error
+                                                                ? 'border-red-400 bg-red-50'
+                                                                : isPdf
+                                                                    ? 'border-red-200 bg-gradient-to-b from-red-50 via-white to-amber-50 group-hover:border-red-400'
                                                                     : 'border-orange-200 bg-stone-100 group-hover:border-orange-400'
-                                                        }`}
+                                                            }`}
                                                         title={doc.name}
                                                     >
                                                         {isPdf ? (
@@ -619,10 +616,10 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                                                         ) : (
                                                             /* Image Mini Preview */
                                                             <div className="w-full h-full relative">
-                                                                <img 
-                                                                    src={doc.localUrl || doc.url} 
-                                                                    alt={doc.name} 
-                                                                    className="w-full h-full object-cover" 
+                                                                <img
+                                                                    src={doc.localUrl || doc.url}
+                                                                    alt={doc.name}
+                                                                    className="w-full h-full object-cover"
                                                                 />
                                                                 <div className="absolute inset-0 bg-stone-900/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-2xs">
                                                                     <Eye size={16} />
@@ -669,8 +666,8 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                                     <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1 border-t border-orange-200/50">
                                         <span className="flex items-center gap-1 font-semibold text-emerald-800">
                                             <CheckCircle2 size={13} className="text-emerald-600" />
-                                            {isBn 
-                                                ? `${documents.length}টি ডকুমেন্ট সংযুক্ত রয়েছে` 
+                                            {isBn
+                                                ? `${documents.length}টি ডকুমেন্ট সংযুক্ত রয়েছে`
                                                 : `${documents.length} document(s) attached`}
                                         </span>
                                         <span>{t('প্রতিটি সর্বোচ্চ ১০MB (ছবি বা PDF)', 'Max 10MB each (Photo or PDF)')}</span>
@@ -678,7 +675,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                                 </div>
                             ) : (
                                 /* Empty upload dropzone */
-                                <label 
+                                <label
                                     onClick={() => fileInputRef.current?.click()}
                                     className="border-2 border-dashed border-stone-300 hover:border-orange-500 hover:bg-orange-50/40 rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center group"
                                 >
@@ -745,11 +742,11 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
 
             {/* Document Preview Lightbox Modal */}
             {activeLightboxDoc && (
-                <div 
+                <div
                     className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-6 bg-stone-950/85 backdrop-blur-md animate-fade-in"
                     onClick={() => setActiveLightboxDoc(null)}
                 >
-                    <div 
+                    <div
                         className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full max-h-[90vh] flex flex-col border border-orange-200 animate-zoom-in"
                         onClick={e => e.stopPropagation()}
                     >

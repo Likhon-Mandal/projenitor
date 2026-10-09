@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import ImageSlider from '../components/ImageSlider';
 import HelpRequestModal from '../components/HelpRequestModal';
+import NextSammelanSpotlight from '../components/NextSammelanSpotlight';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -216,7 +217,7 @@ const Home = () => {
             <AnimationStyles />
 
             {/* HERO SECTION - 50vh Centered Design (Light Theme) */}
-            <div className="relative w-full h-[50vh] min-h-[500px] mb-16 group bg-[#fffcf5]">
+            <div className="relative w-full h-[50vh] min-h-[500px] mb-8 group bg-[#fffcf5]">
 
                 {/* 1. Background Slider - Light Theme */}
                 <div className="absolute inset-0 z-0 overflow-hidden opacity-30">
@@ -257,8 +258,11 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* NEXT SAMMELAN SPOTLIGHT BANNER */}
+            <NextSammelanSpotlight />
+
             {/* SYSTEM OVERVIEW / STATS BAR */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 mb-16 -mt-12 relative z-20">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6 mb-16 relative z-20">
                 <div className="glass-panel rounded-[1.5rem] p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 text-center shadow-xl shadow-orange-900/5">
                     <div className="relative space-y-1 group">
                         <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">

@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { deleteMultipleMediaFiles } = require('../utils/cloudinaryHelper');
 
 /**
  * Submit a new brilliant student recognition request
@@ -314,10 +315,24 @@ exports.handleRequestAction = async (req, res) => {
 exports.deleteRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query('DELETE FROM brilliant_student_requests WHERE id = $1', [id]);
+        const result = await pool.query('DELETE FROM brilliant_student_requests WHERE id = $1 RETURNING document_url, documents', [id]);
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Request not found' });
         }
+
+        const deleted = result.rows[0];
+        const urlsToClean = [];
+        if (deleted.document_url) urlsToClean.push(deleted.document_url);
+        if (Array.isArray(deleted.documents)) {
+            deleted.documents.forEach(doc => {
+                if (doc && doc.url) urlsToClean.push(doc.url);
+            });
+        }
+
+        if (urlsToClean.length > 0) {
+            deleteMultipleMediaFiles(urlsToClean).catch(e => console.error('Error cleaning student request documents:', e));
+        }
+
         res.json({ message: 'Request deleted successfully' });
     } catch (err) {
         console.error('Error deleting brilliant student request:', err);

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const apiLogController = require('../controllers/apiLogController');
 const { authenticate, requireAdmin, requireSuperAdmin } = require('../middleware/authMiddleware');
 
 // All routes require authentication
@@ -17,6 +18,11 @@ router.put('/admins/:id', requireSuperAdmin, adminController.updateAdmin);
 router.delete('/admins/:id', requireSuperAdmin, adminController.deleteAdmin);
 router.get('/admin-requests', requireSuperAdmin, adminController.getAdminRequests);
 router.put('/admin-requests/:id', requireSuperAdmin, adminController.handleAdminRequest);
+
+// API Audit Logs — superadmin only
+router.get('/api-logs', requireSuperAdmin, apiLogController.getApiLogs);
+router.get('/api-logs/:id', requireSuperAdmin, apiLogController.getApiLogDetails);
+router.delete('/api-logs', requireSuperAdmin, apiLogController.clearApiLogs);
 
 // User management - admin and superadmin
 router.get('/users', requireAdmin, adminController.getUsers);

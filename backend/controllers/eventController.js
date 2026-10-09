@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config();
+const { deleteMediaFile, deleteMultipleMediaFiles } = require('../utils/cloudinaryHelper');
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -53,7 +54,16 @@ exports.addEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
     const { id } = req.params;
     try {
+        // Collect memories media URLs before deleting
+        const memories = await pool.query('SELECT media_url FROM event_memories WHERE event_id = $1', [id]);
+        const urls = memories.rows.map(m => m.media_url);
+
         await pool.query('DELETE FROM events WHERE id = $1', [id]);
+
+        if (urls.length > 0) {
+            deleteMultipleMediaFiles(urls).catch(e => console.error('Error cleaning event memories on event delete:', e));
+        }
+
         res.json({ message: 'Event deleted successfully' });
     } catch (err) {
         console.error('Error deleting event:', err);
@@ -140,6 +150,12 @@ exports.deleteEventMemory = async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Memory not found' });
         }
+
+        const deletedMemory = result.rows[0];
+        if (deletedMemory && deletedMemory.media_url) {
+            deleteMediaFile(deletedMemory.media_url).catch(e => console.error('Error cleaning memory media:', e));
+        }
+
         res.json({ message: 'Memory removed successfully' });
     } catch (err) {
         console.error('Error deleting event memory:', err);

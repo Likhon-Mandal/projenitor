@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('../config/db');
+const { deleteMediaFile } = require('../utils/cloudinaryHelper');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey_projenitor_123';
 const TOKEN_EXPIRY = '7d';
@@ -372,6 +373,23 @@ exports.updateProfile = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Clean up previous profile photo from Cloudinary if replaced
+    const oldAvatar = req.user?.profile_image_url;
+    if (oldAvatar && profile_image_url !== undefined && oldAvatar !== profile_image_url) {
+      try {
+        const otherUsage = await pool.query(
+          'SELECT 1 FROM admin_users WHERE profile_image_url = $1 AND id != $2 UNION SELECT 1 FROM members WHERE profile_image_url = $1 AND id != $3',
+          [oldAvatar, req.user.id, req.user?.member_id || '00000000-0000-0000-0000-000000000000']
+        );
+        if (otherUsage.rowCount === 0) {
+          deleteMediaFile(oldAvatar).catch(e => console.error('Error cleaning replaced admin avatar:', e));
+        }
+      } catch (err) {
+        console.warn('Could not check other avatar usage:', err.message);
+      }
+    }
+
     res.json({ message: 'Profile updated successfully', user: updatedUser || { ...req.user, name: effectiveName, profile_image_url } });
   } catch (err) {
     await client.query('ROLLBACK');

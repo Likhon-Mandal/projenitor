@@ -1,5 +1,6 @@
 const { pool } = require('../config/db');
 const { transliterateBengali } = require('../utils/transliterate');
+const { deleteMediaFile } = require('../utils/cloudinaryHelper');
 
 // Bilingual synonyms mapping for seamless cross-language search
 const OCCUPATION_SYNONYMS = {
@@ -447,13 +448,14 @@ exports.updateMember = async (req, res) => {
     }
     const computedFullName = full_name?.trim() || (trimmedBangla && trimmedEnglish ? `${trimmedBangla} (${trimmedEnglish})` : (trimmedBangla || trimmedEnglish || ''));
 
-    // Get existing member to check if level changed
-    const existingMemberRes = await pool.query('SELECT level, gender FROM members WHERE id = $1', [id]);
+    // Get existing member to check if level changed and track old photo
+    const existingMemberRes = await pool.query('SELECT level, gender, profile_image_url FROM members WHERE id = $1', [id]);
     if (existingMemberRes.rows.length === 0) {
       return res.status(404).json({ error: 'Member not found' });
     }
     const oldLevel = existingMemberRes.rows[0].level;
     const existingGender = existingMemberRes.rows[0].gender;
+    const oldProfileImage = existingMemberRes.rows[0].profile_image_url;
 
     // Determine target level & gender:
     // 1. If spouse: gender is strictly Female, level locked to husband's level
@@ -569,6 +571,21 @@ exports.updateMember = async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
+
+    // If profile image was replaced or cleared, clean up the old photo from Cloudinary
+    if (oldProfileImage && profile_image_url !== undefined && oldProfileImage !== profile_image_url) {
+      try {
+        const otherUsage = await pool.query(
+          'SELECT 1 FROM members WHERE profile_image_url = $1 AND id != $2 UNION SELECT 1 FROM admin_users WHERE profile_image_url = $1 AND member_id != $2',
+          [oldProfileImage, id]
+        );
+        if (otherUsage.rowCount === 0) {
+          deleteMediaFile(oldProfileImage).catch(e => console.error('Error cleaning replaced member photo:', e));
+        }
+      } catch (checkErr) {
+        console.warn('Could not verify other photo usage:', checkErr.message);
+      }
+    }
 
     // If level has changed and the new level is valid, update all descendants recursively
     if (targetLevel !== undefined && targetLevel !== null && oldLevel !== null && Number(targetLevel) !== Number(oldLevel)) {

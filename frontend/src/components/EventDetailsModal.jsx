@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    X, Calendar, Clock, MapPin, ExternalLink, Image as ImageIcon, 
-    Video, Upload, Trash2, Heart, Sparkles, ChevronRight, Edit2, 
+import {
+    X, Calendar, Clock, MapPin, ExternalLink, Image as ImageIcon,
+    Video, Upload, Trash2, Heart, Sparkles, ChevronRight, Edit2,
     CheckCircle2, AlertCircle, Play, Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
     const [activeTab, setActiveTab] = useState('details'); // 'details' | 'memories'
     const [memories, setMemories] = useState([]);
     const [loadingMemories, setLoadingMemories] = useState(false);
-    
+
     // Upload state
     const [showUploadForm, setShowUploadForm] = useState(false);
     const [uploadType, setUploadType] = useState('file'); // 'file' | 'url'
@@ -194,14 +194,14 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
             };
 
             await api.post(`/events/${event.id}/memories`, memoryPayload);
-            
+
             // Reset form
             setSelectedFile(null);
             setPreviewUrl('');
             setVideoUrl('');
             setCaption('');
             setShowUploadForm(false);
-            
+
             // Refetch
             await fetchMemories(event.id);
             if (onEventUpdated) onEventUpdated();
@@ -231,7 +231,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
             <div className="fixed inset-0 bg-stone-900/70 backdrop-blur-sm transition-opacity"></div>
 
             {/* Modal Dialog */}
-            <div 
+            <div
                 className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col border border-orange-200 animate-slide-up"
                 onClick={e => e.stopPropagation()}
             >
@@ -240,23 +240,21 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                     <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2 flex-1 pr-6">
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-                                    isPast 
-                                        ? 'bg-amber-900/60 text-amber-200 border border-amber-600/40' 
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${isPast
+                                        ? 'bg-amber-900/60 text-amber-200 border border-amber-600/40'
                                         : 'bg-yellow-400 text-stone-900 font-extrabold border border-yellow-300'
-                                }`}>
+                                    }`}>
                                     <Sparkles size={13} />
                                     {isPast ? t('পূর্ববর্তী অনুষ্ঠান', 'Previous Event') : t('আসন্ন অনুষ্ঠান', 'Upcoming Event')}
                                 </span>
 
                                 {remaining && (
-                                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                                        remaining.isToday 
-                                            ? 'bg-red-500 text-white animate-pulse' 
-                                            : remaining.isSoon 
-                                                ? 'bg-orange-500/80 text-white' 
+                                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${remaining.isToday
+                                            ? 'bg-red-500 text-white animate-pulse'
+                                            : remaining.isSoon
+                                                ? 'bg-orange-500/80 text-white'
                                                 : 'bg-black/25 text-white/90'
-                                    }`}>
+                                        }`}>
                                         {remaining.text}
                                     </span>
                                 )}
@@ -267,7 +265,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                             </h2>
                         </div>
 
-                        <button 
+                        <button
                             onClick={onClose}
                             className="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors shrink-0"
                             title={t('বন্ধ করুন', 'Close')}
@@ -279,17 +277,15 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                     {/* Three Justified Options: Event Details, Memories & Gallery, View Map */}
                     {isPast && (
                         <div className="w-full mt-4 pt-4 border-t border-white/15">
-                            <div className={`grid gap-2 sm:gap-3 w-full ${
-                                (event.map_link || event.location) ? 'grid-cols-3' : 'grid-cols-2'
-                            }`}>
+                            <div className={`grid gap-2 sm:gap-3 w-full ${(event.map_link || event.location) ? 'grid-cols-3' : 'grid-cols-2'
+                                }`}>
                                 {/* Option 1: Event Details */}
                                 <button
                                     onClick={() => setActiveTab('details')}
-                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs border ${
-                                        activeTab === 'details'
+                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs border ${activeTab === 'details'
                                             ? 'bg-white text-orange-950 border-white shadow-md font-extrabold scale-[1.02]'
                                             : 'bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border-white/15'
-                                    }`}
+                                        }`}
                                 >
                                     <Calendar size={15} className={`shrink-0 ${activeTab === 'details' ? 'text-orange-800' : 'text-orange-200'}`} />
                                     <span className="truncate">
@@ -301,11 +297,10 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                 {/* Option 2: Memories & Gallery */}
                                 <button
                                     onClick={() => setActiveTab('memories')}
-                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 relative cursor-pointer shadow-xs border ${
-                                        activeTab === 'memories'
+                                    className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 relative cursor-pointer shadow-xs border ${activeTab === 'memories'
                                             ? 'bg-yellow-400 text-stone-900 border-yellow-300 shadow-md font-extrabold scale-[1.02]'
                                             : 'bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border-white/15'
-                                    }`}
+                                        }`}
                                 >
                                     <Heart size={15} className={`shrink-0 ${activeTab === 'memories' ? 'fill-current text-red-600' : 'text-red-400'}`} />
                                     <span className="truncate">
@@ -313,9 +308,8 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         <span className="sm:hidden">{t('স্মৃতিমালা', 'Memories')}</span>
                                     </span>
                                     {memories.length > 0 && (
-                                        <span className={`text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ${
-                                            activeTab === 'memories' ? 'bg-red-600 text-white' : 'bg-white/20 text-white'
-                                        }`}>
+                                        <span className={`text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ${activeTab === 'memories' ? 'bg-red-600 text-white' : 'bg-white/20 text-white'
+                                            }`}>
                                             {memories.length}
                                         </span>
                                     )}
@@ -423,7 +417,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         <div>
                                             <h4 className="text-sm font-bold text-stone-800">{t('অনুষ্ঠানের রঙিন স্মৃতিমালা', 'Cherished Event Memories')}</h4>
                                             <p className="text-xs text-stone-500">
-                                                {memories.length > 0 
+                                                {memories.length > 0
                                                     ? t(`${memories.length}টি ছবি ও ভিডিও স্মৃতি সংরক্ষিত রয়েছে।`, `${memories.length} photo & video memories saved.`)
                                                     : t('এই অনুষ্ঠানের ছবি বা ভিডিও স্মৃতি সংরক্ষিত থাকবে।', 'Photos & videos from this gathering are preserved here.')}
                                             </p>
@@ -433,8 +427,8 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         onClick={() => setActiveTab('memories')}
                                         className="w-full sm:w-auto px-4 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5"
                                     >
-                                        {isAdmin 
-                                            ? t('স্মৃতিমালা দেখুন ও যোগ করুন', 'Explore & Add Memories') 
+                                        {isAdmin
+                                            ? t('স্মৃতিমালা দেখুন ও যোগ করুন', 'Explore & Add Memories')
                                             : t('স্মৃতিমালা দেখুন', 'Explore Memories')}
                                         <ChevronRight size={14} />
                                     </button>
@@ -454,8 +448,8 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         {t('অনুষ্ঠানের স্মৃতিমালা (ছবি ও ভিডিও)', 'Event Memories (Photos & Videos)')}
                                     </h3>
                                     <p className="text-xs text-stone-500">
-                                        {isAdmin 
-                                            ? t('অ্যাডমিন হিসেবে আপনি ছবি ও ভিডিও স্মৃতি আপলোড করতে পারেন।', 'As admin, you can upload photo and video memories.') 
+                                        {isAdmin
+                                            ? t('অ্যাডমিন হিসেবে আপনি ছবি ও ভিডিও স্মৃতি আপলোড করতে পারেন।', 'As admin, you can upload photo and video memories.')
                                             : t('অনুষ্ঠানের স্মৃতিময় মুহূর্তগুলোর সংরক্ষিত গ্যালারি।', 'A preserved gallery of cherished moments from this gathering.')}
                                     </p>
                                 </div>
@@ -472,7 +466,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
 
                             {/* Upload Form Card (Admin Only) */}
                             {isAdmin && showUploadForm && (
-                                <form 
+                                <form
                                     onSubmit={handleUploadMemory}
                                     className="bg-white p-5 rounded-2xl border-2 border-orange-300 shadow-md space-y-4 animate-slide-up"
                                 >
@@ -481,24 +475,22 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                             <Upload size={16} className="text-orange-600" />
                                             {t('নতুন স্মৃতি আপলোড করুন', 'Upload New Memory')}
                                         </h4>
-                                        
+
                                         {/* Upload Mode Pill */}
                                         <div className="flex bg-stone-100 p-0.5 rounded-lg text-xs">
                                             <button
                                                 type="button"
                                                 onClick={() => { setUploadType('file'); setVideoUrl(''); }}
-                                                className={`px-2.5 py-1 rounded-md font-bold transition-all ${
-                                                    uploadType === 'file' ? 'bg-white text-orange-800 shadow-sm' : 'text-stone-500'
-                                                }`}
+                                                className={`px-2.5 py-1 rounded-md font-bold transition-all ${uploadType === 'file' ? 'bg-white text-orange-800 shadow-sm' : 'text-stone-500'
+                                                    }`}
                                             >
                                                 {t('ফাইল আপলোড', 'Direct File')}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => { setUploadType('url'); setSelectedFile(null); setPreviewUrl(''); }}
-                                                className={`px-2.5 py-1 rounded-md font-bold transition-all ${
-                                                    uploadType === 'url' ? 'bg-white text-orange-800 shadow-sm' : 'text-stone-500'
-                                                }`}
+                                                className={`px-2.5 py-1 rounded-md font-bold transition-all ${uploadType === 'url' ? 'bg-white text-orange-800 shadow-sm' : 'text-stone-500'
+                                                    }`}
                                             >
                                                 {t('ভিডিও লিংক', 'Video Link')}
                                             </button>
@@ -645,7 +637,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                     {memories.map((mem) => {
                                         const ytEmbed = mem.media_type === 'video' ? getYouTubeEmbedUrl(mem.media_url) : null;
                                         return (
-                                            <div 
+                                            <div
                                                 key={mem.id}
                                                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-orange-100 group transition-all duration-300 flex flex-col"
                                             >
@@ -668,13 +660,13 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                                             />
                                                         )
                                                     ) : (
-                                                        <div 
+                                                        <div
                                                             className="w-full h-full cursor-pointer relative group/img overflow-hidden"
                                                             onClick={() => setLightboxImage(mem.media_url)}
                                                         >
-                                                            <img 
-                                                                src={mem.media_url} 
-                                                                alt={mem.caption || 'Event memory'} 
+                                                            <img
+                                                                src={mem.media_url}
+                                                                alt={mem.caption || 'Event memory'}
                                                                 className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
                                                                 loading="lazy"
                                                             />
@@ -731,7 +723,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
                                         {t('এখনও কোনো ছবি বা ভিডিও স্মৃতি যোগ করা হয়নি', 'No Memories Uploaded Yet')}
                                     </h4>
                                     <p className="text-xs text-stone-400 max-w-sm mx-auto">
-                                        {isAdmin 
+                                        {isAdmin
                                             ? t('এই অনুষ্ঠানের স্মরণীয় মুহূর্তগুলো সংরক্ষিত রাখতে প্রথম স্মৃতিটি আপনি যোগ করুন!', 'Be the first to share photos or videos from this cherished family gathering!')
                                             : t('এই অনুষ্ঠানের কোনো স্মৃতি এখনও সংরক্ষিত হয়নি।', 'No memories have been archived for this event yet.')}
                                     </p>
@@ -784,20 +776,20 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
 
             {/* Photo Lightbox Popup */}
             {lightboxImage && (
-                <div 
+                <div
                     className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
                     onClick={() => setLightboxImage(null)}
                 >
-                    <button 
+                    <button
                         onClick={() => setLightboxImage(null)}
                         className="absolute top-4 right-4 text-white hover:text-orange-400 p-2 rounded-full bg-white/10"
                     >
                         <X size={24} />
                     </button>
-                    <img 
-                        src={lightboxImage} 
-                        alt="Enlarged memory" 
-                        className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl" 
+                    <img
+                        src={lightboxImage}
+                        alt="Enlarged memory"
+                        className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
                     />
                 </div>
             )}

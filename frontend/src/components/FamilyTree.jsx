@@ -144,22 +144,45 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                     className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-modal relative max-h-[90vh] md:h-[620px] flex flex-col md:flex-row"
                     onClick={e => e.stopPropagation()}
                 >
+                    {/* Mobile Close Button: placed at top-right of modal for mobile screens only */}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="md:hidden absolute top-3.5 right-3.5 z-30 p-2 text-white/90 hover:text-white bg-black/25 hover:bg-black/40 active:scale-95 rounded-full transition-all backdrop-blur-md border border-white/20 shadow-md cursor-pointer"
+                        title={t('বন্ধ করুন', 'Close')}
+                        aria-label="Close"
+                    >
+                        <X size={18} />
+                    </button>
+
                     {/* Main Card Content (Blurred when activeSpouse is open) */}
                     <div className={`w-full h-full flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden transition-all duration-300 ${activeSpouse ? 'filter blur-[6px] opacity-30 pointer-events-none select-none scale-[0.98]' : ''}`}>
-                <div className={`md:w-1/3 ${headerGradient} p-5 sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
+                <div className={`md:w-1/3 ${headerGradient} p-5 pt-8 sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
-                    {/* Identity badge pill */}
-                    {_useTheme && (
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-white/90 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">
-                            <span>{_theme.symbol}</span>
-                            <span>{isBn ? _theme.labelBn : _theme.labelEn}</span>
+                    
+                    {/* Identity & Eminent badges: on mobile sit side-by-side with gap to prevent overlap; on desktop preserved exactly */}
+                    {(_useTheme || person.eminent_category) && (
+                        <div className="flex md:contents flex-wrap items-center justify-center gap-2 mb-3 px-12 md:px-0 z-20">
+                            {_useTheme && (
+                                <div className="md:absolute md:top-3 md:left-1/2 md:-translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-white/90 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">
+                                    <span>{_theme.symbol}</span>
+                                    <span>{isBn ? _theme.labelBn : _theme.labelEn}</span>
+                                </div>
+                            )}
+                            {person.eminent_category && (
+                                <div className="md:hidden z-20 flex items-center gap-1.5 bg-green-100 text-green-800 border-2 border-white rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap">
+                                    <Award size={10} className="text-green-600" />
+                                    <span>{person.eminent_category}</span>
+                                </div>
+                            )}
                         </div>
                     )}
+
                     <div className="relative mb-4 sm:mb-6 flex flex-col items-center">
                         {person.eminent_category && (
-                            <div className="mb-3 sm:mb-4 z-20 flex items-center gap-1.5 bg-green-100 text-green-800 border-2 border-white rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap">
+                            <div className="hidden md:flex mb-3 sm:mb-4 z-20 items-center gap-1.5 bg-green-100 text-green-800 border-2 border-white rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap">
                                 <Award size={10} className="sm:size-3 text-green-600" />
-                                {person.eminent_category}
+                                <span>{person.eminent_category}</span>
                             </div>
                         )}
                         <div className="relative">
@@ -195,7 +218,13 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                 </div>
 
                 <div className="md:w-2/3 p-5 sm:p-8 md:p-10 bg-white relative flex flex-col min-h-0 overflow-hidden">
-                    <button onClick={onClose} className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10">
+                    {/* Desktop Close Button: only shown on md+ screens */}
+                    <button 
+                        type="button"
+                        onClick={onClose} 
+                        className="hidden md:block absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10 cursor-pointer"
+                        title="Close"
+                    >
                         <X size={18} />
                     </button>
 

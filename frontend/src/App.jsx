@@ -19,6 +19,7 @@ import Admin from './pages/Admin';
 import FindRelation from './pages/FindRelation';
 import RecycleBin from './pages/RecycleBin';
 import SpousesDirectory from './pages/SpousesDirectory';
+import SammelanKotha from './pages/SammelanKotha';
 
 // Auth Pages (no Layout wrapper)
 import Login from './pages/Login';
@@ -58,6 +59,8 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/relation" element={<FindRelation />} />
+                  <Route path="/sammelan" element={<SammelanKotha />} />
+                  <Route path="/sammelan-kotha" element={<SammelanKotha />} />
                   <Route path="/spouses" element={<SpousesDirectory />} />
                   <Route path="/recycle-bin" element={
                     <ProtectedRoute requiredRole="admin">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Home, MapPin, Calendar, Bell, Star, Shield, ShieldAlert, Plus, Pencil, Trash2, X, Eye, EyeOff, LogOut, Key, RefreshCw, AlertCircle, GraduationCap } from 'lucide-react';
+import { Users, Home, MapPin, Calendar, Bell, Star, Shield, ShieldAlert, Plus, Pencil, Trash2, X, Eye, EyeOff, LogOut, Key, RefreshCw, AlertCircle, GraduationCap, Terminal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -10,6 +10,7 @@ import UserManagement from '../components/UserManagement';
 import Profile from './Profile';
 import BrilliantStudentRequestsAdmin from '../components/BrilliantStudentRequestsAdmin';
 import ConfirmModal from '../components/ConfirmModal';
+import ApiLogsAdmin from '../components/ApiLogsAdmin';
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, label, value, color }) => (
@@ -299,7 +300,7 @@ const SuperAdminDashboard = () => {
         : (pendingStudentRequests + pendingUserAccounts + pendingAdminRequests);
 
     const tabs = [
-        { id: 'overview', label: t('সারসংক্ষেপ', 'Overview') },
+        { id: 'overview', label: t('সারসংক্ষেপ', 'Overview'), icon: Home },
         { 
             id: 'brilliant-requests', 
             label: t('কৃতি শিক্ষার্থী আবেদন', 'Student Requests'), 
@@ -309,14 +310,21 @@ const SuperAdminDashboard = () => {
         { 
             id: 'users', 
             label: t('ব্যবহারকারী পরিচালনা', 'User Accounts'),
+            icon: Users,
             badge: pendingUserAccounts 
         },
         { 
             id: 'admins', 
             label: t('এডমিন পরিচালনা', 'Admin Management'),
+            icon: Shield,
             badge: pendingAdminRequests 
         },
-        { id: 'profile', label: t('প্রোফাইল ও নিরাপত্তা', 'Profile & Security') }
+        { 
+            id: 'api-logs', 
+            label: t('এপিআই অডিট ও লগ', 'API Logs & Monitor'), 
+            icon: Terminal 
+        },
+        { id: 'profile', label: t('প্রোফাইল ও নিরাপত্তা', 'Profile & Security'), icon: Key }
     ];
 
     return (
@@ -342,24 +350,28 @@ const SuperAdminDashboard = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 bg-white border border-orange-100 rounded-xl p-1.5 shadow-sm w-fit flex-wrap">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
-                                activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'
-                            }`}
-                        >
-                            <span>{tab.label}</span>
-                            {tab.badge > 0 && (
-                                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                                    activeTab === tab.id ? 'bg-amber-400 text-stone-900' : 'bg-red-600 text-white animate-pulse'
-                                }`}>
-                                    {formatNumber(tab.badge)}
-                                </span>
-                            )}
-                        </button>
-                    ))}
+                    {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
+                                    activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'
+                                }`}
+                            >
+                                {Icon && <Icon className="w-4 h-4 shrink-0" />}
+                                <span>{tab.label}</span>
+                                {tab.badge > 0 && (
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                                        activeTab === tab.id ? 'bg-amber-400 text-stone-900' : 'bg-red-600 text-white animate-pulse'
+                                    }`}>
+                                        {formatNumber(tab.badge)}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Overview Tab */}
@@ -653,6 +665,11 @@ const SuperAdminDashboard = () => {
                 {/* Users Tab */}
                 {activeTab === 'users' && (
                     <UserManagement />
+                )}
+
+                {/* API Logs & Monitor Tab */}
+                {activeTab === 'api-logs' && (
+                    <ApiLogsAdmin />
                 )}
             </div>
 
