@@ -778,3 +778,43 @@ exports.handleAdminRequest = async (req, res) => {
         client.release();
     }
 };
+
+// ─── Get Public Admins List (for Contact & Info Hub) ────────────────────────
+exports.getPublicAdmins = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                a.id, 
+                a.name, 
+                COALESCE(m.name_bangla, a.name_bangla) as name_bangla, 
+                COALESCE(m.name_english, a.name_english) as name_english, 
+                a.email, 
+                a.role, 
+                COALESCE(a.profile_image_url, m.profile_image_url) as profile_image_url,
+                a.member_id,
+                m.full_name,
+                m.contact_number,
+                m.occupation,
+                m.blood_group,
+                m.gender,
+                v.name as village,
+                u.name as upazila,
+                di.name as district,
+                h.name as home_name
+            FROM admin_users a
+            LEFT JOIN members m ON a.member_id = m.id AND m.deleted_at IS NULL
+            LEFT JOIN villages v ON m.village_id = v.id
+            LEFT JOIN upazilas u ON m.upazila_id = u.id
+            LEFT JOIN districts di ON m.district_id = di.id
+            LEFT JOIN homes h ON m.home_id = h.id
+            ORDER BY 
+                CASE WHEN a.role = 'superadmin' THEN 1 ELSE 2 END,
+                a.created_at ASC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching public admins:', err);
+        res.status(500).json({ error: 'Failed to fetch admins list' });
+    }
+};

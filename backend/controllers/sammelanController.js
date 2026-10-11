@@ -30,6 +30,7 @@ exports.getAllSammelans = async (req, res) => {
         const query = `
             SELECT 
                 s.*,
+                TO_CHAR(s.date, 'YYYY-MM-DD') as date,
                 h.name as home_name,
                 h.map_link as home_map_link,
                 v.name as village_name,
@@ -61,6 +62,7 @@ exports.getNextSammelan = async (req, res) => {
         let query = `
             SELECT 
                 s.*,
+                TO_CHAR(s.date, 'YYYY-MM-DD') as date,
                 h.name as home_name,
                 h.map_link as home_map_link,
                 v.name as village_name,
@@ -85,6 +87,7 @@ exports.getNextSammelan = async (req, res) => {
             query = `
                 SELECT 
                     s.*,
+                    TO_CHAR(s.date, 'YYYY-MM-DD') as date,
                     h.name as home_name,
                     h.map_link as home_map_link,
                     v.name as village_name,
@@ -164,6 +167,7 @@ exports.getSammelanById = async (req, res) => {
         const query = `
             SELECT 
                 s.*,
+                TO_CHAR(s.date, 'YYYY-MM-DD') as date,
                 h.name as home_name,
                 h.map_link as home_map_link,
                 v.name as village_name,
@@ -224,9 +228,28 @@ exports.createSammelan = async (req, res) => {
             await pool.query('UPDATE sammelans SET is_next = false');
         }
 
-        const autoTitle = title && title.trim() 
-            ? title.trim() 
+        const autoTitle = title && title.trim()
+            ? title.trim()
             : `${edition}তম বার্ষিক জ্ঞাতি সম্মেলন`;
+
+        // Sync & Protect Home Map Link with Lineage Explorer
+        let effectiveMapLink = map_link && typeof map_link === 'string' && map_link.trim() ? map_link.trim() : null;
+        if (home_id) {
+            const homeCheck = await pool.query('SELECT map_link FROM homes WHERE id = $1 AND deleted_at IS NULL', [parseInt(home_id, 10)]);
+            if (homeCheck.rows.length > 0) {
+                const existingHomeMap = homeCheck.rows[0].map_link;
+                if (existingHomeMap && existingHomeMap.trim()) {
+                    // Selected Bari already has a map link: keep it unchanged and synced
+                    effectiveMapLink = existingHomeMap.trim();
+                } else if (effectiveMapLink) {
+                    // Selected Bari had no map link: update the Bari in Lineage Explorer with the new link!
+                    await pool.query(
+                        'UPDATE homes SET map_link = $1 WHERE id = $2 AND deleted_at IS NULL',
+                        [effectiveMapLink, parseInt(home_id, 10)]
+                    );
+                }
+            }
+        }
 
         const query = `
             INSERT INTO sammelans (
@@ -246,7 +269,7 @@ exports.createSammelan = async (req, res) => {
             home_id ? parseInt(home_id, 10) : null,
             venue_name.trim(),
             venue_address?.trim() || null,
-            map_link?.trim() || null,
+            effectiveMapLink,
             president_name?.trim() || null,
             secretary_name?.trim() || null,
             description?.trim() || null,
@@ -305,9 +328,28 @@ exports.updateSammelan = async (req, res) => {
             await pool.query('UPDATE sammelans SET is_next = false WHERE id != $1', [id]);
         }
 
-        const autoTitle = title && title.trim() 
-            ? title.trim() 
+        const autoTitle = title && title.trim()
+            ? title.trim()
             : `${edition}তম বার্ষিক জ্ঞাতি সম্মেলন`;
+
+        // Sync & Protect Home Map Link with Lineage Explorer
+        let effectiveMapLink = map_link && typeof map_link === 'string' && map_link.trim() ? map_link.trim() : null;
+        if (home_id) {
+            const homeCheck = await pool.query('SELECT map_link FROM homes WHERE id = $1 AND deleted_at IS NULL', [parseInt(home_id, 10)]);
+            if (homeCheck.rows.length > 0) {
+                const existingHomeMap = homeCheck.rows[0].map_link;
+                if (existingHomeMap && existingHomeMap.trim()) {
+                    // Selected Bari already has a map link: keep it unchanged and synced
+                    effectiveMapLink = existingHomeMap.trim();
+                } else if (effectiveMapLink) {
+                    // Selected Bari had no map link: update the Bari in Lineage Explorer with the new link!
+                    await pool.query(
+                        'UPDATE homes SET map_link = $1 WHERE id = $2 AND deleted_at IS NULL',
+                        [effectiveMapLink, parseInt(home_id, 10)]
+                    );
+                }
+            }
+        }
 
         const query = `
             UPDATE sammelans SET
@@ -341,7 +383,7 @@ exports.updateSammelan = async (req, res) => {
             home_id ? parseInt(home_id, 10) : null,
             venue_name.trim(),
             venue_address?.trim() || null,
-            map_link?.trim() || null,
+            effectiveMapLink,
             president_name?.trim() || null,
             secretary_name?.trim() || null,
             description?.trim() || null,

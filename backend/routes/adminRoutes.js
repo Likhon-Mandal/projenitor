@@ -4,7 +4,10 @@ const adminController = require('../controllers/adminController');
 const apiLogController = require('../controllers/apiLogController');
 const { authenticate, requireAdmin, requireSuperAdmin } = require('../middleware/authMiddleware');
 
-// All routes require authentication
+// Public route: Get Admins list with contact details (for footer contact hub)
+router.get('/public-admins', adminController.getPublicAdmins);
+
+// All subsequent routes require authentication
 router.use(authenticate);
 
 // Dashboard stats — admin and superadmin

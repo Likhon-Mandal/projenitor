@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2, Heart, MapPin, ExternalLink, ArrowLeft } from 'lucide-react';
+import { ChevronRight, Map, Home, Plus, Edit2, Check, X, Trash2, Heart, MapPin, ExternalLink, ArrowLeft, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FamilyTree from '../components/FamilyTree';
 import LocationTree from '../components/LocationTree';
@@ -7,12 +7,18 @@ import MemberForm from '../components/MemberForm';
 import MemberProfileModal from '../components/MemberProfileModal';
 import SpousesDirectoryModal from '../components/SpousesDirectoryModal';
 import BariMapModal from '../components/BariMapModal';
+import BariSammelanModal from '../components/BariSammelanModal';
 
 import LocationForm from '../components/LocationForm';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+
+const toBnDigits = (num) => {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(num ?? '').replace(/[0-9]/g, d => bnDigits[d]);
+};
 
 const Explorer = () => {
     const { isAdmin } = useAuth();
@@ -40,6 +46,9 @@ const Explorer = () => {
     const [homeMapLink, setHomeMapLink] = useState('');
     const [isBariMapModalOpen, setIsBariMapModalOpen] = useState(false);
     const [mapModalTarget, setMapModalTarget] = useState({ homeName: '', villageName: '', currentLink: '' });
+
+    const [homeSammelans, setHomeSammelans] = useState([]);
+    const [isSammelanModalOpen, setIsSammelanModalOpen] = useState(false);
 
     const [editingItem, setEditingItem] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -148,6 +157,7 @@ const Explorer = () => {
             }
         } else {
             setHomeMapLink('');
+            setHomeSammelans([]);
             const parent = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
             fetchOptions(currentLevel, parent);
 
@@ -165,9 +175,11 @@ const Explorer = () => {
             });
             if (res.data) {
                 setHomeMapLink(res.data.map_link || '');
+                setHomeSammelans(res.data.sammelans || []);
             }
         } catch (error) {
             console.error('Error fetching home details:', error);
+            setHomeSammelans([]);
         }
     };
 
@@ -804,6 +816,35 @@ const Explorer = () => {
                                     <Heart size={13} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-200" />
                                     <span>{isBn ? `সহধর্মিণী তালিকা` : `Spouses Directory`}</span>
                                 </button>
+
+                                {/* Sammelan Counter & History Button */}
+                                <button
+                                    onClick={() => setIsSammelanModalOpen(true)}
+                                    className={`inline-flex items-center gap-1.5 font-sans font-semibold px-3 py-1.5 rounded-xl shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group text-xs cursor-pointer border ${
+                                        homeSammelans.length > 0
+                                            ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-stone-900 border-amber-600/30 hover:from-amber-400 hover:to-orange-400 shadow-amber-500/20'
+                                            : 'bg-stone-50 hover:bg-orange-50 text-stone-700 hover:text-orange-900 border-stone-200/90 hover:border-orange-300'
+                                    }`}
+                                    title={
+                                        homeSammelans.length > 0
+                                            ? (isBn ? `এই বাড়িতে সর্বমোট ${toBnDigits(homeSammelans.length)}টি সম্মেলন অনুষ্ঠিত হয়েছে (ক্লিক করে তালিকা দেখুন)` : `Total ${homeSammelans.length} gathering(s) held in this home (click to view list)`)
+                                            : (isBn ? 'এই বাড়ির সম্মেলনের তথ্য ও তালিকা দেখুন' : 'View gathering history for this home')
+                                    }
+                                >
+                                    <Sparkles
+                                        size={13}
+                                        className={`${
+                                            homeSammelans.length > 0
+                                                ? 'text-stone-950 fill-amber-300 group-hover:rotate-12'
+                                                : 'text-orange-700 group-hover:scale-110'
+                                        } transition-transform duration-200`}
+                                    />
+                                    <span>
+                                        {isBn
+                                            ? `${toBnDigits(homeSammelans.length)}টি সম্মেলন`
+                                            : `${homeSammelans.length} Gathering${homeSammelans.length === 1 ? '' : 's'}`}
+                                    </span>
+                                </button>
                             </div>
                         </div>
 
@@ -955,6 +996,16 @@ const Explorer = () => {
                         return opt;
                     }));
                 }}
+            />
+
+            <BariSammelanModal
+                isOpen={isSammelanModalOpen}
+                onClose={() => setIsSammelanModalOpen(false)}
+                homeName={selection || geoContext.home_name}
+                villageName={geoContext.village || pathSegments[3] || ''}
+                upazilaName={geoContext.upazila || pathSegments[2] || ''}
+                districtName={geoContext.district || pathSegments[1] || ''}
+                sammelans={homeSammelans}
             />
 
         </div >

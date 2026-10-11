@@ -573,7 +573,35 @@ exports.getHomeDetails = async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Home not found' });
         }
-        res.json(result.rows[0]);
+
+        const home = result.rows[0];
+
+        // Fetch sammelans held in this home
+        const sammelansQuery = `
+            SELECT 
+                s.id, 
+                s.edition, 
+                s.title, 
+                s.bengali_date, 
+                TO_CHAR(s.date, 'YYYY-MM-DD') as date, 
+                s.time, 
+                s.venue_name, 
+                s.venue_address, 
+                s.map_link, 
+                s.cover_image_url, 
+                s.is_next,
+                s.president_name,
+                s.secretary_name
+            FROM sammelans s
+            WHERE s.home_id = $1
+               OR (s.home_id IS NULL AND s.venue_name ILIKE '%' || $2 || '%')
+            ORDER BY s.edition DESC
+        `;
+        const sammelansResult = await pool.query(sammelansQuery, [home.id, home.name]);
+        home.sammelans = sammelansResult.rows;
+        home.sammelan_count = sammelansResult.rows.length;
+
+        res.json(home);
     } catch (err) {
         console.error('Error fetching home details:', err);
         res.status(500).json({ error: 'Server error fetching home details' });

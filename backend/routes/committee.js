@@ -5,6 +5,7 @@ const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 
 // Public: Read
 router.get('/', committeeController.getCommittees);
+router.get('/leaders', committeeController.getLeaders);
 
 // Protected: Write (admin/superadmin only)
 router.post('/', authenticate, requireAdmin, committeeController.createCommittee);

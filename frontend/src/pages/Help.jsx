@@ -16,7 +16,8 @@ import {
     Check, 
     X, 
     Filter, 
-    Phone
+    Phone,
+    LogIn
 } from 'lucide-react';
 import HelpRequestModal from '../components/HelpRequestModal';
 import Profile from './Profile';
@@ -74,23 +75,33 @@ const Help = () => {
         
         if (!targetId) return;
 
-        // Auto-expand target if navigated from notification
+        // Auto-expand target if navigated from home or notification
         if (targetId.startsWith('help-')) {
             const rawId = parseInt(targetId.replace('help-', ''), 10);
             if (!isNaN(rawId)) {
                 setExpandedIds(prev => new Set([...prev, rawId]));
+                setSelectedCategory('All');
+                setSearchQuery('');
             }
         }
 
-        const timer = setTimeout(() => {
+        const scrollAndHighlight = () => {
             const el = document.getElementById(targetId);
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setHighlightedId(targetId);
+                return true;
             }
-        }, 300);
+            return false;
+        };
 
-        return () => clearTimeout(timer);
+        const timer1 = setTimeout(scrollAndHighlight, 200);
+        const timer2 = setTimeout(scrollAndHighlight, 500);
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+        };
     }, [location.search, location.hash, location.state, helpRequests]);
 
     // Clear highlight effect after 5 seconds
@@ -227,13 +238,24 @@ const Help = () => {
                         {t('সাহায্য চান বা সমাজের সদস্যদের সাহায্য করুন।', 'Ask for help or offer support to community members.')}
                     </p>
                 </div>
-                <button
-                    onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
-                    className="bg-primary text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-orange-900 transition-all flex items-center gap-2 shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 duration-200 font-semibold cursor-pointer text-sm sm:text-base"
-                >
-                    <PlusCircle className="h-5 w-5" />
-                    <span>{t('নতুন অনুরোধ', 'New Request')}</span>
-                </button>
+                {user ? (
+                    <button
+                        onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
+                        className="bg-primary text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-orange-900 transition-all flex items-center gap-2 shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 duration-200 font-semibold cursor-pointer text-sm sm:text-base"
+                    >
+                        <PlusCircle className="h-5 w-5" />
+                        <span>{t('নতুন অনুরোধ', 'New Request')}</span>
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => navigate('/login', { state: { from: '/help' } })}
+                        className="bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl transition-all flex items-center gap-2 font-semibold text-sm sm:text-base cursor-pointer shadow-xs hover:shadow-sm"
+                        title={t('সহায়তার অনুরোধ প্রদান করতে লগইন আবশ্যক', 'Login required to submit request')}
+                    >
+                        <LogIn className="h-4 w-4 text-orange-700" />
+                        <span>{t('অনুরোধ পাঠাতে লগইন করুন', 'Login to Request')}</span>
+                    </button>
+                )}
             </div>
 
             {/* Search and Filters */}

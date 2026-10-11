@@ -235,7 +235,7 @@ const NextSammelanSpotlight = () => {
                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-800 via-orange-700 to-red-800 hover:from-orange-900 hover:to-red-900 text-white rounded-full font-bold text-xs sm:text-sm shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
                         >
                             <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
-                            <span>{t('সম্মেলন কথা ঘুরে দেখুন (সকল পূর্ববর্তী সম্মেলন)', 'Explore Sammelan Katha (Previous Gatherings)')}</span>
+                            <span>{t('সম্মেলনের ইতিহাস ঘুরে দেখুন (সকল পূর্ববর্তী সম্মেলন)', 'সম্মেলনের ইতিহাস ঘুরে দেখুন (সকল পূর্ববর্তী সম্মেলন)')}</span>
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>

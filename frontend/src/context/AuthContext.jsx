@@ -45,7 +45,8 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (err) {
             console.error('Failed to sync auth profile with server:', err);
-            if (err.response?.status === 401) {
+            const status = err.response?.status;
+            if (status === 401 || status === 403 || err.response?.data?.error?.toLowerCase?.()?.includes('unauthorized') || err.response?.data?.error?.toLowerCase?.()?.includes('token')) {
                 logout();
             }
         } finally {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
-import { 
-    Calendar, MapPin, Home as HomeIcon, Clock, Sparkles, 
-    Plus, Pencil, Trash2, Search, ArrowUpDown, ExternalLink, 
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
+import {
+    Calendar, MapPin, Home as HomeIcon, Clock, Sparkles,
+    Plus, Pencil, Trash2, Search, ArrowUpDown, ExternalLink,
     User, BookOpen, Star, Eye, X, CheckCircle2, AlertCircle,
     ChevronRight, ChevronDown, ChevronUp, Map, Info, Compass
 } from 'lucide-react';
@@ -11,6 +11,37 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 import SammelanFormModal from '../components/SammelanFormModal';
 import ConfirmModal from '../components/ConfirmModal';
+import SammelanPhotoCollage from '../components/SammelanPhotoCollage';
+import PhotoLightboxModal from '../components/PhotoLightboxModal';
+
+// Extract all unique photos for a sammelan item
+const getSammelanPhotos = (item) => {
+    if (!item) return [];
+    const list = [];
+    if (item.cover_image_url && typeof item.cover_image_url === 'string' && item.cover_image_url.trim()) {
+        list.push(item.cover_image_url.trim());
+    }
+    if (item.images) {
+        let arr = [];
+        if (Array.isArray(item.images)) {
+            arr = item.images;
+        } else if (typeof item.images === 'string') {
+            try {
+                arr = JSON.parse(item.images);
+            } catch (e) {
+                arr = [];
+            }
+        }
+        if (Array.isArray(arr)) {
+            arr.forEach(img => {
+                if (img && typeof img === 'string' && img.trim() && !list.includes(img.trim())) {
+                    list.push(img.trim());
+                }
+            });
+        }
+    }
+    return list;
+};
 
 // Helper to convert English digits to Bengali digits
 const toBnDigits = (num) => {
@@ -25,18 +56,153 @@ const getEnglishYear = (edition) => {
     return 1977 + (ed - 45);
 };
 
+// Clean Date String: remove 'বঙ্গাব্দ', 'খ্রিঃ', 'খ্রিস্টাব্দ', and parenthesized years
+const cleanDateString = (str) => {
+    if (!str) return '';
+    return str
+        .replace(/\s*\([^)]*\)/g, '')
+        .replace(/\s*বঙ্গাব্দ\s*/g, ' ')
+        .replace(/\s*(খ্রিঃ|খ্রিস্টাব্দ)\s*/g, ' ')
+        .replace(/,\s*$/, '')
+        .trim();
+};
+
+// Extract Bangla Year Only (e.g. ১৩৮৬)
+const getBanglaYear = (edition, bengaliDate) => {
+    if (bengaliDate) {
+        // Look specifically for 4-digit Bengali year starting with ১ and ৩-৪ (i.e. ১৩০০ to ১৪৯৯)
+        const bnMatch = bengaliDate.match(/[১][৩-৪][০-৯]{2}/);
+        if (bnMatch) return bnMatch[0];
+        // Or English digits 1300-1499
+        const enMatch = bengaliDate.match(/\b(1[3-4]\d{2})\b/);
+        if (enMatch) return toBnDigits(enMatch[0]);
+    }
+    const ey = getEnglishYear(edition);
+    return ey ? toBnDigits(ey - 594) : '';
+};
+
+// Bangla Year in English digits for English view
+const getBanglaYearEn = (edition, bengaliDate) => {
+    const byBn = getBanglaYear(edition, bengaliDate);
+    const bnToEnMap = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+    return String(byBn).replace(/[০-৯]/g, d => bnToEnMap[d] || d);
+};
+
+// Format Full English Date (e.g. ২৩ ফেব্রুয়ারি, ১৯৮০ / 23 February, 1980)
+const getFullEnglishDate = (dateVal, engYear, isBn) => {
+    const monthsBn = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+    const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    if (dateVal) {
+        if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateVal)) {
+            const parts = dateVal.split('T')[0].split('-');
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const d = parseInt(parts[2], 10);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d) && m >= 0 && m < 12) {
+                return isBn
+                    ? `${toBnDigits(d)} ${monthsBn[m]}, ${toBnDigits(y)}`
+                    : `${d} ${monthsEn[m]}, ${y}`;
+            }
+        }
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+            const day = d.getDate();
+            return isBn
+                ? `${toBnDigits(day)} ${monthsBn[d.getMonth()]}, ${toBnDigits(d.getFullYear())}`
+                : `${day} ${monthsEn[d.getMonth()]}, ${d.getFullYear()}`;
+        }
+    }
+    
+    // Fallback if no exact date is available: 10th Falgun logic
+    // Before 2020, 10th Falgun was 22 February. 2020 onwards, it's 23 February.
+    const isLeapYearFallBack = engYear < 2020;
+    const defaultDay = isLeapYearFallBack ? 22 : 23;
+    const defaultDayBn = isLeapYearFallBack ? '২২' : '২৩';
+
+    return isBn ? `${defaultDayBn} ফেব্রুয়ারি, ${toBnDigits(engYear)}` : `${defaultDay} February, ${engYear}`;
+};
+
+// Extract area address without repeating the bari/venue name
+const getAreaAddressWithoutBari = (venueName, venueAddress) => {
+    let addr = (venueAddress || '').trim();
+    const vName = (venueName || '').trim();
+    if (vName && addr) {
+        if (addr.startsWith(vName)) {
+            addr = addr.slice(vName.length).replace(/^[, \s]+/, '').trim();
+        } else {
+            addr = addr.replace(vName, '').replace(/^[, \s]+/, '').trim();
+        }
+    }
+    return addr;
+};
+
 // ── Main SammelanKotha Component ──────────────────────────────────────────────
 const SammelanKotha = () => {
     const { user, isAdmin, isSuperAdmin } = useAuth();
     const { t, isBn, formatNumber } = useLanguage();
     const location = useLocation();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     const [sammelans, setSammelans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState('desc'); // Default desc: newest/highest edition on top
     const [error, setError] = useState('');
+
+    // Full-screen photo lightbox state
+    const [lightbox, setLightbox] = useState({
+        isOpen: false,
+        photos: [],
+        index: 0,
+        title: ''
+    });
+
+    const handleOpenPhoto = (photos, index, title) => {
+        setLightbox({
+            isOpen: true,
+            photos,
+            index: index || 0,
+            title: title || ''
+        });
+    };
+
+    // Open host bari in Lineage Explorer
+    const handleOpenBariInExplorer = async (item, e) => {
+        if (e) e.stopPropagation();
+
+        // 1. Direct match with joined hierarchy
+        if (item.district_name && item.village_name && (item.home_name || item.venue_name)) {
+            const country = 'Bangladesh';
+            const district = item.district_name;
+            const upazila = item.upazila_name || '';
+            const village = item.village_name;
+            const home = item.home_name || item.venue_name;
+            navigate(`/explorer/${encodeURIComponent(country)}/${encodeURIComponent(district)}/${encodeURIComponent(upazila)}/${encodeURIComponent(village)}/${encodeURIComponent(home)}`);
+            return;
+        }
+
+        // 2. Lookup matching home from listed baris
+        const queryName = (item.home_name || item.venue_name || '').trim();
+        if (queryName && !queryName.includes('অনির্ধারিত') && !queryName.toLowerCase().includes('tbd')) {
+            try {
+                const res = await api.get(`/sammelans/homes-lookup?q=${encodeURIComponent(queryName)}`);
+                if (res.data && res.data.length > 0) {
+                    const match = res.data.find(h => h.id === item.home_id) || res.data.find(h => h.home_name === queryName) || res.data[0];
+                    if (match && match.district_name && match.village_name) {
+                        navigate(`/explorer/Bangladesh/${encodeURIComponent(match.district_name)}/${encodeURIComponent(match.upazila_name || '')}/${encodeURIComponent(match.village_name)}/${encodeURIComponent(match.home_name)}`);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('Error opening home in lineage explorer:', err);
+            }
+        }
+
+        // 3. Fallback: navigate to Lineage Explorer root
+        navigate('/explorer');
+    };
 
     // Accordion state: only one sammelan details can be open at a time
     const [expandedId, setExpandedId] = useState(null);
@@ -120,26 +286,16 @@ const SammelanKotha = () => {
 
     return (
         <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-24">
-            
-            {/* HERITAGE HERO HEADER */}
-            <div className="relative bg-gradient-to-b from-orange-900 via-orange-950 to-stone-900 text-white py-14 px-4 md:px-8 border-b-4 border-amber-500 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
-                
-                <div className="max-w-6xl mx-auto text-center relative z-10 space-y-3.5">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-widest shadow-inner">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{t('৪৫তম থেকে ১০০তম ঐতিহাসিক সম্মেলন', '45th to 100th Annual Lineage Gatherings')}</span>
-                    </div>
 
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-black tracking-tight text-amber-50 drop-shadow-md">
-                        {t('সম্মেলন কথা', 'Sammelan Katha')}
+            {/* HERITAGE HERO HEADER - Clean, Colorful & Simple */}
+            <div className="relative bg-gradient-to-r from-orange-700 via-amber-600 to-red-700 text-white py-8 sm:py-10 px-4 text-center shadow-md border-b-4 border-amber-400/60 overflow-hidden">
+                <div className="max-w-4xl mx-auto relative z-10 space-y-2">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-black tracking-tight text-white drop-shadow-md">
+                        {t('সম্মেলনের ইতিহাস', 'সম্মেলনের ইতিহাস')}
                     </h1>
 
-                    <p className="text-orange-200/90 text-xs sm:text-sm max-w-3xl mx-auto font-light leading-relaxed">
-                        {t(
-                            'ইংরেজি ১৯৩৩ (বাংলা ১৩৩৯) থেকে অনুষ্ঠিত বাড়ৈ বংশের ঐতিহাসিক বার্ষিক সম্মেলন। ৪৫তম সম্মেলন (১৯৭৭) থেকে শুরু করে ১০০তম সম্মেলন (২০৩২) পর্যন্ত সকল সম্মেলনের সংক্ষিপ্ত রূপরেখা ও অবস্থান।',
-                            'Chronicle of the Barai annual conferences from the 45th Gathering (1977) to the historic 100th Gathering (2032).'
-                        )}
+                    <p className="text-amber-100/95 text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto">
+                        {t('৪৫তম থেকে ১০০তম ঐতিহাসিক বার্ষিক জ্ঞাতি সম্মেলন (১৯৭৭ – ২০৩২)', '45th to 100th Annual Lineage Gatherings (1977 – 2032)')}
                     </p>
 
                     {/* Admin Add Button */}
@@ -148,9 +304,9 @@ const SammelanKotha = () => {
                             <button
                                 type="button"
                                 onClick={() => { setEditingSammelan(null); setIsFormModalOpen(true); }}
-                                className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-900 rounded-full font-bold text-xs shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-5 py-2 bg-white hover:bg-amber-50 text-stone-900 rounded-full font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                             >
-                                <Plus className="w-4 h-4 stroke-[2.5]" />
+                                <Plus className="w-4 h-4 stroke-[2.5] text-orange-700" />
                                 <span>{t('নতুন সম্মেলন যোগ করুন', 'Add New Sammelan')}</span>
                             </button>
                         </div>
@@ -163,10 +319,10 @@ const SammelanKotha = () => {
 
                 {/* SCROLLABLE BOX CONTAINER */}
                 <div className="bg-white rounded-3xl border border-orange-200/80 shadow-xl shadow-orange-950/5 overflow-hidden flex flex-col">
-                    
+
                     {/* Header Controls Bar */}
                     <div className="p-4 sm:p-5 bg-gradient-to-r from-orange-50 via-amber-50/50 to-orange-50 border-b border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-3.5 shrink-0">
-                        
+
                         {/* Title & Count */}
                         <div className="flex items-center gap-2.5 w-full sm:w-auto">
                             <div className="w-8 h-8 rounded-xl bg-orange-800 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -232,34 +388,37 @@ const SammelanKotha = () => {
                                 const engYear = getEnglishYear(item.edition);
                                 const isNext = Boolean(item.is_next);
                                 const isExpanded = expandedId === item.id;
+                                const cleanBnDate = cleanDateString(item.bengali_date);
+                                const banglaYear = getBanglaYear(item.edition, item.bengali_date);
+                                const banglaYearEn = getBanglaYearEn(item.edition, item.bengali_date);
+                                const fullEngDate = getFullEnglishDate(item.date, engYear, isBn);
+                                const areaAddress = getAreaAddressWithoutBari(item.venue_name, item.venue_address);
                                 const mapUrl = item.map_link || item.home_map_link || (item.venue_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.venue_address)}` : null);
 
                                 return (
                                     <div
                                         key={item.id}
                                         id={`sammelan-item-${item.id}`}
-                                        className={`rounded-2xl transition-all duration-200 border overflow-hidden ${
-                                            isExpanded
+                                        className={`rounded-2xl transition-all duration-200 border overflow-hidden ${isExpanded
                                                 ? 'bg-orange-50/70 border-orange-300 shadow-md ring-1 ring-orange-400/30'
                                                 : isNext
                                                     ? 'bg-amber-50/60 border-amber-300 hover:bg-amber-50 hover:shadow-xs'
                                                     : 'bg-white hover:bg-orange-50/60 border-orange-100 hover:border-orange-200 hover:shadow-2xs'
-                                        }`}
+                                            }`}
                                     >
                                         {/* Clickable Header Row */}
                                         <div
                                             onClick={() => setExpandedId(prev => prev === item.id ? null : item.id)}
                                             className="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none"
                                         >
-                                            {/* Two Compact Lines - Optimized to avoid breaking unnecessarily */}
+                                            {/* Two Compact Lines - Non-duplicate & Clean Dates */}
                                             <div className="min-w-0 flex-1 space-y-0.5">
-                                                {/* LINE 1: Edition Badge, Title, English Year, Upcoming Badge */}
+                                                {/* LINE 1: Edition Badge, Title, Bangla Year Only, Full English Date, Upcoming Badge */}
                                                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold font-sans ${
-                                                        isNext 
-                                                            ? 'bg-amber-500 text-stone-950 font-black shadow-2xs' 
+                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold font-sans ${isNext
+                                                            ? 'bg-amber-500 text-stone-950 font-black shadow-2xs'
                                                             : 'bg-orange-800 text-white'
-                                                    }`}>
+                                                        }`}>
                                                         {isBn ? `${toBnDigits(item.edition)}তম` : `${item.edition}th`}
                                                     </span>
 
@@ -267,15 +426,15 @@ const SammelanKotha = () => {
                                                         {isBn ? `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন` : `${item.edition}th Gathering`}
                                                     </h4>
 
-                                                    <span className="text-[11px] sm:text-xs font-bold text-orange-800 bg-orange-100/80 px-1.5 py-0.5 rounded-md">
-                                                        {isBn ? `${toBnDigits(engYear)} খ্রিঃ` : `${engYear}`}
+                                                    {/* Bangla Year Only */}
+                                                    <span className="text-[11px] sm:text-xs font-bold text-orange-950 bg-orange-100/90 px-2 py-0.5 rounded-md">
+                                                        {isBn ? banglaYear : banglaYearEn}
                                                     </span>
 
-                                                    {item.bengali_date && (
-                                                        <span className="text-xs text-stone-500 font-medium hidden md:inline">
-                                                            • {item.bengali_date}
-                                                        </span>
-                                                    )}
+                                                    {/* Full English Date */}
+                                                    <span className="text-xs text-stone-600 font-semibold">
+                                                        • {fullEngDate}
+                                                    </span>
 
                                                     {isNext && (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 text-[10px] font-bold border border-amber-400">
@@ -285,23 +444,39 @@ const SammelanKotha = () => {
                                                     )}
                                                 </div>
 
-                                                {/* LINE 2: Venue and Address compactly joined */}
+                                                {/* LINE 2: Venue and Area Address (without repeating homestead!) */}
                                                 <div className="flex items-center gap-2 text-xs text-stone-600 truncate pt-0.5">
-                                                    <div className="flex items-center gap-1 truncate shrink-0 max-w-[50%] sm:max-w-none">
-                                                        <HomeIcon className="w-3.5 h-3.5 text-amber-800 shrink-0" />
-                                                        <span className="font-semibold text-stone-800 truncate">
-                                                            {item.venue_name || t('স্থান অনির্ধারিত', 'Venue TBD')}
-                                                        </span>
-                                                    </div>
+                                                    {item.venue_name && (
+                                                        <div
+                                                            onClick={(e) => handleOpenBariInExplorer(item, e)}
+                                                            className="flex items-center gap-1 truncate shrink-0 max-w-[50%] sm:max-w-none hover:text-orange-950 group/line2 cursor-pointer"
+                                                            title={t('বংশতালিকায় বাড়িটি দেখুন', 'Open in Lineage Explorer')}
+                                                        >
+                                                            <HomeIcon className="w-3.5 h-3.5 text-amber-800 shrink-0 group-hover/line2:scale-110 transition-transform" />
+                                                            <span className="font-semibold text-stone-800 truncate group-hover/line2:underline">
+                                                                {item.venue_name}
+                                                            </span>
+                                                        </div>
+                                                    )}
 
-                                                    <span className="text-stone-300">•</span>
+                                                    {item.venue_name && areaAddress && (
+                                                        <span className="text-stone-300">•</span>
+                                                    )}
 
-                                                    <div className="flex items-center gap-1 truncate text-stone-500">
-                                                        <MapPin className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                                                        <span className="truncate">
-                                                            {item.venue_address || t('ঠিকানা পরবর্তীতে যুক্ত হবে', 'Address to be added')}
+                                                    {areaAddress && (
+                                                        <div className="flex items-center gap-1 truncate text-stone-500">
+                                                            <MapPin className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                                                            <span className="truncate">
+                                                                {areaAddress}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {!item.venue_name && !areaAddress && (
+                                                        <span className="text-stone-400 italic text-xs">
+                                                            {t('স্থান ও ঠিকানা পরবর্তীতে যুক্ত হবে', 'Venue & address to be added')}
                                                         </span>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -314,11 +489,10 @@ const SammelanKotha = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setExpandedId(prev => prev === item.id ? null : item.id)}
-                                                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                                                        isExpanded
+                                                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer ${isExpanded
                                                             ? 'bg-orange-800 text-white shadow-xs'
                                                             : 'bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <span>{isExpanded ? t('আড়াল করুন', 'Hide') : t('বিস্তারিত', 'Details')}</span>
                                                     {isExpanded ? (
@@ -362,100 +536,112 @@ const SammelanKotha = () => {
                                             </div>
                                         </div>
 
-                                        {/* INLINE EXPANDED DETAILS (Below clicked item, only 1 open at a time) */}
+                                        {/* INLINE EXPANDED DETAILS (Compact Box Design) */}
                                         {isExpanded && (
-                                            <div className="px-3 pb-3 sm:px-4 sm:pb-3.5 pt-1 border-t border-orange-200/80 space-y-2 animate-fadeIn text-stone-800">
-                                                {/* Date & Time Compact Inline Box */}
-                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs bg-white/95 p-2.5 rounded-xl border border-orange-100">
-                                                    <span className="inline-flex items-center gap-1 font-bold text-orange-950 shrink-0">
-                                                        <Calendar className="w-3.5 h-3.5 text-orange-700 shrink-0" />
-                                                        <span>{t('তারিখ ও সময়:', 'Date & Time:')}</span>
-                                                    </span>
+                                            <div className="px-3 pb-3 sm:px-4 sm:pb-3.5 pt-2 border-t border-orange-200/80 space-y-2.5 animate-fadeIn text-stone-800">
+                                                {/* Photo Memories & Collage Section */}
+                                                {(() => {
+                                                    const photos = getSammelanPhotos(item);
+                                                    if (photos.length === 0) return null;
+                                                    return (
+                                                        <div className="pt-0.5 pb-1">
+                                                            <SammelanPhotoCollage
+                                                                photos={photos}
+                                                                title={item.title || `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন`}
+                                                                onOpenPhoto={(idx) => handleOpenPhoto(photos, idx, item.title || `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন`)}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })()}
 
-                                                    <span className="font-semibold text-stone-800">
-                                                        {item.bengali_date || (isBn ? '১০ ফাল্গুন' : '10 Falgun')}
-                                                    </span>
+                                                {/* 2-Box Highlights Grid: Host Bari (Clickable -> Lineage Explorer) | Address & Map */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
 
-                                                    <span className="text-orange-800 font-bold bg-orange-100/70 px-2 py-0.5 rounded-md">
-                                                        {isBn ? `২৩ ফেব্রুয়ারি, ${toBnDigits(engYear)} খ্রিঃ` : `23 Feb, ${engYear}`}
-                                                    </span>
-
-                                                    {item.time && (
-                                                        <span className="inline-flex items-center gap-1 text-stone-600 font-medium">
-                                                            <Clock className="w-3 h-3 text-stone-400" />
-                                                            <span>{item.time}</span>
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Host Bari & Address Compact Inline Box */}
-                                                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-xs bg-white/95 p-2.5 rounded-xl border border-orange-100">
-                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                                                        <span className="inline-flex items-center gap-1 font-bold text-orange-950 shrink-0">
-                                                            <HomeIcon className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                                                            <span>{t('স্বাগতিক বাড়ি ও স্থান:', 'Host Bari & Venue:')}</span>
-                                                        </span>
-                                                        <span className="font-bold text-stone-900">
-                                                            {item.venue_name || t('স্থান নির্ধারিত হয়নি', 'Venue not set')}
-                                                        </span>
-                                                        {item.venue_address && (
-                                                            <>
-                                                                <span className="text-stone-300 hidden sm:inline">•</span>
-                                                                <span className="inline-flex items-center gap-1 text-stone-600">
-                                                                    <MapPin className="w-3 h-3 text-red-600 shrink-0" />
-                                                                    <span>{item.venue_address}</span>
+                                                    {/* Box 1: Host Bari (Clickable to open in Lineage Explorer) */}
+                                                    <div
+                                                        onClick={(e) => handleOpenBariInExplorer(item, e)}
+                                                        className="bg-white/95 p-2.5 sm:p-3 rounded-xl border border-orange-100 shadow-2xs hover:shadow-xs hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200 cursor-pointer flex items-center justify-between gap-2.5 group/bari"
+                                                        title={t('বংশতালিকায় বাড়িটি দেখুন', 'Open Bari in Lineage Explorer')}
+                                                    >
+                                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                            <div className="w-8 h-8 rounded-lg bg-amber-100/80 border border-amber-200 flex items-center justify-center text-amber-850 shrink-0 group-hover/bari:scale-105 group-hover/bari:bg-amber-200/80 transition-all">
+                                                                <HomeIcon className="w-4 h-4 text-amber-800" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                                                                    {t('স্বাগতিক বাড়ি', 'Host Bari')}
+                                                                </p>
+                                                                <p className="text-xs sm:text-sm font-bold text-stone-900 leading-snug truncate group-hover/bari:text-orange-950 transition-colors">
+                                                                    {item.venue_name || t('স্থান নির্ধারিত হয়নি', 'Venue not set')}
+                                                                </p>
+                                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-800 group-hover/bari:underline mt-0.5">
+                                                                    <Compass className="w-3 h-3 text-orange-700" />
+                                                                    <span>{t('বংশতালিকায় বাড়িটি দেখুন', 'Open in Lineage Explorer')}</span>
                                                                 </span>
-                                                            </>
-                                                        )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-6 h-6 rounded-lg bg-orange-100/60 flex items-center justify-center text-orange-800 shrink-0 group-hover/bari:bg-orange-800 group-hover/bari:text-white transition-colors">
+                                                            <ChevronRight className="w-3.5 h-3.5" />
+                                                        </div>
                                                     </div>
 
-                                                    {mapUrl && (
-                                                        <a 
-                                                            href={mapUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-100 hover:bg-orange-200 text-orange-900 rounded-lg font-bold text-[11px] transition-colors shrink-0"
-                                                        >
-                                                            <Map className="w-3 h-3 text-red-600" />
-                                                            <span>{t('গুগল ম্যাপ', 'Google Map')}</span>
-                                                            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-                                                        </a>
-                                                    )}
+                                                    {/* Box 2: Address & Map (Without repeating bari name) */}
+                                                    <div
+                                                        onClick={() => mapUrl && window.open(mapUrl, '_blank', 'noopener,noreferrer')}
+                                                        className={`bg-white/95 p-2.5 sm:p-3 rounded-xl border border-orange-100 shadow-2xs transition-all duration-200 flex items-center justify-between gap-2.5 ${mapUrl
+                                                                ? 'hover:border-amber-400 hover:bg-orange-50/50 hover:shadow-xs cursor-pointer group/map'
+                                                                : 'hover:border-amber-300'
+                                                            }`}
+                                                        title={mapUrl ? t('গুগল ম্যাপে দেখুন', 'View on Google Maps') : undefined}
+                                                    >
+                                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                            <div className="w-8 h-8 rounded-lg bg-red-100/80 border border-red-200 flex items-center justify-center text-red-800 shrink-0 group-hover/map:scale-105 group-hover/map:bg-red-200/80 transition-all">
+                                                                <MapPin className="w-4 h-4 text-red-700" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                                                                    {t('ঠিকানা ও অবস্থান', 'Address & Location')}
+                                                                </p>
+                                                                <p className="text-xs sm:text-sm font-bold text-stone-900 leading-snug truncate group-hover/map:text-orange-950 transition-colors">
+                                                                    {areaAddress || t('ঠিকানা পরবর্তীতে যুক্ত হবে', 'Address to be announced')}
+                                                                </p>
+                                                                {mapUrl ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-800 group-hover/map:underline mt-0.5">
+                                                                        <Map className="w-3 h-3 text-red-600" />
+                                                                        <span>{t('গুগল ম্যাপে লোকেশন দেখুন', 'View on Google Maps')}</span>
+                                                                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[11px] text-stone-400 italic">
+                                                                        {t('ম্যাপ লিংক যুক্ত নেই', 'No map link')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {mapUrl && (
+                                                            <div className="w-6 h-6 rounded-lg bg-red-50 flex items-center justify-center text-red-700 shrink-0 group-hover/map:bg-red-700 group-hover/map:text-white transition-colors">
+                                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                {/* Leadership (President & Secretary) if available */}
-                                                {(item.president || item.secretary) && (
-                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs bg-white/90 p-2.5 rounded-xl border border-orange-100">
-                                                        {item.president && (
-                                                            <span className="inline-flex items-center gap-1.5">
-                                                                <User className="w-3.5 h-3.5 text-orange-700" />
-                                                                <span className="text-stone-500 font-medium">{t('সভাপতি:', 'President:')}</span>
-                                                                <span className="font-bold text-stone-800">{item.president}</span>
-                                                            </span>
-                                                        )}
-                                                        {item.secretary && (
-                                                            <span className="inline-flex items-center gap-1.5">
-                                                                <User className="w-3.5 h-3.5 text-amber-700" />
-                                                                <span className="text-stone-500 font-medium">{t('সম্পাদক:', 'Secretary:')}</span>
-                                                                <span className="font-bold text-stone-800">{item.secretary}</span>
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                )}
 
-                                                {/* Memoirs / History / Description */}
-                                                {item.description ? (
-                                                    <div className="bg-amber-50/60 p-2.5 sm:p-3 rounded-xl border border-amber-200/80 text-xs text-stone-800 leading-relaxed font-sans">
-                                                        <span className="font-bold text-orange-900 block sm:inline mr-2">
-                                                            📜 {t('কার্যবিবরণী ও ইতিহাস:', 'Memoirs & History:')}
-                                                        </span>
-                                                        <span>{item.description}</span>
+
+                                                {/* Box 3: Memoirs / History / Description */}
+                                                <div className="bg-amber-50/60 p-2.5 sm:p-3 rounded-xl border border-amber-200/80 shadow-2xs text-xs text-stone-800 leading-relaxed font-sans">
+                                                    <div className="flex items-center gap-1.5 font-bold text-orange-900 mb-0.5">
+                                                        <BookOpen className="w-3.5 h-3.5 text-orange-800 shrink-0" />
+                                                        <span>{t('সম্মেলনের কার্যবিবরণী ও ইতিহাস', 'Memoirs & History')}</span>
                                                     </div>
-                                                ) : (
-                                                    <div className="text-center py-2 text-stone-400 text-xs italic bg-white/50 rounded-xl border border-dashed border-orange-100">
-                                                        {t('সম্মেলনের বিস্তারিত কার্যবিবরণী এখনো সংরক্ষিত করা হয়নি।', 'Detailed memoirs for this gathering have not been archived yet.')}
-                                                    </div>
-                                                )}
+                                                    <p className="text-stone-700 whitespace-pre-line leading-relaxed text-xs">
+                                                        {item.description || (
+                                                            <span className="text-stone-400 italic">
+                                                                {t('সম্মেলনের বিস্তারিত কার্যবিবরণী এখনো সংরক্ষিত করা হয়নি।', 'Detailed memoirs for this gathering have not been archived yet.')}
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                </div>
 
                                                 {/* Admin Edit Link inside details */}
                                                 {(isAdmin || isSuperAdmin) && (
@@ -463,9 +649,9 @@ const SammelanKotha = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => { setEditingSammelan(item); setIsFormModalOpen(true); }}
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-900 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-900 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-2xs"
                                                         >
-                                                            <Pencil className="w-3 h-3 text-orange-700" />
+                                                            <Pencil className="w-3.5 h-3.5 text-orange-700" />
                                                             <span>{t('তথ্য সম্পাদনা করুন', 'Edit Information')}</span>
                                                         </button>
                                                     </div>
@@ -508,6 +694,15 @@ const SammelanKotha = () => {
                 )}
                 confirmText={t('মুছে ফেলুন', 'Delete')}
                 type="danger"
+            />
+
+            {/* Full-Screen Interactive Lightbox Viewer */}
+            <PhotoLightboxModal
+                isOpen={lightbox.isOpen}
+                photos={lightbox.photos}
+                initialIndex={lightbox.index}
+                title={lightbox.title}
+                onClose={() => setLightbox({ isOpen: false, photos: [], index: 0, title: '' })}
             />
         </div>
     );

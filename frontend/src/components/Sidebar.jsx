@@ -16,7 +16,7 @@ const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
     const navItems = [
         { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon },
         { to: '/history', label: t('আমাদের ঐতিহ্য', 'Our Heritage'), icon: BookOpen },
-        { to: '/sammelan', label: t('সম্মেলন কথা', 'Sammelan Katha'), icon: Sparkles },
+        { to: '/sammelan', label: t('সম্মেলনের ইতিহাস', 'History of Sammelan'), icon: Sparkles },
         { to: '/explorer', label: t('বংশতালিকা', 'Lineage Explorer'), icon: Map },
         { to: '/directory', label: t('সদস্য অনুসন্ধান', 'Search Members'), icon: Search },
         { to: '/spouses', label: t('সহধর্মিণী তালিকা', 'Spouses Directory'), icon: Heart },

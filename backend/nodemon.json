@@ -1,5 +1,6 @@
 {
-  "watch": ["."],
+  "watch": ["controllers", "routes", "middleware", "config", "utils", "server.js", "seedSuperAdmin.js"],
   "ignore": ["uploads/*", "*.log", "node_modules/*", "test_*.js"],
-  "ext": "js,json"
+  "ext": "js,json",
+  "delay": 500
 }

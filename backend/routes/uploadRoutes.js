@@ -38,14 +38,27 @@ if (isCloudinaryConfigured) {
         params: async (req, file) => {
             const isPdf = file.mimetype === 'application/pdf' || (file.originalname && file.originalname.toLowerCase().endsWith('.pdf'));
             const isVideo = file.mimetype.startsWith('video/');
+            const isImage = !isPdf && !isVideo;
             const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
 
-            return {
+            const uploadParams = {
                 folder: 'projenitor',
                 resource_type: isPdf ? 'raw' : (isVideo ? 'video' : 'image'),
                 public_id: uniqueName,
-                format: isPdf ? 'pdf' : undefined
             };
+
+            if (isPdf) {
+                uploadParams.format = 'pdf';
+            } else if (isImage) {
+                // Intelligent compression: limits max dimensions to 2048px (downscaling huge raw photos)
+                // and applies auto:good quality to slash file size by 70-85% while keeping visual fidelity crisp
+                uploadParams.transformation = [
+                    { width: 2048, height: 2048, crop: 'limit' },
+                    { quality: 'auto:good' }
+                ];
+            }
+
+            return uploadParams;
         }
     });
 } else {
@@ -117,12 +130,17 @@ router.post('/', (req, res) => {
 
             // Return URL: Cloudinary URL if available, else local server URL
             const isCloudinaryUrl = file.path && (file.path.startsWith('http://') || file.path.startsWith('https://'));
-            const fileUrl = isCloudinaryUrl
+            let fileUrl = isCloudinaryUrl
                 ? file.path
                 : `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
 
             const isVideo = file.mimetype.startsWith('video/');
             const isPdf = file.mimetype === 'application/pdf' || (file.originalname && file.originalname.toLowerCase().endsWith('.pdf'));
+
+            // Deliver Cloudinary images with auto-format (WebP/AVIF) and perceptual auto-quality
+            if (isCloudinaryUrl && !isVideo && !isPdf && fileUrl.includes('/upload/') && !fileUrl.includes('/upload/f_auto,q_auto/')) {
+                fileUrl = fileUrl.replace('/upload/', '/upload/f_auto,q_auto/');
+            }
 
             res.json({
                 message: 'File uploaded successfully',

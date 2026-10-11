@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Calendar, HelpCircle, Plus, Trash2, Edit2, Megaphone,
@@ -145,14 +145,17 @@ const EventsAndNotices = () => {
         return false;
     };
 
+    const lastOpenedEventTargetRef = useRef(null);
+
     // Deep link scroll & highlight effect from notification click
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const targetId = location.state?.targetId || params.get('highlight') || location.hash.replace('#', '');
+        const clickTimestamp = location.state?.timestamp || targetId;
 
         if (!targetId) return;
 
-        // 1. If it's an event, automatically switch to correct event tab (upcoming vs previous)
+        // 1. If it's an event, automatically switch to correct event tab (upcoming vs previous) and open details modal
         if (targetId.startsWith('event-')) {
             const rawEventId = parseInt(targetId.replace('event-', ''), 10);
             if (events.length > 0 && !isNaN(rawEventId)) {
@@ -162,6 +165,10 @@ const EventsAndNotices = () => {
                         setEventTab('previous');
                     } else {
                         setEventTab('upcoming');
+                    }
+                    if (lastOpenedEventTargetRef.current !== clickTimestamp) {
+                        lastOpenedEventTargetRef.current = clickTimestamp;
+                        handleOpenDetails(targetEvent);
                     }
                 }
             }
@@ -175,15 +182,23 @@ const EventsAndNotices = () => {
         }
 
         // 3. Scroll to the element and apply highlight effect
-        const timer = setTimeout(() => {
+        const scrollAndHighlight = () => {
             const el = document.getElementById(targetId);
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setHighlightedId(targetId);
+                return true;
             }
-        }, 300);
+            return false;
+        };
 
-        return () => clearTimeout(timer);
+        const timer1 = setTimeout(scrollAndHighlight, 200);
+        const timer2 = setTimeout(scrollAndHighlight, 500);
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+        };
     }, [location.search, location.hash, location.state, events, notices]);
 
     // Clear highlight effect after 5 seconds

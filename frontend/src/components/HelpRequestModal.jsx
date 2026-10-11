@@ -167,7 +167,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                 type="button"
                                 onClick={() => {
                                     onClose();
-                                    navigate('/auth', { state: { from: '/help' } });
+                                    navigate('/login', { state: { from: '/help' } });
                                 }}
                                 className="px-6 py-2.5 bg-primary hover:bg-orange-900 text-white font-semibold text-sm rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
                             >

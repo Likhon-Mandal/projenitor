@@ -4,6 +4,8 @@ const { pool } = require('../config/db');
 /**
  * Middleware: Verify JWT and attach user info to req.user
  */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -12,7 +14,15 @@ const authenticate = async (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Empty token' });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey_projenitor_123');
+
+        if (!decoded || !decoded.id || !UUID_REGEX.test(String(decoded.id))) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid token payload' });
+        }
 
         let result;
         if (decoded.is_normal_user) {
@@ -70,8 +80,11 @@ const authenticate = async (req, res, next) => {
         if (err.name === 'JsonWebTokenError') {
             return res.status(401).json({ error: 'Unauthorized: Invalid token' });
         }
+        if (err.code === '22P02') {
+            return res.status(401).json({ error: 'Unauthorized: Invalid user identifier' });
+        }
         console.error('Auth middleware error:', err);
-        res.status(500).json({ error: 'Server error during authentication' });
+        res.status(401).json({ error: 'Unauthorized: Authentication failed' });
     }
 };
 

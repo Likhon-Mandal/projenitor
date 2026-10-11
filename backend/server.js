@@ -59,9 +59,43 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
+// Global Express Error Handler
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Express Error]:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error', message: err.message });
+  }
+});
+
 // Start Server
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   // Seed SuperAdmin on every startup
   await seedSuperAdmin();
 });
+
+// Proper handling for nodemon restarts to prevent EADDRINUSE
+process.once('SIGUSR2', () => {
+  server.close(() => {
+    process.kill(process.pid, 'SIGUSR2');
+  });
+});
+
+process.on('SIGINT', () => {
+  server.close(() => process.exit(0));
+});
+
+process.on('SIGTERM', () => {
+  server.close(() => process.exit(0));
+});
+
+// Prevent unhandled promise rejections or uncaught exceptions from killing the process
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection] at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]:', err);
+});
+
+

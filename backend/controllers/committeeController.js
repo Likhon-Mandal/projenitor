@@ -19,9 +19,15 @@ exports.getCommittees = async (req, res) => {
         // Fetch members for these committees
         const membersResult = await pool.query(`
             SELECT cm.committee_id, cm.role, cm.order_index, cm.member_id,
-                   m.full_name, m.profile_image_url, m.occupation
+                   m.full_name, m.name_bangla, m.name_english, m.profile_image_url, m.occupation,
+                   m.contact_number,
+                   v.name as village, u.name as upazila, d.name as district, h.name as home_name
             FROM committee_members cm
             JOIN members m ON cm.member_id = m.id
+            LEFT JOIN villages v ON m.village_id = v.id
+            LEFT JOIN upazilas u ON m.upazila_id = u.id
+            LEFT JOIN districts d ON m.district_id = d.id
+            LEFT JOIN homes h ON m.home_id = h.id
             ORDER BY cm.order_index ASC
         `);
         const membersRows = membersResult.rows;
@@ -33,9 +39,16 @@ exports.getCommittees = async (req, res) => {
             memMap[row.committee_id].push({
                 member_id: row.member_id,
                 full_name: row.full_name,
+                name_bangla: row.name_bangla,
+                name_english: row.name_english,
                 role: row.role,
                 profile_image_url: row.profile_image_url,
-                occupation: row.occupation
+                occupation: row.occupation,
+                contact_number: row.contact_number,
+                village: row.village,
+                upazila: row.upazila,
+                district: row.district,
+                home_name: row.home_name
             });
         });
 
@@ -48,6 +61,52 @@ exports.getCommittees = async (req, res) => {
         res.json(result);
     } catch (err) {
         console.error('Error fetching committees:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+exports.getLeaders = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                cm.role,
+                cm.order_index,
+                m.id as member_id,
+                m.full_name,
+                m.name_bangla,
+                m.name_english,
+                m.contact_number,
+                m.profile_image_url,
+                v.name as village,
+                u.name as upazila,
+                d.name as district,
+                h.name as home_name
+            FROM committees c
+            JOIN committee_members cm ON c.id = cm.committee_id
+            JOIN members m ON cm.member_id = m.id
+            LEFT JOIN villages v ON m.village_id = v.id
+            LEFT JOIN upazilas u ON m.upazila_id = u.id
+            LEFT JOIN districts d ON m.district_id = d.id
+            LEFT JOIN homes h ON m.home_id = h.id
+            WHERE c.is_current = TRUE
+            ORDER BY cm.order_index ASC
+        `;
+        const result = await pool.query(query);
+        const rows = result.rows;
+
+        const president = rows.find(r => 
+            /সভাপতি|president/i.test(r.role) && !/সহ|সহকারী|যুগ্ম|vice/i.test(r.role)
+        );
+        const secretary = rows.find(r => 
+            /সাধারণ\s*সম্পাদক|general\s*secretary/i.test(r.role) && !/যুগ্ম|সহকারী|joint|assistant/i.test(r.role)
+        );
+
+        res.json({
+            president: president || null,
+            secretary: secretary || null
+        });
+    } catch (err) {
+        console.error('Error fetching leaders:', err);
         res.status(500).json({ error: 'Server error' });
     }
 };
