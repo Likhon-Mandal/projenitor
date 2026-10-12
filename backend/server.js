@@ -68,7 +68,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-const server = app.listen(PORT, async () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Server running on port ${PORT}`);
   // Seed SuperAdmin on every startup
   await seedSuperAdmin();
