@@ -4,10 +4,10 @@ import { usePWA } from '../context/PWAContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const InstallAppBanner = () => {
-  const { showBanner, isInstalled, promptInstall, dismissBanner } = usePWA();
+  const { showBanner, isInstalled, promptInstall, dismissBanner, isMobileOrTablet } = usePWA();
   const { t } = useLanguage();
 
-  if (!showBanner || isInstalled) return null;
+  if (!showBanner || isInstalled || !isMobileOrTablet) return null;
 
   return (
     <div 

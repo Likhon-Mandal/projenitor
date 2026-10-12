@@ -11,6 +11,8 @@ export const PWAProvider = ({ children }) => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
 
@@ -30,10 +32,15 @@ export const PWAProvider = ({ children }) => {
     // Device detection
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent) && !window.MSStream;
-    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) || window.innerWidth <= 768;
+    const isTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+    const isMobileDevice = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent) || (window.innerWidth <= 640);
+    const isTabletDevice = /ipad|tablet/i.test(userAgent) || (isTouch && window.innerWidth > 640 && window.innerWidth <= 1024);
+    const isMobileOrTabletDevice = isMobileDevice || isTabletDevice || (isTouch && window.innerWidth <= 1024) || (window.innerWidth <= 1024);
 
     setIsIOS(isIOSDevice);
     setIsMobile(isMobileDevice);
+    setIsTablet(isTabletDevice);
+    setIsMobileOrTablet(isMobileOrTabletDevice);
 
     // If already installed, don't show prompts
     if (installed) {
@@ -51,7 +58,8 @@ export const PWAProvider = ({ children }) => {
       setDeferredPrompt(e);
       setIsInstallable(true);
 
-      if (!isDismissed) {
+      // Only show banner automatically on mobile and tablet devices, never on desktop/laptop
+      if (!isDismissed && isMobileOrTabletDevice) {
         // Small delay so page loads gracefully before popping up banner
         setTimeout(() => setShowBanner(true), 1500);
       }
@@ -71,9 +79,9 @@ export const PWAProvider = ({ children }) => {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // For iOS users on Safari (no beforeinstallprompt event available)
-    if (isIOSDevice && !installed && !isDismissed) {
+    if (isIOSDevice && !installed && !isDismissed && isMobileOrTabletDevice) {
       setIsInstallable(true);
-      // Wait a moment before showing iOS install banner on mobile
+      // Wait a moment before showing iOS install banner on mobile/tablet
       setTimeout(() => setShowBanner(true), 2500);
     }
 
@@ -120,6 +128,8 @@ export const PWAProvider = ({ children }) => {
         isInstalled,
         isIOS,
         isMobile,
+        isTablet,
+        isMobileOrTablet,
         showBanner,
         setShowBanner,
         showIOSModal,

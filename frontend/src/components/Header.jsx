@@ -18,8 +18,8 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
-  const { t, formatName, formatNumber } = useLanguage();
-  const { isInstalled, promptInstall } = usePWA();
+  const { setLanguage, isBn, t, formatName, formatNumber } = useLanguage();
+  const { isInstalled, promptInstall, isMobileOrTablet } = usePWA();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -174,16 +174,38 @@ const Header = () => {
             </div>
           </nav>
 
-          {/* Right side: PWA Install + Notification Bell + Admin Dashboard + Profile Icon */}
+          {/* Right side: Language Switcher (Desktop) + PWA Install (Mobile/Tab only) + Notification Bell + Admin Dashboard + Profile Icon */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
 
-            {/* Prominent PWA Install App Button */}
-            {!isInstalled && (
+            {/* Language Toggle Pill: Displayed on Desktop (md: and up), hidden on mobile to prevent navbar overflow */}
+            <div className="hidden md:flex items-center bg-orange-950/70 border border-orange-700/70 rounded-full p-0.5 text-xs font-bold transition-all shadow-inner">
+              <button
+                type="button"
+                onClick={() => setLanguage('bn')}
+                className={`px-2.5 py-1 rounded-full transition-all duration-200 text-xs cursor-pointer select-none active:scale-95 ${isBn ? 'bg-yellow-500 text-orange-950 font-black shadow-sm' : 'text-orange-200/80 hover:text-white hover:bg-white/10'}`}
+                title="বাংলা ভাষায় দেখুন"
+                aria-label="Switch to Bengali"
+              >
+                বাং
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`px-2.5 py-1 rounded-full transition-all duration-200 text-xs cursor-pointer select-none active:scale-95 ${!isBn ? 'bg-yellow-500 text-orange-950 font-black shadow-sm' : 'text-orange-200/80 hover:text-white hover:bg-white/10'}`}
+                title="View in English"
+                aria-label="Switch to English"
+              >
+                EN
+              </button>
+            </div>
+
+            {/* PWA Install App Button: Mobile and Tablet only (hidden on laptop/desktop) */}
+            {!isInstalled && isMobileOrTablet && (
               <button
                 type="button"
                 onClick={promptInstall}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 border border-yellow-300 cursor-pointer animate-pulse"
-                title={t('স্মার্টফোনে বা কম্পিউটারে অ্যাপ ইনস্টল করুন', 'Install App on your device')}
+                className="lg:hidden flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 border border-yellow-300 cursor-pointer animate-pulse"
+                title={t('মোবাইল বা ট্যাবলেটে অ্যাপ ইনস্টল করুন', 'Install App on mobile/tablet')}
               >
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline font-bold">{t('অ্যাপ ইনস্টল', 'Install App')}</span>
