@@ -447,7 +447,7 @@ const SammelanKotha = () => {
 
                                                 {/* LINE 2: Venue and Area Address (without repeating homestead!) */}
                                                 <div className="flex items-center gap-2 text-xs text-stone-600 truncate pt-0.5">
-                                                    {item.venue_name && (
+                                                    {item.venue_name ? (
                                                         <div
                                                             onClick={(e) => handleOpenBariInExplorer(item, e)}
                                                             className="flex items-center gap-1 truncate shrink-0 max-w-[50%] sm:max-w-none hover:text-orange-950 group/line2 cursor-pointer"
@@ -458,25 +458,25 @@ const SammelanKotha = () => {
                                                                 {item.venue_name}
                                                             </span>
                                                         </div>
+                                                    ) : (
+                                                        <div className="flex items-center shrink-0" title={t('বাড়ি নির্ধারিত হয়নি', 'Homestead not set')}>
+                                                            <HomeIcon className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                                        </div>
                                                     )}
 
-                                                    {item.venue_name && areaAddress && (
-                                                        <span className="text-stone-300">•</span>
-                                                    )}
+                                                    <span className="text-stone-300">•</span>
 
-                                                    {areaAddress && (
+                                                    {areaAddress ? (
                                                         <div className="flex items-center gap-1 truncate text-stone-500">
                                                             <MapPin className="w-3.5 h-3.5 text-red-600 shrink-0" />
                                                             <span className="truncate">
                                                                 {areaAddress}
                                                             </span>
                                                         </div>
-                                                    )}
-
-                                                    {!item.venue_name && !areaAddress && (
-                                                        <span className="text-stone-400 italic text-xs">
-                                                            {t('স্থান ও ঠিকানা পরবর্তীতে যুক্ত হবে', 'Venue & address to be added')}
-                                                        </span>
+                                                    ) : (
+                                                        <div className="flex items-center shrink-0" title={t('ঠিকানা নির্ধারিত হয়নি', 'Address not set')}>
+                                                            <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -558,14 +558,17 @@ const SammelanKotha = () => {
                                                 {/* 2-Box Highlights Grid: Host Bari (Clickable -> Lineage Explorer) | Address & Map */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
 
-                                                    {/* Box 1: Host Bari (Clickable to open in Lineage Explorer) */}
+                                                    {/* Box 1: Host Bari */}
                                                     <div
-                                                        onClick={(e) => handleOpenBariInExplorer(item, e)}
-                                                        className="bg-white/95 p-2.5 sm:p-3 rounded-xl border border-orange-100 shadow-2xs hover:shadow-xs hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200 cursor-pointer flex items-center justify-between gap-2.5 group/bari"
-                                                        title={t('বংশতালিকায় বাড়িটি দেখুন', 'Open Bari in Lineage Explorer')}
+                                                        onClick={(e) => item.venue_name && handleOpenBariInExplorer(item, e)}
+                                                        className={`bg-white/95 p-2.5 sm:p-3 rounded-xl border border-orange-100 shadow-2xs transition-all duration-200 flex items-center justify-between gap-2.5 ${item.venue_name
+                                                                ? 'hover:border-amber-400 hover:bg-orange-50/50 hover:shadow-xs group/bari cursor-pointer'
+                                                                : 'hover:border-amber-300'
+                                                            }`}
+                                                        title={item.venue_name ? t('বংশতালিকায় বাড়িটি দেখুন', 'Open in Lineage Explorer') : undefined}
                                                     >
                                                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                                            <div className="w-8 h-8 rounded-lg bg-amber-100/80 border border-amber-200 flex items-center justify-center text-amber-850 shrink-0 group-hover/bari:scale-105 group-hover/bari:bg-amber-200/80 transition-all">
+                                                            <div className="w-8 h-8 rounded-lg bg-amber-100/80 border border-amber-200 flex items-center justify-center text-amber-900 shrink-0 group-hover/bari:scale-105 group-hover/bari:bg-amber-200/80 transition-all">
                                                                 <HomeIcon className="w-4 h-4 text-amber-800" />
                                                             </div>
                                                             <div className="min-w-0 flex-1">
@@ -573,17 +576,21 @@ const SammelanKotha = () => {
                                                                     {t('স্বাগতিক বাড়ি', 'Host Bari')}
                                                                 </p>
                                                                 <p className="text-xs sm:text-sm font-bold text-stone-900 leading-snug truncate group-hover/bari:text-orange-950 transition-colors">
-                                                                    {item.venue_name || t('স্থান নির্ধারিত হয়নি', 'Venue not set')}
+                                                                    {item.venue_name || '—'}
                                                                 </p>
-                                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-800 group-hover/bari:underline mt-0.5">
-                                                                    <Compass className="w-3 h-3 text-orange-700" />
-                                                                    <span>{t('বংশতালিকায় বাড়িটি দেখুন', 'Open in Lineage Explorer')}</span>
-                                                                </span>
+                                                                {item.venue_name && (
+                                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-800 group-hover/bari:underline mt-0.5">
+                                                                        <Compass className="w-3 h-3 text-orange-700" />
+                                                                        <span>{t('বংশতালিকায় বাড়িটি দেখুন', 'Open in Lineage Explorer')}</span>
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="w-6 h-6 rounded-lg bg-orange-100/60 flex items-center justify-center text-orange-800 shrink-0 group-hover/bari:bg-orange-800 group-hover/bari:text-white transition-colors">
-                                                            <ChevronRight className="w-3.5 h-3.5" />
-                                                        </div>
+                                                        {item.venue_name && (
+                                                            <div className="w-6 h-6 rounded-lg bg-orange-100/60 flex items-center justify-center text-orange-800 shrink-0 group-hover/bari:bg-orange-800 group-hover/bari:text-white transition-colors">
+                                                                <ChevronRight className="w-3.5 h-3.5" />
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Box 2: Address & Map (Without repeating bari name) */}
@@ -604,7 +611,7 @@ const SammelanKotha = () => {
                                                                     {t('ঠিকানা ও অবস্থান', 'Address & Location')}
                                                                 </p>
                                                                 <p className="text-xs sm:text-sm font-bold text-stone-900 leading-snug truncate group-hover/map:text-orange-950 transition-colors">
-                                                                    {areaAddress || t('ঠিকানা পরবর্তীতে যুক্ত হবে', 'Address to be announced')}
+                                                                    {areaAddress || '—'}
                                                                 </p>
                                                                 {mapUrl ? (
                                                                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-800 group-hover/map:underline mt-0.5">
@@ -665,13 +672,7 @@ const SammelanKotha = () => {
                         )}
                     </div>
 
-                    {/* Bottom Status / Footer of Box */}
-                    <div className="p-3 bg-stone-50 border-t border-orange-100 text-center text-xs text-stone-500">
-                        {t(
-                            '💡 যে সকল সম্মেলনের বিস্তারিত বিবরণ নেই, এডমিন "সম্পাদনা" থেকে পরবর্তীতে স্বাগতিক বাড়ি ও কার্যবিবরণী সংযোজন করতে পারবেন।',
-                            '💡 For sammelans without full details, admins can click "Edit" anytime to link homesteads and update memoirs.'
-                        )}
-                    </div>
+
                 </div>
             </div>
 
