@@ -4,32 +4,33 @@ const { pool } = require('../config/db');
 // ─── Get Dashboard Stats ──────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
     try {
-        const [members, homes, villages, events, notices, eminent, admins, pendingStudents, pendingUsers, pendingAdmins] = await Promise.all([
-            pool.query("SELECT COUNT(*) FROM members WHERE deleted_at IS NULL"),
-            pool.query("SELECT COUNT(*) FROM homes WHERE deleted_at IS NULL"),
-            pool.query("SELECT COUNT(*) FROM villages WHERE deleted_at IS NULL"),
-            pool.query("SELECT COUNT(*) FROM events"),
-            pool.query("SELECT COUNT(*) FROM notices"),
-            pool.query("SELECT COUNT(*) FROM eminent_figures"),
-            pool.query("SELECT COUNT(*) FROM admin_users"),
-            pool.query("SELECT COUNT(*) FROM brilliant_student_requests WHERE status = 'pending'"),
-            pool.query("SELECT COUNT(*) FROM users WHERE status = 'pending'"),
-            pool.query("SELECT COUNT(*) FROM admin_requests WHERE status = 'pending'"),
-        ]);
-
-        const pendingStudentCount = parseInt(pendingStudents.rows[0].count);
-        const pendingUserCount = parseInt(pendingUsers.rows[0].count);
-        const pendingAdminCount = parseInt(pendingAdmins.rows[0].count);
+        const result = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM members WHERE deleted_at IS NULL) as total_members,
+                (SELECT COUNT(*) FROM homes WHERE deleted_at IS NULL) as total_homes,
+                (SELECT COUNT(*) FROM villages WHERE deleted_at IS NULL) as total_villages,
+                (SELECT COUNT(*) FROM events) as total_events,
+                (SELECT COUNT(*) FROM notices) as total_notices,
+                (SELECT COUNT(*) FROM eminent_figures) as total_eminent,
+                (SELECT COUNT(*) FROM admin_users) as total_admins,
+                (SELECT COUNT(*) FROM brilliant_student_requests WHERE status = 'pending') as pending_students,
+                (SELECT COUNT(*) FROM users WHERE status = 'pending') as pending_users,
+                (SELECT COUNT(*) FROM admin_requests WHERE status = 'pending') as pending_admins
+        `);
+        const r = result.rows[0];
+        const pendingStudentCount = parseInt(r.pending_students, 10) || 0;
+        const pendingUserCount = parseInt(r.pending_users, 10) || 0;
+        const pendingAdminCount = parseInt(r.pending_admins, 10) || 0;
         const totalPendingNotifications = pendingStudentCount + pendingUserCount + pendingAdminCount;
 
         res.json({
-            totalMembers: parseInt(members.rows[0].count),
-            totalHomes: parseInt(homes.rows[0].count),
-            totalVillages: parseInt(villages.rows[0].count),
-            totalEvents: parseInt(events.rows[0].count),
-            totalNotices: parseInt(notices.rows[0].count),
-            totalEminentFigures: parseInt(eminent.rows[0].count),
-            totalAdmins: parseInt(admins.rows[0].count),
+            totalMembers: parseInt(r.total_members, 10) || 0,
+            totalHomes: parseInt(r.total_homes, 10) || 0,
+            totalVillages: parseInt(r.total_villages, 10) || 0,
+            totalEvents: parseInt(r.total_events, 10) || 0,
+            totalNotices: parseInt(r.total_notices, 10) || 0,
+            totalEminentFigures: parseInt(r.total_eminent, 10) || 0,
+            totalAdmins: parseInt(r.total_admins, 10) || 0,
             pendingStudentRequests: pendingStudentCount,
             pendingUserAccounts: pendingUserCount,
             pendingAdminRequests: pendingAdminCount,

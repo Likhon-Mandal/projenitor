@@ -930,16 +930,17 @@ exports.emptyRecycleBin = async (req, res) => {
 
 exports.getPublicStats = async (req, res) => {
     try {
-        const [members, homes, villages] = await Promise.all([
-            pool.query("SELECT COUNT(*) FROM members WHERE deleted_at IS NULL"),
-            pool.query("SELECT COUNT(*) FROM homes WHERE deleted_at IS NULL"),
-            pool.query("SELECT COUNT(*) FROM villages WHERE deleted_at IS NULL"),
-        ]);
-
+        const result = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM members WHERE deleted_at IS NULL) as total_members,
+                (SELECT COUNT(*) FROM homes WHERE deleted_at IS NULL) as total_homes,
+                (SELECT COUNT(*) FROM villages WHERE deleted_at IS NULL) as total_villages
+        `);
+        const row = result.rows[0];
         res.json({
-            totalMembers: parseInt(members.rows[0].count),
-            totalHomes: parseInt(homes.rows[0].count),
-            totalVillages: parseInt(villages.rows[0].count),
+            totalMembers: parseInt(row.total_members, 10) || 0,
+            totalHomes: parseInt(row.total_homes, 10) || 0,
+            totalVillages: parseInt(row.total_villages, 10) || 0,
         });
     } catch (err) {
         console.error('Public stats error:', err);
