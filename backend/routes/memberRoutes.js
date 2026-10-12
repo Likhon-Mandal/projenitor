@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 const memberController = require('../controllers/memberController');
 
-const { cacheMiddleware, invalidateCache } = require('../middleware/cacheMiddleware');
+const { cacheMiddleware, invalidateCache, clearCacheNow } = require('../middleware/cacheMiddleware');
 
 // Invalidation middleware for member mutations
 const clearMemberCache = (req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      invalidateCache('members');
-      invalidateCache('member');
-      invalidateCache('system');
+      clearCacheNow('members');
+      clearCacheNow('member');
+      clearCacheNow('system');
     }
   });
   next();

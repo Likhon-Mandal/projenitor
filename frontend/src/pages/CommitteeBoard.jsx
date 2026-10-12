@@ -21,10 +21,13 @@ const CommitteeBoard = () => {
     // For accordions of past committees
     const [expandedIds, setExpandedIds] = useState(new Set());
 
-    const fetchCommittees = async () => {
+    const fetchCommittees = async (forceBypass = false) => {
         try {
             setLoading(true);
-            const res = await api.get('/committee');
+            const res = await api.get('/committee', {
+                params: forceBypass ? { _t: Date.now() } : {},
+                cache: !forceBypass
+            });
             setCommittees(res.data);
         } catch (error) {
             console.error(error);
@@ -60,7 +63,7 @@ const CommitteeBoard = () => {
         if (!deleteConfirm.committee) return;
         try {
             await api.delete(`/committee/${deleteConfirm.committee.id}`);
-            fetchCommittees();
+            fetchCommittees(true);
         } catch (error) {
             console.error(error);
             alert(error.response?.data?.error || error.message);
@@ -345,7 +348,7 @@ const CommitteeBoard = () => {
             <CommitteeFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSuccess={() => fetchCommittees()}
+                onSuccess={() => fetchCommittees(true)}
                 initialData={editingCommittee}
             />
 

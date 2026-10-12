@@ -124,6 +124,11 @@ const MemberSelector = ({ label, onSelect, selectedMember, disableActive = false
                             placeholder={t ? t('নাম লিখে খুঁজুন...', 'Search by name...') : 'নাম লিখে খুঁজুন...'}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                }
+                            }}
                             onFocus={() => { if (searchResults.length > 0) setIsDropdownOpen(true) }}
                             className="w-full pl-12 pr-16 py-4 rounded-xl border-2 border-stone-200 focus:border-orange-500 focus:ring-0 outline-none transition-all text-stone-800 font-medium placeholder:font-normal bg-white shadow-sm"
                         />

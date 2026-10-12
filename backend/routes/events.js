@@ -26,12 +26,12 @@ const optionalAuth = async (req, res, next) => {
     next();
 };
 
-const { cacheMiddleware, invalidateCache } = require('../middleware/cacheMiddleware');
+const { cacheMiddleware, invalidateCache, clearCacheNow } = require('../middleware/cacheMiddleware');
 
 const clearEventsCache = (req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      invalidateCache('events');
+      clearCacheNow('events');
     }
   });
   next();

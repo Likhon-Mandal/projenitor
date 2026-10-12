@@ -3,12 +3,13 @@ const router = express.Router();
 const committeeController = require('../controllers/committeeController');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 
-const { cacheMiddleware, invalidateCache } = require('../middleware/cacheMiddleware');
+const { cacheMiddleware, invalidateCache, clearCacheNow } = require('../middleware/cacheMiddleware');
 
 const clearCommitteeCache = (req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      invalidateCache('committee');
+      clearCacheNow('committee');
+      clearCacheNow('committee:leaders');
     }
   });
   next();

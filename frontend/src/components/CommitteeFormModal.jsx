@@ -88,10 +88,11 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
 
     const handleAddMemberToRole = (roleId, member) => {
         if (!member) return;
+        const targetId = member.id || member.member_id;
         setRoles(roles.map(r => {
             if (r.id === roleId) {
-                if (r.members.find(m => m.id === member.id)) return r; // prevent duplicates
-                return { ...r, members: [...r.members, member] };
+                if (r.members.find(m => (m.id || m.member_id) === targetId)) return r; // prevent duplicates
+                return { ...r, members: [...r.members, { ...member, id: targetId }] };
             }
             return r;
         }));
@@ -100,7 +101,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     const handleRemoveMemberFromRole = (roleId, memberId) => {
         setRoles(roles.map(r => {
             if (r.id === roleId) {
-                return { ...r, members: r.members.filter(m => m.id !== memberId) };
+                return { ...r, members: r.members.filter(m => (m.id || m.member_id) !== memberId) };
             }
             return r;
         }));
@@ -120,16 +121,19 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
         let orderIdx = 0;
         validRoles.forEach(r => {
             r.members.forEach(m => {
-                payloadMembers.push({
-                    member_id: m.id,
-                    role: r.role,
-                    order_index: orderIdx++
-                });
+                const targetMemberId = m.member_id || m.id;
+                if (targetMemberId) {
+                    payloadMembers.push({
+                        member_id: targetMemberId,
+                        role: r.role.trim(),
+                        order_index: orderIdx++
+                    });
+                }
             });
         });
 
         const payload = {
-            name,
+            name: name.trim(),
             start_date: startDate || null,
             end_date: endDate || null,
             is_current: isCurrent,
@@ -146,8 +150,8 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
             if (onSuccess) onSuccess();
             onClose();
         } catch (error) {
-            console.error(error);
-            alert(error.response?.data?.error || error.message);
+            console.error('Failed to save committee:', error);
+            alert(error.response?.data?.error || error.message || 'Server error updating committee');
         } finally {
             setLoading(false);
         }
@@ -171,9 +175,10 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                     </button>
                 </div>
 
-                {/* Form Body - Scrollable */}
-                <div className="p-6 overflow-y-auto custom-scroll flex-grow">
-                    <form id="committee-form" onSubmit={handleSubmit} className="space-y-6">
+                {/* Form wrapping scrollable body and pinned footer */}
+                <form id="committee-form" onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                    {/* Form Body - Scrollable */}
+                    <div className="p-6 overflow-y-auto custom-scroll flex-1 min-h-0 space-y-6">
 
                         {/* Basic Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
@@ -227,7 +232,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                 <button
                                     type="button"
                                     onClick={handleAddRole}
-                                    className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors border border-stone-200"
+                                    className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors border border-stone-200 cursor-pointer"
                                 >
                                     <Plus size={14} /> Add Role Slot
                                 </button>
@@ -250,7 +255,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveRole(roleObj.id)}
-                                                className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                                 title="Remove this role entirely"
                                             >
                                                 <Trash2 size={18} />
@@ -261,7 +266,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                             {(roleObj.members || []).map(m => {
                                                 const memberDisplayName = formatName(m);
                                                 return (
-                                                <div key={m.id} className="flex items-center justify-between bg-orange-50/50 border border-orange-100 p-2 rounded-lg">
+                                                <div key={m.id || m.member_id} className="flex items-center justify-between bg-orange-50/50 border border-orange-100 p-2 rounded-lg">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 shrink-0 flex items-center justify-center">
                                                             {m.profile_image_url ?
@@ -271,7 +276,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                                         </div>
                                                         <span className="text-sm font-bold text-stone-800">{memberDisplayName}</span>
                                                     </div>
-                                                    <button type="button" onClick={() => handleRemoveMemberFromRole(roleObj.id, m.id)} className="text-stone-400 hover:text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors cursor-pointer" title="Remove Member">
+                                                    <button type="button" onClick={() => handleRemoveMemberFromRole(roleObj.id, m.id || m.member_id)} className="text-stone-400 hover:text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors cursor-pointer" title="Remove Member">
                                                         <X size={16} />
                                                     </button>
                                                 </div>
@@ -297,28 +302,27 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                             </div>
                         </div>
 
-                    </form>
-                </div>
+                    </div>
 
-                {/* Footer Controls */}
-                <div className="border-t border-stone-100 p-4 bg-stone-50 flex justify-end gap-3 shrink-0">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-5 py-2 text-stone-600 font-medium hover:bg-stone-200 rounded-lg transition-colors"
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        form="committee-form"
-                        disabled={loading}
-                        className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {loading ? 'Saving...' : <><CheckCircle2 size={18} /> {initialData ? 'Update Committee' : 'Save Committee'}</>}
-                    </button>
-                </div>
+                    {/* Footer Controls - Always pinned at bottom */}
+                    <div className="border-t border-stone-200 p-4 bg-stone-50 flex justify-end gap-3 shrink-0 z-10">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-5 py-2 text-stone-600 font-medium hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+                            disabled={loading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                        >
+                            {loading ? 'Saving...' : <><CheckCircle2 size={18} /> {initialData ? 'Update Committee' : 'Save Committee'}</>}
+                        </button>
+                    </div>
+                </form>
 
             </div>
         </div>
