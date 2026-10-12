@@ -3,18 +3,16 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { X, Sparkles, Calendar, MapPin, ExternalLink, ArrowRight, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-
-const toBnDigits = (num) => {
-    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return String(num ?? '').replace(/[0-9]/g, d => bnDigits[d]);
-};
-
-// Compute English year fallback from edition (Anchor: 45th in 1977, 95th in 2027)
-const getEnglishYear = (edition) => {
-    const ed = parseInt(edition, 10);
-    if (isNaN(ed)) return '';
-    return 1977 + (ed - 45);
-};
+import { 
+    toBnDigits, 
+    toEnDigits, 
+    getOrdinal, 
+    getEnglishYear, 
+    cleanDateString, 
+    formatBengaliCalendarDate, 
+    formatSammelanTime, 
+    formatSammelanTitle 
+} from '../utils/sammelanUtils';
 
 // Format English date into readable string
 const formatDisplayDate = (dateStr, edition, isBn) => {
@@ -39,16 +37,7 @@ const formatDisplayDate = (dateStr, edition, isBn) => {
     }
 };
 
-// Clean Date String: remove redundant parenthesized years, 'বঙ্গাব্দ', 'খ্রিঃ'
-const cleanDateString = (str) => {
-    if (!str) return '';
-    return str
-        .replace(/\s*\([^)]*\)/g, '')
-        .replace(/\s*বঙ্গাব্দ\s*/g, ' ')
-        .replace(/\s*(খ্রিঃ|খ্রিস্টাব্দ)\s*/g, ' ')
-        .replace(/,\s*$/, '')
-        .trim();
-};
+
 
 const BariSammelanModal = ({
     isOpen,
@@ -211,7 +200,7 @@ const BariSammelanModal = ({
                                             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-orange-200 shadow-2xs bg-stone-100">
                                                 <img
                                                     src={item.cover_image_url}
-                                                    alt={item.title || 'Sammelan Cover'}
+                                                    alt={formatSammelanTitle(item, isBn)}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                     loading="lazy"
                                                 />
@@ -244,7 +233,7 @@ const BariSammelanModal = ({
 
                                             {/* Sammelan Title */}
                                             <h4 className="font-serif font-bold text-stone-900 text-sm sm:text-base leading-snug group-hover:text-orange-950 transition-colors">
-                                                {item.title || (isBn ? `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন` : `${item.edition}th Gathering`)}
+                                                {formatSammelanTitle(item, isBn)}
                                             </h4>
 
                                             {/* Dates & Venue Info */}
@@ -252,14 +241,10 @@ const BariSammelanModal = ({
                                                 {(item.bengali_date || formattedDate) && (
                                                     <div className="flex items-center gap-1.5 flex-wrap">
                                                         <Calendar size={12} className="text-orange-700 shrink-0" />
-                                                        {cleanDateString(item.bengali_date) ? (
+                                                        {formatBengaliCalendarDate(item.bengali_date, isBn) && (
                                                             <span className="font-medium text-stone-850">
-                                                                {cleanDateString(item.bengali_date)}
+                                                                {formatBengaliCalendarDate(item.bengali_date, isBn)}
                                                             </span>
-                                                        ) : (
-                                                            item.bengali_date && (
-                                                                <span className="font-medium text-stone-850">{item.bengali_date}</span>
-                                                            )
                                                         )}
                                                         {formattedDate && (
                                                             <span className="text-stone-600 font-medium text-[11px]">
@@ -269,7 +254,7 @@ const BariSammelanModal = ({
                                                         {item.time && (
                                                             <span className="inline-flex items-center gap-1 text-stone-500 text-[11px] ml-1">
                                                                 <Clock size={10} className="text-stone-400" />
-                                                                {item.time}
+                                                                {formatSammelanTime(item.time, isBn)}
                                                             </span>
                                                         )}
                                                     </div>

@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
+import { formatSammelanTitle } from '../utils/sammelanUtils';
 import SammelanFormModal from '../components/SammelanFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import SammelanPhotoCollage from '../components/SammelanPhotoCollage';
@@ -295,7 +296,7 @@ const SammelanKotha = () => {
                     </h1>
 
                     <p className="text-amber-100/95 text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto">
-                        {t('৪৫তম থেকে ১০০তম ঐতিহাসিক বার্ষিক জ্ঞাতি সম্মেলন (১৯৭৭ – ২০৩২)', '45th to 100th Annual Lineage Gatherings (1977 – 2032)')}
+                        {t('৪৫তম থকে সকল ঐতিহাসিক জ্ঞাতি সম্মেলনের ইতিহাস(১৯৭৭ – ২০৩২)', '45th to 100th Annual Lineage Gatherings (1977 – 2032)')}
                     </p>
 
                     {/* Admin Add Button */}
@@ -423,7 +424,7 @@ const SammelanKotha = () => {
                                                     </span>
 
                                                     <h4 className="text-sm sm:text-base font-bold text-stone-900 font-serif">
-                                                        {isBn ? `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন` : `${item.edition}th Gathering`}
+                                                        {formatSammelanTitle(item, isBn)}
                                                     </h4>
 
                                                     {/* Bangla Year Only */}
@@ -525,7 +526,7 @@ const SammelanKotha = () => {
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => setDeleteModal({ isOpen: true, id: item.id, title: item.title || `${toBnDigits(item.edition)}তম সম্মেলন` })}
+                                                            onClick={() => setDeleteModal({ isOpen: true, id: item.id, title: formatSammelanTitle(item, isBn) })}
                                                             className="p-1.5 text-stone-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                                             title={t('মুছে ফেলুন', 'Delete')}
                                                         >
@@ -547,8 +548,8 @@ const SammelanKotha = () => {
                                                         <div className="pt-0.5 pb-1">
                                                             <SammelanPhotoCollage
                                                                 photos={photos}
-                                                                title={item.title || `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন`}
-                                                                onOpenPhoto={(idx) => handleOpenPhoto(photos, idx, item.title || `${toBnDigits(item.edition)}তম বংশীয় সম্মেলন`)}
+                                                                title={formatSammelanTitle(item, isBn)}
+                                                                onOpenPhoto={(idx) => handleOpenPhoto(photos, idx, formatSammelanTitle(item, isBn))}
                                                             />
                                                         </div>
                                                     );

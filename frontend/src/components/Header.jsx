@@ -79,7 +79,7 @@ const Header = () => {
   // Primary navigation items (desktop)
   const primaryNav = [
     { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon, exact: true },
-    { to: '/explorer', label: t('বংশতালিকা', 'Lineage Explorer'), icon: Map },
+    { to: '/explorer', label: t('বংশীয় বাড়িসমূহ', 'Lineage Explorer'), icon: Map },
     { to: '/directory', label: t('সদস্য অনুসন্ধান', 'Search Members'), icon: Search },
   ];
 
@@ -87,7 +87,7 @@ const Header = () => {
   const secondaryNav = [
     { to: '/history', label: t('আমাদের ঐতিহ্য', 'Our Heritage'), icon: BookOpen },
     { to: '/sammelan', label: t('সম্মেলনের ইতিহাস', 'History of Sammelan'), icon: Sparkles },
-    { to: '/relation', label: t('সম্পর্ক অনুসন্ধান', 'Find Relation'), icon: Users },
+    { to: '/relation', label: t('সম্পর্ক নির্ণয়', 'Find Relation'), icon: Users },
     { to: '/spouses', label: t('সহধর্মিণী তালিকা', 'Spouses Directory'), icon: Heart },
     { to: '/board', label: t('বিজ্ঞপ্তি ও কার্যক্রম', 'Events & Notices'), icon: Calendar },
     { to: '/committee', label: t('কমিটি বোর্ড', 'Committee Board'), icon: UsersRound },

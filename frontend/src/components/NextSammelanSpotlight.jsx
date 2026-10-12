@@ -5,20 +5,10 @@ import {
     ArrowRight, Map, ChevronRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { toBnDigits, getEnglishYear, formatSammelanTitle } from '../utils/sammelanUtils';
 import api from '../api/api';
 
-// Helper to convert English digits to Bengali digits
-const toBnDigits = (num) => {
-    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return String(num || '').replace(/[0-9]/g, d => bnDigits[d]);
-};
 
-// Calculate English Year from Edition (Anchor: 95th in 2027)
-const getEnglishYear = (edition) => {
-    const ed = parseInt(edition, 10);
-    if (isNaN(ed)) return '';
-    return 1977 + (ed - 45);
-};
 
 const NextSammelanSpotlight = () => {
     const { t, isBn, formatNumber } = useLanguage();
@@ -135,7 +125,7 @@ const NextSammelanSpotlight = () => {
                         </div>
 
                         <h3 className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-stone-900 tracking-tight leading-snug">
-                            {sammelan.title || (isBn ? `${toBnDigits(sammelan.edition)}তম বার্ষিক জ্ঞাতি সম্মেলন` : `${sammelan.edition}th Annual Barai Gathering`)}
+                            {formatSammelanTitle(sammelan, isBn)}
                         </h3>
                     </div>
 

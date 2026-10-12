@@ -418,8 +418,8 @@ const Explorer = () => {
         <div className="space-y-6 animate-fade-in relative">
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-orange-100 animate-slide-up flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">{t('ভৌগোলিক বংশধারা পরিভ্রমণ', 'Geographic Lineage Explorer')}</h1>
-                    <p className="text-stone-500 text-sm">{t('ভৌগোলিক কাঠামোর মাধ্যমে পূর্বপুরুষ ও আত্মীয়দের সন্ধান করুন।', 'Trace roots through the geographical hierarchy.')}</p>
+                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">{t('বংশের বাড়ি খুঁজুন এবং সদস্যদের সম্পর্কে জানুন', 'Search for houses and learn about members.')}</h1>
+                    <p className="text-stone-500 text-sm">{t('ক্রমান্বয়ে দেশ থেকে জেলা,উপজেলা,গ্রাম ও বাড়ি নির্বাচন করুন।', 'Select the country, district, upazila, village, and house in sequence.')}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
