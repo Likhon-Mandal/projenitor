@@ -6,7 +6,13 @@
   body {
     @apply bg-background text-stone font-sans;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-serif text-primary;
   }
 }
@@ -26,14 +32,16 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb,
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: #fdba74; /* orange-300 */
+  background: #fdba74;
+  /* orange-300 */
   border-radius: 9999px;
   transition: background-color 0.2s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover,
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: #ea580c; /* orange-600 */
+  background: #ea580c;
+  /* orange-600 */
 }
 
 .custom-scrollbar,
@@ -48,12 +56,15 @@
     transform: scale(0.9);
     box-shadow: 0 0 0 0 rgba(194, 65, 12, 0.85);
   }
+
   50% {
     transform: scale(1.25);
   }
+
   70% {
     box-shadow: 0 0 0 8px rgba(194, 65, 12, 0);
   }
+
   100% {
     transform: scale(0.9);
     box-shadow: 0 0 0 0 rgba(194, 65, 12, 0);

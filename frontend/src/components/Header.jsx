@@ -4,10 +4,11 @@ import {
   UserCircle, Search, Map, Home as HomeIcon, Menu,
   LogOut, LayoutDashboard, Trash2, Shield, Key, ChevronDown,
   Users, Calendar, UsersRound, Star, HelpCircle, Heart, BookOpen,
-  User, Sparkles, CheckCircle2
+  User, Sparkles, CheckCircle2, Smartphone, Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePWA } from '../context/PWAContext';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 import NotificationBell from './NotificationBell';
@@ -18,6 +19,7 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
   const { language, setLanguage, toggleLanguage, isBn, t, formatName, formatNumber } = useLanguage();
+  const { isInstalled, promptInstall } = usePWA();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -222,15 +224,14 @@ const Header = () => {
                 /* Logged In: Avatar button */
                 <button
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className={`relative p-0.5 rounded-full border-2 transition-all duration-200 active:scale-95 flex items-center justify-center cursor-pointer ${
-                    profileMenuOpen
+                  className={`relative p-0.5 rounded-full border-2 transition-all duration-200 active:scale-95 flex items-center justify-center cursor-pointer ${profileMenuOpen
                       ? 'border-yellow-400 ring-2 ring-yellow-400/40 shadow-lg'
                       : isSuperAdmin
-                      ? 'border-yellow-400 hover:ring-2 hover:ring-yellow-400/30'
-                      : isAdmin
-                      ? 'border-orange-400 hover:ring-2 hover:ring-orange-400/30'
-                      : 'border-orange-600 hover:border-yellow-400'
-                  }`}
+                        ? 'border-yellow-400 hover:ring-2 hover:ring-yellow-400/30'
+                        : isAdmin
+                          ? 'border-orange-400 hover:ring-2 hover:ring-orange-400/30'
+                          : 'border-orange-600 hover:border-yellow-400'
+                    }`}
                   aria-label="User Account Menu"
                   title={userName || 'My Profile'}
                 >
@@ -246,19 +247,17 @@ const Header = () => {
                     </div>
                   )}
                   {/* Status / Role indicator dot */}
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-orange-800 ${
-                    isSuperAdmin ? 'bg-yellow-400' : isAdmin ? 'bg-orange-400' : 'bg-emerald-400'
-                  }`} />
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-orange-800 ${isSuperAdmin ? 'bg-yellow-400' : isAdmin ? 'bg-orange-400' : 'bg-emerald-400'
+                    }`} />
                 </button>
               ) : (
                 /* Logged Out: Profile Icon button */
                 <button
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className={`flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer shadow-sm group ${
-                    profileMenuOpen
+                  className={`flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer shadow-sm group ${profileMenuOpen
                       ? 'bg-orange-700 border-yellow-400 text-yellow-400 shadow-md ring-2 ring-yellow-400/20'
                       : 'bg-orange-900/60 hover:bg-orange-700/80 border-orange-700/60 hover:border-yellow-400/50 text-orange-100 hover:text-yellow-400'
-                  }`}
+                    }`}
                   aria-label="Account Login and Activation"
                   title={t('প্রোফাইল ও একাউন্ট', 'Profile & Account')}
                 >
@@ -271,7 +270,7 @@ const Header = () => {
               {/* ─── Profile Dropdown Popup Box ─── */}
               {profileMenuOpen && (
                 <div className="absolute top-full right-0 mt-2.5 w-72 sm:w-80 bg-orange-950/95 backdrop-blur-xl border border-orange-700/60 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up divide-y divide-orange-800/60 text-white">
-                  
+
                   {user ? (
                     /* ── Logged In Content ── */
                     <>
@@ -293,13 +292,12 @@ const Header = () => {
                             {userName || t('সদস্য', 'Member')}
                           </p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              isSuperAdmin
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${isSuperAdmin
                                 ? 'bg-yellow-400 text-orange-950 shadow-sm'
                                 : isAdmin
-                                ? 'bg-orange-600 text-white shadow-sm'
-                                : 'bg-orange-800/90 text-orange-200'
-                            }`}>
+                                  ? 'bg-orange-600 text-white shadow-sm'
+                                  : 'bg-orange-800/90 text-orange-200'
+                              }`}>
                               <Shield className="w-2.5 h-2.5" />
                               {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Admin' : 'Member'}
                             </span>
@@ -405,6 +403,36 @@ const Header = () => {
                           <Key className="w-4 h-4 text-stone-400 group-hover:scale-110 transition-transform shrink-0" />
                           <span>{t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}</span>
                         </Link>
+
+                        {/* Use as App Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            promptInstall();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/10 transition-colors group cursor-pointer text-left"
+                        >
+                          <Smartphone className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <span className="truncate">{t('ফোনে অ্যাপ ব্যবহার করুন', 'Use as an App')}</span>
+                              {isInstalled && (
+                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                                  ✓ {t('ইনস্টল্ড', 'Installed')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-orange-300/60 font-normal truncate">
+                              {isInstalled 
+                                ? t('হোম স্ক্রিনে আইকন রয়েছে', 'Already added to Home Screen')
+                                : t('হোম স্ক্রিনে আইকন যুক্ত করুন', 'Add app icon to home screen')}
+                            </div>
+                          </div>
+                          {!isInstalled && (
+                            <Download className="w-3.5 h-3.5 text-yellow-400 opacity-70 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all shrink-0" />
+                          )}
+                        </button>
                       </div>
 
                       {/* Logout Action */}
@@ -484,6 +512,36 @@ const Header = () => {
                           <HelpCircle className="w-4 h-4 text-orange-400 shrink-0" />
                           <span>{t('আবেদনের অবস্থা ও পাসওয়ার্ড সেট', 'Check Status & Set Password')}</span>
                         </Link>
+
+                        {/* Use as App Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            promptInstall();
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-orange-900/60 hover:bg-orange-800 text-yellow-300 hover:text-yellow-200 border border-yellow-500/20 hover:border-yellow-400/50 transition-all font-semibold text-xs group cursor-pointer text-left active:scale-95"
+                        >
+                          <Smartphone className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition-transform shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between font-bold">
+                              <span>{t('ফোনে অ্যাপ হিসেবে ব্যবহার করুন', 'Use as an App')}</span>
+                              {isInstalled && (
+                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                                  ✓ {t('ইনস্টল্ড', 'Installed')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-orange-200/70 font-normal truncate">
+                              {isInstalled 
+                                ? t('হোম স্ক্রিনে আইকন রয়েছে', 'Already added to Home Screen')
+                                : t('হোম স্ক্রিনে আইকন যুক্ত করুন', 'Add app icon to phone')}
+                            </div>
+                          </div>
+                          {!isInstalled && (
+                            <Download className="w-3.5 h-3.5 text-yellow-400 opacity-80 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all shrink-0" />
+                          )}
+                        </button>
                       </div>
                     </>
                   )}

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { PWAProvider } from './context/PWAContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -37,69 +38,71 @@ function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          {/* Main app pages — with Layout (header + footer) */}
-          <Route path="/*" element={
-            <ErrorBoundary>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/explorer/*" element={<Explorer />} />
-                  <Route path="/directory" element={<Directory />} />
-                  <Route path="/member/:id" element={<Profile />} />
-                  <Route path="/board" element={<EventsAndNotices />} />
-                  <Route path="/help" element={<Help />} />
-                  <Route path="/history" element={<History />} />
-                  <Route path="/committee" element={<CommitteeBoard />} />
-                  <Route path="/eminent" element={<EminentFigures />} />
-                  <Route path="/admin" element={
-                    <ProtectedRoute requiredRole="admin">
-                      <Admin />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/relation" element={<FindRelation />} />
-                  <Route path="/sammelan" element={<SammelanKotha />} />
-                  <Route path="/sammelan-kotha" element={<SammelanKotha />} />
-                  <Route path="/spouses" element={<SpousesDirectory />} />
-                  <Route path="/recycle-bin" element={
-                    <ProtectedRoute requiredRole="admin">
-                      <RecycleBin />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/dashboard/superadmin" element={
-                    <ProtectedRoute requiredRole="superadmin">
-                      <SuperAdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/dashboard/admin" element={
-                    <ProtectedRoute requiredRole="admin">
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/dashboard/user" element={
-                    <ProtectedRoute>
-                      <UserDashboard />
-                    </ProtectedRoute>
-                  } />
+        <PWAProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Routes>
+            {/* Main app pages — with Layout (header + footer) */}
+            <Route path="/*" element={
+              <ErrorBoundary>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/explorer/*" element={<Explorer />} />
+                    <Route path="/directory" element={<Directory />} />
+                    <Route path="/member/:id" element={<Profile />} />
+                    <Route path="/board" element={<EventsAndNotices />} />
+                    <Route path="/help" element={<Help />} />
+                    <Route path="/history" element={<History />} />
+                    <Route path="/committee" element={<CommitteeBoard />} />
+                    <Route path="/eminent" element={<EminentFigures />} />
+                    <Route path="/admin" element={
+                      <ProtectedRoute requiredRole="admin">
+                        <Admin />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/relation" element={<FindRelation />} />
+                    <Route path="/sammelan" element={<SammelanKotha />} />
+                    <Route path="/sammelan-kotha" element={<SammelanKotha />} />
+                    <Route path="/spouses" element={<SpousesDirectory />} />
+                    <Route path="/recycle-bin" element={
+                      <ProtectedRoute requiredRole="admin">
+                        <RecycleBin />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/superadmin" element={
+                      <ProtectedRoute requiredRole="superadmin">
+                        <SuperAdminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/admin" element={
+                      <ProtectedRoute requiredRole="admin">
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/user" element={
+                      <ProtectedRoute>
+                        <UserDashboard />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Auth pages — now rendered with Navbar (Header) & Footer */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/user-auth" element={<UserAuth />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/change-password" element={
-                    <ProtectedRoute>
-                      <ChangePassword />
-                    </ProtectedRoute>
-                  } />
-                </Routes>
-              </Layout>
-            </ErrorBoundary>
-          } />
-        </Routes>
-      </Router>
-    </AuthProvider>
+                    {/* Auth pages — now rendered with Navbar (Header) & Footer */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/user-auth" element={<UserAuth />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/change-password" element={
+                      <ProtectedRoute>
+                        <ChangePassword />
+                      </ProtectedRoute>
+                    } />
+                  </Routes>
+                </Layout>
+              </ErrorBoundary>
+            } />
+          </Routes>
+        </Router>
+        </PWAProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, X, ArchiveRestore, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const ConfirmModal = ({ 
-    isOpen, 
-    onClose, 
-    onConfirm, 
-    message, 
-    title, 
+const ConfirmModal = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    message,
+    title,
     confirmText,
     cancelText,
     type = 'danger', // 'danger' | 'approve' | 'reject' | 'restore' | 'warning'
@@ -66,19 +66,18 @@ const ConfirmModal = ({
                 </button>
 
                 <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner ${
-                        isApprove
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner ${isApprove
                             ? 'bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50'
                             : isReject
                                 ? 'bg-red-100 text-red-600 ring-8 ring-red-50'
-                                : isRestore 
-                                    ? 'bg-green-100 text-green-700 ring-8 ring-green-50' 
-                                    : isPermanent 
-                                        ? 'bg-red-100 text-red-700 ring-8 ring-red-50' 
+                                : isRestore
+                                    ? 'bg-green-100 text-green-700 ring-8 ring-green-50'
+                                    : isPermanent
+                                        ? 'bg-red-100 text-red-700 ring-8 ring-red-50'
                                         : isWarning
                                             ? 'bg-amber-100 text-amber-700 ring-8 ring-amber-50'
                                             : 'bg-red-100 text-red-600 ring-8 ring-red-50'
-                    }`}>
+                        }`}>
                         {isApprove ? (
                             <CheckCircle2 size={36} />
                         ) : isReject ? (
@@ -92,9 +91,8 @@ const ConfirmModal = ({
                         )}
                     </div>
 
-                    <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-2 ${
-                        isApprove ? 'text-emerald-950' : (isReject || isPermanent) ? 'text-red-950' : 'text-stone-900'
-                    }`}>
+                    <h2 className={`text-xl sm:text-2xl font-serif font-bold mb-2 ${isApprove ? 'text-emerald-950' : (isReject || isPermanent) ? 'text-red-950' : 'text-stone-900'
+                        }`}>
                         {modalTitle}
                     </h2>
 
@@ -105,11 +103,11 @@ const ConfirmModal = ({
                     {/* Sure reminder: Mandatory confirmation checkbox for permanent deletion */}
                     {requireCheckbox && (
                         <label className="w-full flex items-start gap-3 text-left text-xs sm:text-sm text-red-950 bg-red-50/90 p-3.5 rounded-2xl border border-red-200/90 cursor-pointer select-none mb-6 transition-all hover:bg-red-100/70">
-                            <input 
-                                type="checkbox" 
-                                checked={acknowledged} 
-                                onChange={e => setAcknowledged(e.target.checked)} 
-                                className="mt-0.5 rounded text-red-700 focus:ring-red-600 w-4 h-4 cursor-pointer accent-red-700" 
+                            <input
+                                type="checkbox"
+                                checked={acknowledged}
+                                onChange={e => setAcknowledged(e.target.checked)}
+                                className="mt-0.5 rounded text-red-700 focus:ring-red-600 w-4 h-4 cursor-pointer accent-red-700"
                             />
                             <span className="font-medium font-sans">
                                 {finalCheckboxLabel}
@@ -132,8 +130,7 @@ const ConfirmModal = ({
                                 onConfirm();
                                 onClose();
                             }}
-                            className={`flex-1 py-3 px-4 text-white font-medium rounded-xl shadow-md transition-all active:scale-95 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none ${
-                                isApprove
+                            className={`flex-1 py-3 px-4 text-white font-medium rounded-xl shadow-md transition-all active:scale-95 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none ${isApprove
                                     ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20 font-bold'
                                     : isReject
                                         ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20 font-bold'
@@ -142,7 +139,7 @@ const ConfirmModal = ({
                                             : isPermanent
                                                 ? 'bg-red-700 hover:bg-red-800 shadow-red-700/20 font-bold'
                                                 : 'bg-red-600 hover:bg-red-700 shadow-red-600/20 font-bold'
-                            }`}
+                                }`}
                         >
                             {actionText}
                         </button>

@@ -143,19 +143,16 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
             <button
                 type="button"
                 onClick={() => setIsOpen(prev => !prev)}
-                className={`relative border transition-all duration-300 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 ${
-                    inNavbar
-                        ? `p-1.5 sm:p-2 rounded-xl ${
-                            isOpen 
-                                ? 'bg-orange-950 border-yellow-400 text-yellow-400 ring-2 ring-yellow-400/30' 
-                                : 'bg-orange-900/60 hover:bg-orange-700/80 border-orange-700/60 hover:border-yellow-400/50 text-orange-100 hover:text-yellow-400'
+                className={`relative border transition-all duration-300 flex items-center justify-center cursor-pointer shadow-xs active:scale-95 ${inNavbar
+                        ? `p-1.5 sm:p-2 rounded-xl ${isOpen
+                            ? 'bg-orange-950 border-yellow-400 text-yellow-400 ring-2 ring-yellow-400/30'
+                            : 'bg-orange-900/60 hover:bg-orange-700/80 border-orange-700/60 hover:border-yellow-400/50 text-orange-100 hover:text-yellow-400'
                         }`
-                        : `p-2.5 rounded-2xl ${
-                            isOpen 
-                                ? 'bg-orange-100/80 border-orange-400 text-orange-950 ring-2 ring-orange-200' 
-                                : 'bg-white hover:bg-orange-50/80 border-stone-200 hover:border-orange-300 text-stone-700 hover:text-orange-900 hover:shadow-md'
+                        : `p-2.5 rounded-2xl ${isOpen
+                            ? 'bg-orange-100/80 border-orange-400 text-orange-950 ring-2 ring-orange-200'
+                            : 'bg-white hover:bg-orange-50/80 border-stone-200 hover:border-orange-300 text-stone-700 hover:text-orange-900 hover:shadow-md'
                         }`
-                }`}
+                    }`}
                 title={t('বিজ্ঞপ্তি', 'Notifications')}
                 aria-label={t('বিজ্ঞপ্তি', 'Notifications')}
             >
@@ -163,9 +160,8 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
 
                 {/* Badge representing unseen notification count */}
                 {unseenCount > 0 && (
-                    <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 rounded-full bg-red-600 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center shadow-md animate-pulse border-2 ${
-                        inNavbar ? 'border-orange-800' : 'border-white'
-                    }`}>
+                    <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 rounded-full bg-red-600 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center shadow-md animate-pulse border-2 ${inNavbar ? 'border-orange-800' : 'border-white'
+                        }`}>
                         {unseenCount > 99 ? '99+' : formatNumber(unseenCount)}
                     </span>
                 )}
@@ -246,7 +242,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                             </div>
 
                                             {/* Clickable Heading */}
-                                            <p 
+                                            <p
                                                 className="text-xs font-bold line-clamp-2 leading-snug group-hover:text-orange-950 transition-colors"
                                                 style={{ color: '#1c1917' }}
                                             >

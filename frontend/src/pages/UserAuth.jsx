@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
-import { 
-    Phone, Mail, User, Lock, ArrowRight, ShieldCheck, Map, 
-    Eye, EyeOff, CheckCircle2, Clock, XCircle, AlertCircle, Sparkles 
+import {
+    Phone, Mail, User, Lock, ArrowRight, ShieldCheck, Map,
+    Eye, EyeOff, CheckCircle2, Clock, XCircle, AlertCircle, Sparkles
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import MemberSelector from '../components/MemberSelector';
@@ -14,7 +14,7 @@ const UserAuth = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
-    
+
     // mode: 'login' | 'register' | 'check' | 'set-password'
     const [mode, setMode] = useState('login');
     const [mobileNumber, setMobileNumber] = useState('');
@@ -66,7 +66,7 @@ const UserAuth = () => {
             });
             // Defensive: res.data.token and res.data.user
             login(res.data.token, res.data.user);
-            
+
             // Redirect based on role
             if (res.data.user.role === 'superadmin') {
                 navigate('/dashboard/superadmin');
@@ -131,7 +131,7 @@ const UserAuth = () => {
         try {
             const res = await api.post('/users/check-status', { mobile_number: mobileNumber.trim() });
             const { status, needsPassword } = res.data;
-            
+
             if (status === 'active') {
                 setStatusInfo({
                     type: 'active',
@@ -206,20 +206,20 @@ const UserAuth = () => {
         <div className="min-h-[70vh] flex flex-col justify-center py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden rounded-3xl">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-25" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #ea580c 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
-            
+
             <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
                 {/* Header Icon */}
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-800 to-red-800 rounded-2xl mx-auto flex items-center justify-center shadow-xl transform hover:rotate-6 transition-transform mb-5 border border-yellow-500/30">
                     <ShieldCheck className="w-9 h-9 text-yellow-400" />
                 </div>
-                
+
                 <h1 className="text-center text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 font-serif">
-                    {mode === 'register' ? t('অ্যাকাউন্ট চালু করুন', 'Activate Your Account') : 
-                     mode === 'check' ? t('আবেদনের অবস্থা যাচাই', 'Check Application Status') :
-                     mode === 'set-password' ? t('পাসওয়ার্ড নির্ধারণ করুন', 'Set Account Password') :
-                     t('সদস্য ও এডমিন লগইন', 'Member & Admin Login')}
+                    {mode === 'register' ? t('অ্যাকাউন্ট চালু করুন', 'Activate Your Account') :
+                        mode === 'check' ? t('আবেদনের অবস্থা যাচাই', 'Check Application Status') :
+                            mode === 'set-password' ? t('পাসওয়ার্ড নির্ধারণ করুন', 'Set Account Password') :
+                                t('সদস্য ও এডমিন লগইন', 'Member & Admin Login')}
                 </h1>
-                
+
                 <p className="mt-1.5 text-center text-xs sm:text-sm text-stone-600">
                     {t('বাড়ৈ বংশের ইতিবৃত্ত — পারিবারিক ডাটাবেস পোর্টাল', 'Projenitor — Ancestral Family Database Portal')}
                 </p>
@@ -237,39 +237,36 @@ const UserAuth = () => {
             <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
                 {/* Main Card */}
                 <div className="bg-white py-7 px-5 shadow-2xl sm:rounded-3xl sm:px-8 border border-orange-200/80">
-                    
+
                     {/* Navigation Tabs */}
                     <div className="grid grid-cols-3 gap-1 p-1 bg-orange-100/80 rounded-2xl mb-6 border border-orange-200 text-xs font-bold">
                         <button
                             type="button"
                             onClick={() => switchMode('login')}
-                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${
-                                mode === 'login'
+                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${mode === 'login'
                                     ? 'bg-orange-800 text-yellow-400 shadow-md font-black'
                                     : 'text-stone-700 hover:text-orange-900 hover:bg-orange-200/50'
-                            }`}
+                                }`}
                         >
                             {t('লগইন', 'Login')}
                         </button>
                         <button
                             type="button"
                             onClick={() => switchMode('register')}
-                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${
-                                mode === 'register'
+                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${mode === 'register'
                                     ? 'bg-red-800 text-yellow-400 shadow-md font-black'
                                     : 'text-stone-700 hover:text-red-900 hover:bg-orange-200/50'
-                            }`}
+                                }`}
                         >
                             {t('অ্যাকাউন্ট চালু', 'Activate')}
                         </button>
                         <button
                             type="button"
                             onClick={() => switchMode('check')}
-                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${
-                                mode === 'check' || mode === 'set-password'
+                            className={`py-2 px-1 rounded-xl transition-all duration-200 text-center truncate ${mode === 'check' || mode === 'set-password'
                                     ? 'bg-orange-800 text-yellow-400 shadow-md font-black'
                                     : 'text-stone-700 hover:text-orange-900 hover:bg-orange-200/50'
-                            }`}
+                                }`}
                         >
                             {t('স্ট্যাটাস', 'Status')}
                         </button>
@@ -277,17 +274,16 @@ const UserAuth = () => {
 
                     {/* Status Info Notification Box */}
                     {statusInfo && (
-                        <div className={`mb-5 p-3.5 rounded-2xl text-xs sm:text-sm font-medium border flex items-start gap-2.5 ${
-                            statusInfo.type === 'approved' ? 'bg-blue-50 text-blue-900 border-blue-200' :
-                            statusInfo.type === 'active' || statusInfo.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
-                            statusInfo.type === 'rejected' ? 'bg-red-50 text-red-900 border-red-200' :
-                            'bg-amber-50 text-amber-900 border-amber-200'
-                        }`}>
+                        <div className={`mb-5 p-3.5 rounded-2xl text-xs sm:text-sm font-medium border flex items-start gap-2.5 ${statusInfo.type === 'approved' ? 'bg-blue-50 text-blue-900 border-blue-200' :
+                                statusInfo.type === 'active' || statusInfo.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
+                                    statusInfo.type === 'rejected' ? 'bg-red-50 text-red-900 border-red-200' :
+                                        'bg-amber-50 text-amber-900 border-amber-200'
+                            }`}>
                             {statusInfo.type === 'approved' && <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />}
                             {(statusInfo.type === 'active' || statusInfo.type === 'success') && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />}
                             {statusInfo.type === 'rejected' && <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />}
                             {statusInfo.type === 'pending' && <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-                            
+
                             <div className="flex-1 leading-relaxed">
                                 {statusInfo.message}
                                 {statusInfo.type === 'active' && (
@@ -340,8 +336,8 @@ const UserAuth = () => {
                                     <label className="block text-xs font-bold uppercase tracking-wider text-stone-700">
                                         {t('পাসওয়ার্ড', 'Password')}
                                     </label>
-                                    <Link 
-                                        to="/forgot-password" 
+                                    <Link
+                                        to="/forgot-password"
                                         className="text-xs text-orange-700 hover:text-orange-900 font-semibold hover:underline"
                                     >
                                         {t('পাসওয়ার্ড ভুলে গেছেন?', 'Forgot?')}
@@ -423,7 +419,7 @@ const UserAuth = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    <MemberSelector 
+                                    <MemberSelector
                                         label={t('বংশতালিকা থেকে আপনার নাম খুঁজুন *', 'Search Your Name in Lineage Tree *')}
                                         selectedMember={null}
                                         disableActive={true}

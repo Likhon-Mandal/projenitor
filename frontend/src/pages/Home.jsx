@@ -70,8 +70,8 @@ const CompactListItem = ({ title, date, tag, type, to, targetId, isBn, adminActi
     const displayTag = tag ? (
         isBn ? (
             tag === 'Event' ? 'আয়োজন' :
-            tag === 'Notice' ? 'বিজ্ঞপ্তি' :
-            tag
+                tag === 'Notice' ? 'বিজ্ঞপ্তি' :
+                    tag
         ) : tag
     ) : (isBn ? (type === 'alert' ? 'জরুরি' : 'সহায়তা') : (type === 'alert' ? 'Alert' : 'Help'));
 
@@ -86,13 +86,12 @@ const CompactListItem = ({ title, date, tag, type, to, targetId, isBn, adminActi
             >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     {/* Badge */}
-                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-colors ${
-                        isAlert
+                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-colors ${isAlert
                             ? 'bg-rose-100 text-rose-900 border border-rose-200/80'
                             : tag === 'Event' || tag === 'আয়োজন'
-                            ? 'bg-amber-100 text-amber-900 border border-amber-200/80'
-                            : 'bg-orange-100 text-orange-900 border border-orange-200/80'
-                    }`}>
+                                ? 'bg-amber-100 text-amber-900 border border-amber-200/80'
+                                : 'bg-orange-100 text-orange-900 border border-orange-200/80'
+                        }`}>
                         {displayTag}
                     </span>
 
@@ -185,10 +184,10 @@ const PillarCard = ({ person, onOpenProfile, isBn, t, formatName, formatOccupati
                     {/* Specific Tag Badge Placed at Avatar's Lower Side */}
                     <div className="flex items-center justify-center -mt-3 mb-3 relative z-20">
                         <span className={`inline-flex items-center px-3.5 py-0.5 rounded-full text-xs font-bold leading-snug shadow-sm tracking-wide transition-transform group-hover:scale-105 duration-300 ${isPresident
-                                ? 'bg-gradient-to-r from-red-900 via-amber-800 to-yellow-700 text-amber-100 border border-amber-300/60 shadow-amber-900/20'
-                                : isCommittee
-                                    ? 'bg-gradient-to-r from-red-900 via-orange-800 to-amber-900 text-amber-100 border border-amber-300/40 shadow-red-950/20'
-                                    : 'bg-gradient-to-r from-amber-600 via-yellow-600 to-orange-600 text-white border border-yellow-200/50 shadow-amber-800/20'
+                            ? 'bg-gradient-to-r from-red-900 via-amber-800 to-yellow-700 text-amber-100 border border-amber-300/60 shadow-amber-900/20'
+                            : isCommittee
+                                ? 'bg-gradient-to-r from-red-900 via-orange-800 to-amber-900 text-amber-100 border border-amber-300/40 shadow-red-950/20'
+                                : 'bg-gradient-to-r from-amber-600 via-yellow-600 to-orange-600 text-white border border-yellow-200/50 shadow-amber-800/20'
                             }`}>
                             <span>{person.badge}</span>
                         </span>
@@ -702,8 +701,8 @@ const Home = () => {
                                             key={idx}
                                             onClick={() => setCurrentPage(idx)}
                                             className={`transition-all duration-300 rounded-full ${currentPage === idx
-                                                    ? 'w-7 h-2.5 bg-gradient-to-r from-orange-700 to-amber-600 shadow-sm'
-                                                    : 'w-2.5 h-2.5 bg-stone-300 hover:bg-stone-400'
+                                                ? 'w-7 h-2.5 bg-gradient-to-r from-orange-700 to-amber-600 shadow-sm'
+                                                : 'w-2.5 h-2.5 bg-stone-300 hover:bg-stone-400'
                                                 }`}
                                             title={`${t('পৃষ্ঠা', 'Page')} ${formatNumber(idx + 1)}`}
                                             aria-label={`Go to page ${idx + 1}`}

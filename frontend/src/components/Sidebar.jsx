@@ -2,16 +2,19 @@ import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home as HomeIcon, Map, Search, Users, Calendar, UsersRound,
-    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard, Heart, BookOpen, Sparkles
+    Star, HelpCircle, Trash2, Shield, X, LogOut, Key, LayoutDashboard, Heart, BookOpen, Sparkles,
+    Smartphone, Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePWA } from '../context/PWAContext';
 
 const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout, isAdmin, isSuperAdmin } = useAuth();
     const { language, setLanguage, toggleLanguage, isBn, t, formatName, formatNumber } = useLanguage();
+    const { isInstalled, promptInstall } = usePWA();
 
     const navItems = [
         { to: '/', label: t('বাড়ি', 'Home'), icon: HomeIcon },
@@ -164,6 +167,40 @@ const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
                         </>
                     )}
                 </nav>
+
+                {/* PWA App Install Action */}
+                <div className="px-3 py-2 border-t border-orange-800/80">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onClose();
+                            promptInstall();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-orange-950 to-orange-900 border border-yellow-500/40 text-yellow-300 hover:text-yellow-200 transition-all active:scale-95 shadow-md group cursor-pointer text-left"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-orange-800 border border-yellow-400/30 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform shrink-0">
+                            <Smartphone className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between font-bold text-xs">
+                                <span className="truncate">{t('ফোনে অ্যাপ ইনস্টল করুন', 'Install Phone App')}</span>
+                                {isInstalled && (
+                                    <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950 px-1 py-0.2 rounded border border-emerald-500/30">
+                                        ✓ {t('যুক্ত আছে', 'Installed')}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-[10px] text-orange-200/70 truncate">
+                                {isInstalled
+                                    ? t('হোম স্ক্রিনে অলরেডি আছে', 'Already on home screen')
+                                    : t('হোম স্ক্রিন থেকে সহজে ব্যবহার', 'Fast home screen access')}
+                            </div>
+                        </div>
+                        {!isInstalled && (
+                            <Download className="w-3.5 h-3.5 text-yellow-400 opacity-80 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all shrink-0" />
+                        )}
+                    </button>
+                </div>
 
                 {/* Bottom Actions */}
                 <div className="p-3 border-t border-orange-800 space-y-1">

@@ -2,6 +2,8 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
+import InstallAppBanner from './InstallAppBanner';
+import InstallAppModal from './InstallAppModal';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -14,6 +16,8 @@ const Layout = ({ children }) => {
         {children}
       </main>
       <Footer />
+      <InstallAppBanner />
+      <InstallAppModal />
     </div>
   );
 };

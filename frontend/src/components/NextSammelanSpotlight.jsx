@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-    Calendar, MapPin, Home as HomeIcon, Clock, Sparkles, 
-    ArrowRight, Map, ChevronRight 
+import {
+    Calendar, MapPin, Home as HomeIcon, Clock, Sparkles,
+    ArrowRight, Map, ChevronRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
@@ -75,9 +75,9 @@ const NextSammelanSpotlight = () => {
 
     // Full Address for Host Bari box
     const fullAddress = sammelan.venue_address || [
-        sammelan.venue_name, 
-        sammelan.village_name, 
-        sammelan.upazila_name, 
+        sammelan.venue_name,
+        sammelan.village_name,
+        sammelan.upazila_name,
         sammelan.district_name
     ].filter(Boolean).join(', ');
 
@@ -85,7 +85,7 @@ const NextSammelanSpotlight = () => {
     const getAreaAddressWithoutBari = () => {
         let addr = (sammelan.venue_address || '').trim();
         const venueName = (sammelan.venue_name || sammelan.home_name || '').trim();
-        
+
         if (venueName && addr) {
             if (addr.startsWith(venueName)) {
                 addr = addr.slice(venueName.length).replace(/^[, \s]+/, '').trim();
@@ -110,7 +110,7 @@ const NextSammelanSpotlight = () => {
 
             {/* Spotlight Card */}
             <div className="relative bg-gradient-to-b from-white via-orange-50/40 to-amber-50/50 rounded-3xl p-5 sm:p-6 md:p-7 border-2 border-amber-400/70 shadow-2xl shadow-orange-950/15 backdrop-blur-md transition-all duration-300 hover:shadow-orange-950/20 hover:border-amber-500">
-                
+
                 {/* Traditional Decorative Top Accent (Single line with high-contrast beating dot & larger font) */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 sm:px-6 sm:py-2 bg-gradient-to-r from-orange-800 via-amber-600 to-orange-800 rounded-full border-2 border-amber-300 shadow-lg flex items-center justify-center whitespace-nowrap z-10">
                     <span className="relative flex h-2.5 w-2.5 mr-2 shrink-0 items-center justify-center">
@@ -124,7 +124,7 @@ const NextSammelanSpotlight = () => {
 
                 {/* Main Content */}
                 <div className="text-center mt-2.5 space-y-3.5">
-                    
+
                     {/* Pill Badge (Shows ONLY English date) */}
                     <div className="space-y-1.5">
                         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-100/80 border border-orange-200 text-orange-900 text-xs sm:text-sm font-bold font-sans">
@@ -141,7 +141,7 @@ const NextSammelanSpotlight = () => {
 
                     {/* Venue & Location Highlights Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-left">
-                        
+
                         {/* 1. Date & Time (Bengali date & matching English date, no bongabdo/khistabdo) */}
                         <div className="bg-white/80 p-3.5 rounded-2xl border border-orange-100 shadow-xs flex items-start gap-3 hover:border-amber-300 transition-colors">
                             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-100/80 border border-orange-200 flex items-center justify-center text-orange-800 shrink-0">
@@ -199,11 +199,10 @@ const NextSammelanSpotlight = () => {
                             return (
                                 <CardWrapper
                                     {...wrapperProps}
-                                    className={`bg-white/80 p-3.5 rounded-2xl border border-orange-100 shadow-xs flex items-start gap-3 transition-all duration-200 text-left ${
-                                        mapUrl 
-                                            ? 'hover:border-amber-400 hover:bg-orange-50/70 hover:shadow-md cursor-pointer group/addr' 
+                                    className={`bg-white/80 p-3.5 rounded-2xl border border-orange-100 shadow-xs flex items-start gap-3 transition-all duration-200 text-left ${mapUrl
+                                            ? 'hover:border-amber-400 hover:bg-orange-50/70 hover:shadow-md cursor-pointer group/addr'
                                             : 'hover:border-amber-300'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-100/80 border border-red-200 flex items-center justify-center text-red-800 shrink-0 group-hover/addr:scale-105 transition-transform">
                                         <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-red-700" />

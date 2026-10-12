@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
     X, ArrowLeft, MapPin, Briefcase, Calendar, Droplet, User, Edit, Trash2, Heart,
-    Building, Phone, Globe, GraduationCap, Award, Facebook, Twitter, 
+    Building, Phone, Globe, GraduationCap, Award, Facebook, Twitter,
     Instagram, Linkedin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -241,11 +241,11 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
     const overlayRole = overlayTarget?.overlayRole;
     const overlayIsMale = overlayTarget ? (
         overlayRole === 'father' ? true :
-        overlayRole === 'mother' ? false :
-        overlayRole === 'husband' ? true :
-        overlayRole === 'wife' ? false :
-        overlayRole === 'spouse' ? (overlayTarget.gender === 'Male') :
-        (overlayTarget.gender === 'Male' || (!overlayTarget.gender && isFemale))
+            overlayRole === 'mother' ? false :
+                overlayRole === 'husband' ? true :
+                    overlayRole === 'wife' ? false :
+                        overlayRole === 'spouse' ? (overlayTarget.gender === 'Male') :
+                            (overlayTarget.gender === 'Male' || (!overlayTarget.gender && isFemale))
     ) : true;
     const overlayDisplayName = formatName(overlayTarget);
 
@@ -324,11 +324,11 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
     const overlayTheme = getOverlayTheme();
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-stone-950/80 backdrop-blur-md transition-opacity"
             onClick={onClose}
         >
-            <div 
+            <div
                 className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-200 relative max-h-[92vh] md:h-[640px] flex flex-col md:flex-row border border-stone-100"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -358,314 +358,313 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                         </button>
                     )}
 
-                {/* ── Left Panel ───────────────────────────────────────── */}
-                <div className={`md:w-[38%] ${theme.panel} p-6 pt-9 sm:p-8 md:p-6 md:sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
-                    {/* Dot pattern overlay */}
-                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+                    {/* ── Left Panel ───────────────────────────────────────── */}
+                    <div className={`md:w-[38%] ${theme.panel} p-6 pt-9 sm:p-8 md:p-6 md:sm:p-8 text-white flex flex-col items-center justify-center relative overflow-hidden shrink-0`}>
+                        {/* Dot pattern overlay */}
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
-                    {/* Role & Eminent Badges: on mobile sit side-by-side with gap to prevent overlap */}
-                    {((themeKey !== 'default') || member.eminent_category || member.category) && (
-                        <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 z-20 px-10 md:px-0 max-w-[340px]">
-                            {(themeKey !== 'default') && (
-                                <div className={`flex items-center gap-1.5 border rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
-                                    <span className="text-[11px]">{theme.labelIcon}</span>
-                                    {isBn ? theme.label : theme.labelEn}
-                                </div>
-                            )}
-                            {(member.eminent_category || member.category) && (
-                                <div className={`flex items-center gap-1.5 border rounded-full px-3.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
-                                    {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
-                                        <GraduationCap size={12} className="text-yellow-300" />
-                                    ) : (
-                                        <Award size={10} />
-                                    )}
-                                    {member.eminent_category || member.category}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Avatar */}
-                    <div className="relative mb-4 sm:mb-6 flex flex-col items-center">
-                        <div className="relative">
-                            <div className={`w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full border-4 p-1.5 shadow-2xl relative z-10 mx-auto ${theme.avatarBorder}`}>
-                                <div className={`w-full h-full rounded-full overflow-hidden ${theme.avatarBg} backdrop-blur-md flex items-center justify-center`}>
-                                    {loading ? (
-                                        <div className="w-8 h-8 border-3 border-white/50 border-t-white rounded-full animate-spin" />
-                                    ) : member.profile_image_url ? (
-                                        <img src={member.profile_image_url} alt={displayName} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User size={68} className="sm:size-24 text-white/40" />
-                                    )}
-                                </div>
+                        {/* Role & Eminent Badges: on mobile sit side-by-side with gap to prevent overlap */}
+                        {((themeKey !== 'default') || member.eminent_category || member.category) && (
+                            <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5 z-20 px-10 md:px-0 max-w-[340px]">
+                                {(themeKey !== 'default') && (
+                                    <div className={`flex items-center gap-1.5 border rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
+                                        <span className="text-[11px]">{theme.labelIcon}</span>
+                                        {isBn ? theme.label : theme.labelEn}
+                                    </div>
+                                )}
+                                {(member.eminent_category || member.category) && (
+                                    <div className={`flex items-center gap-1.5 border rounded-full px-3.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-xl whitespace-nowrap ${theme.categoryBadge}`}>
+                                        {(member.eminent_category || member.category) === 'কৃতি শিক্ষার্থী' ? (
+                                            <GraduationCap size={12} className="text-yellow-300" />
+                                        ) : (
+                                            <Award size={10} />
+                                        )}
+                                        {member.eminent_category || member.category}
+                                    </div>
+                                )}
                             </div>
-                            {(member.level || member.generation_level) && (
-                                <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[11px] font-black px-3 sm:px-3.5 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap ${theme.genBadge}`}>
-                                    Gen {member.level || member.generation_level}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                        )}
 
-                    {/* Name & ID */}
-                    <div className="text-center relative z-10">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
-                                {displayName}
-                            </h2>
-                            {(member.is_active || member.user_status === 'active' || member.user_account?.status === 'active') && (
-                                <VerifiedBadge size={22} />
+                        {/* Avatar */}
+                        <div className="relative mb-4 sm:mb-6 flex flex-col items-center">
+                            <div className="relative">
+                                <div className={`w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full border-4 p-1.5 shadow-2xl relative z-10 mx-auto ${theme.avatarBorder}`}>
+                                    <div className={`w-full h-full rounded-full overflow-hidden ${theme.avatarBg} backdrop-blur-md flex items-center justify-center`}>
+                                        {loading ? (
+                                            <div className="w-8 h-8 border-3 border-white/50 border-t-white rounded-full animate-spin" />
+                                        ) : member.profile_image_url ? (
+                                            <img src={member.profile_image_url} alt={displayName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User size={68} className="sm:size-24 text-white/40" />
+                                        )}
+                                    </div>
+                                </div>
+                                {(member.level || member.generation_level) && (
+                                    <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[11px] font-black px-3 sm:px-3.5 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap ${theme.genBadge}`}>
+                                        Gen {member.level || member.generation_level}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Name & ID */}
+                        <div className="text-center relative z-10">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
+                                    {displayName}
+                                </h2>
+                                {(member.is_active || member.user_status === 'active' || member.user_account?.status === 'active') && (
+                                    <VerifiedBadge size={22} />
+                                )}
+                            </div>
+                            <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
+                                <div className={`h-px w-4 sm:w-6 ${theme.divider}`} />
+                                <p className={`text-[8px] sm:text-[9px] uppercase tracking-[0.2em] ${theme.idText}`}>
+                                    ID: {String(member.id).slice(0, 8)}
+                                </p>
+                                <div className={`h-px w-4 sm:w-6 ${theme.divider}`} />
+                            </div>
+                            {member.alive === false && (
+                                <span className="inline-block text-[10px] font-semibold text-stone-200 bg-stone-900/60 border border-white/20 px-2.5 py-0.5 rounded-full">
+                                    {t('স্বর্গীয়', 'Deceased')}
+                                </span>
                             )}
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-                            <div className={`h-px w-4 sm:w-6 ${theme.divider}`} />
-                            <p className={`text-[8px] sm:text-[9px] uppercase tracking-[0.2em] ${theme.idText}`}>
-                                ID: {String(member.id).slice(0, 8)}
-                            </p>
-                            <div className={`h-px w-4 sm:w-6 ${theme.divider}`} />
-                        </div>
-                        {member.alive === false && (
-                            <span className="inline-block text-[10px] font-semibold text-stone-200 bg-stone-900/60 border border-white/20 px-2.5 py-0.5 rounded-full">
-                                {t('স্বর্গীয়', 'Deceased')}
-                            </span>
+
+                        {/* Admin Buttons */}
+                        {showActions && isAdmin && (onEdit || onDelete) && (
+                            <div className="flex items-center gap-2 mt-4 relative z-10">
+                                {onEdit && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { onClose(); onEdit(member); }}
+                                        className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all active:scale-95 shadow-xs cursor-pointer"
+                                        title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
+                                    >
+                                        <Edit size={15} />
+                                    </button>
+                                )}
+                                {onDelete && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { onClose(); onDelete(member); }}
+                                        className="p-2 bg-red-600/30 hover:bg-red-600/50 text-red-200 rounded-full transition-all active:scale-95 shadow-xs cursor-pointer border border-red-400/30"
+                                        title={t('সদস্য মুছুন', 'Delete Member')}
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
 
-                    {/* Admin Buttons */}
-                    {showActions && isAdmin && (onEdit || onDelete) && (
-                        <div className="flex items-center gap-2 mt-4 relative z-10">
-                            {onEdit && (
-                                <button
-                                    type="button"
-                                    onClick={() => { onClose(); onEdit(member); }}
-                                    className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all active:scale-95 shadow-xs cursor-pointer"
-                                    title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
-                                >
-                                    <Edit size={15} />
-                                </button>
-                            )}
-                            {onDelete && (
-                                <button
-                                    type="button"
-                                    onClick={() => { onClose(); onDelete(member); }}
-                                    className="p-2 bg-red-600/30 hover:bg-red-600/50 text-red-200 rounded-full transition-all active:scale-95 shadow-xs cursor-pointer border border-red-400/30"
-                                    title={t('সদস্য মুছুন', 'Delete Member')}
-                                >
-                                    <Trash2 size={15} />
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+                    {/* ── Right Panel ──────────────────────────────────────── */}
+                    <div className="md:w-[62%] p-5 sm:p-8 bg-white relative flex flex-col min-h-0 overflow-hidden">
+                        {/* Desktop Close Button: only shown on md+ screens */}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="hidden md:block absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10 cursor-pointer"
+                            title="Close"
+                        >
+                            <X size={18} />
+                        </button>
 
-                {/* ── Right Panel ──────────────────────────────────────── */}
-                <div className="md:w-[62%] p-5 sm:p-8 bg-white relative flex flex-col min-h-0 overflow-hidden">
-                    {/* Desktop Close Button: only shown on md+ screens */}
-                    <button 
-                        type="button"
-                        onClick={onClose} 
-                        className="hidden md:block absolute top-4 sm:top-6 right-4 sm:right-6 p-2 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full transition-all z-10 cursor-pointer"
-                        title="Close"
-                    >
-                        <X size={18} />
-                    </button>
-
-                    <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3.5 sm:gap-y-4 mt-2 sm:mt-4 overflow-y-auto pr-2 custom-scrollbar">
-                        {/* ── Column 1: Personal Info ── */}
-                        <div className="space-y-4">
-                            <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] border-b pb-2 mb-4 ${theme.headingColor} ${theme.headingBorder}`}>
-                                {t('ব্যক্তিগত তথ্য', 'Personal Info')}
-                            </h4>
-                            <div className="grid grid-cols-1 gap-3">
-                                <InfoItem 
-                                    theme={theme}
-                                    icon={<Calendar size={14} />} 
-                                    label={t('জন্ম তারিখ', 'Birth Date')} 
-                                    value={
-                                        <React.Fragment>
-                                            {member.birth_date ? new Date(member.birth_date).toLocaleDateString() : t('অজানা', 'Unknown')}
-                                            {member.alive === false && member.death_date && (
-                                                <span className="text-stone-400 font-normal"> — {new Date(member.death_date).toLocaleDateString()}</span>
-                                            )}
-                                        </React.Fragment>
-                                    } 
-                                />
-                                <InfoItem theme={theme} icon={<Briefcase size={14} />} label={t('পেশা', 'Occupation')} value={formatOccupation(member.occupation)} />
-                                <InfoItem theme={theme} icon={<Building size={14} />} label={t('কর্মস্থল', 'Workplace')} value={member.workplace} />
-                                <InfoItem theme={theme} icon={<GraduationCap size={14} />} label={t('শিক্ষাগত যোগ্যতা', 'Educational Background')} value={member.education} />
-                                <InfoItem theme={theme} icon={<Droplet size={14} />} label={t('রক্তের গ্রুপ', 'Blood Group')} value={member.blood_group} highlight />
-                                <InfoItem theme={theme} icon={<MapPin size={14} />} label={t('আদি গ্রাম', 'Ancestral Village')} value={member.village || member.location || member.ancestral_village} />
-                                <InfoItem theme={theme} icon={<MapPin size={14} />} label={t('বর্তমান ঠিকানা', 'Current Location')} value={member.present_address} />
-                            </div>
-                        </div>
-
-                        {/* ── Column 2: Contact & Family ── */}
-                        <div className="space-y-4">
-                            <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] border-b pb-2 mb-4 ${theme.headingColor} ${theme.headingBorder}`}>
-                                {t('যোগাযোগ ও পরিবার', 'Contact & Family')}
-                            </h4>
-                            <div className="grid grid-cols-1 gap-3">
-                                <InfoItem 
-                                    theme={theme}
-                                    icon={<Phone size={14} />} 
-                                    label={t('যোগাযোগ নম্বর', 'Contact Number')} 
-                                    value={
-                                        member.contact_number ? (
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {member.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
-                                                    const cleanNum = num.trim();
-                                                    if (!cleanNum) return null;
-                                                    return (
-                                                        <a 
-                                                            key={i} 
-                                                            href={`tel:${cleanNum}`} 
-                                                            className="text-orange-900 hover:text-orange-950 hover:underline font-bold bg-orange-100/60 hover:bg-orange-100 px-2 py-0.5 rounded text-xs transition"
-                                                        >
-                                                            {cleanNum}
-                                                        </a>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : 'N/A'
-                                    } 
-                                />
-                                {member.social_media && member.social_media.trim() ? (
+                        <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3.5 sm:gap-y-4 mt-2 sm:mt-4 overflow-y-auto pr-2 custom-scrollbar">
+                            {/* ── Column 1: Personal Info ── */}
+                            <div className="space-y-4">
+                                <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] border-b pb-2 mb-4 ${theme.headingColor} ${theme.headingBorder}`}>
+                                    {t('ব্যক্তিগত তথ্য', 'Personal Info')}
+                                </h4>
+                                <div className="grid grid-cols-1 gap-3">
                                     <InfoItem
                                         theme={theme}
-                                        icon={
-                                            member.social_media.toLowerCase().includes('facebook') ? <Facebook size={14} /> :
-                                            member.social_media.toLowerCase().includes('instagram') ? <Instagram size={14} /> :
-                                            member.social_media.toLowerCase().includes('twitter') || member.social_media.toLowerCase().includes('x.com') ? <Twitter size={14} /> :
-                                            member.social_media.toLowerCase().includes('linkedin') ? <Linkedin size={14} /> :
-                                            <Globe size={14} />
-                                        }
-                                        label={t('সামাজিক যোগাযোগ', 'Social Media')}
+                                        icon={<Calendar size={14} />}
+                                        label={t('জন্ম তারিখ', 'Birth Date')}
                                         value={
-                                            <a 
-                                                href={member.social_media.startsWith('http') ? member.social_media : `https://${member.social_media}`} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                className="text-blue-600 hover:text-blue-800 hover:underline"
-                                            >
-                                                {t('প্রোফাইল দেখুন', 'Visit Profile')}
-                                            </a>
+                                            <React.Fragment>
+                                                {member.birth_date ? new Date(member.birth_date).toLocaleDateString() : t('অজানা', 'Unknown')}
+                                                {member.alive === false && member.death_date && (
+                                                    <span className="text-stone-400 font-normal"> — {new Date(member.death_date).toLocaleDateString()}</span>
+                                                )}
+                                            </React.Fragment>
                                         }
                                     />
-                                ) : (
-                                    <InfoItem theme={theme} icon={<Globe size={14} />} label={t('সামাজিক যোগাযোগ', 'Social Media')} value="N/A" />
-                                )}
-
-                                {/* Spouse / Husband */}
-                                <InfoItem
-                                    theme={theme}
-                                    icon={<Heart size={14} className={isFemale ? "text-orange-700 fill-orange-700" : "text-rose-600 fill-rose-600"} />}
-                                    label={isFemale ? t('স্বামী', 'Husband') : t('সহধর্মিণী', 'Spouse')}
-                                    value={
-                                        ((member.spouses && member.spouses.length > 0) ? member.spouses : (member.partners || [])).filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).length > 0 ? (
-                                            <div className="flex flex-wrap gap-1.5 mt-1">
-                                                {((member.spouses && member.spouses.length > 0) ? member.spouses : (member.partners || [])).filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).map(s => (
-                                                    <button
-                                                        key={s.id}
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenOverlayMember(s, isFemale ? 'husband' : 'spouse');
-                                                        }}
-                                                        className={`font-bold hover:underline px-2.5 py-1 rounded-xl text-xs transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs hover:shadow-xs cursor-pointer ${
-                                                            isFemale
-                                                                ? 'text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-200'
-                                                                : 'text-stone-800 bg-stone-50 hover:bg-orange-50 border border-stone-200'
-                                                        }`}
-                                                        title={isFemale ? t('স্বামীর সংক্ষিপ্ত পরিচিতি দেখুন', 'View Husband Card') : t('সহধর্মিণীর সংক্ষিপ্ত পরিচিতি দেখুন', 'View Spouse Card')}
-                                                    >
-                                                        <div className="w-4 h-4 rounded-full overflow-hidden bg-white shrink-0 ring-1 ring-orange-200">
-                                                            {s.profile_image_url ? (
-                                                                <img src={s.profile_image_url} alt="" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <User size={10} className="m-auto opacity-40 text-stone-600" />
-                                                            )}
-                                                        </div>
-                                                        <span>{formatName(s)}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        ) : "N/A"
-                                    }
-                                />
-
-                                {/* Parents */}
-                                <InfoItem
-                                    theme={theme}
-                                    icon={<User size={14} />}
-                                    label={t('পিতা-মাতা', 'Parents')}
-                                    value={
-                                        <div className="flex flex-col gap-1.5 mt-0.5">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black shrink-0">{isBn ? 'পিতা' : 'F'}</span>
-                                                {member.father_id ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenOverlayMember({
-                                                                id: member.father_id,
-                                                                full_name: member.father_name,
-                                                                name_bangla: member.father_name_bangla,
-                                                                name_english: member.father_name_english,
-                                                                gender: 'Male'
-                                                            }, 'father');
-                                                        }}
-                                                        className="truncate font-medium text-stone-700 hover:text-blue-800 hover:underline text-left cursor-pointer"
-                                                        title={t('পিতার পরিচিতি কার্ড দেখুন', 'View Father Card')}
-                                                    >
-                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
-                                                    </button>
-                                                ) : (
-                                                    <span className="truncate text-stone-700">
-                                                        {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-[8px] bg-rose-100 text-rose-700 px-1 rounded font-black shrink-0">{isBn ? 'মাতা' : 'M'}</span>
-                                                {member.mother_id ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenOverlayMember({
-                                                                id: member.mother_id,
-                                                                full_name: member.mother_name,
-                                                                name_bangla: member.mother_name_bangla,
-                                                                name_english: member.mother_name_english,
-                                                                gender: 'Female'
-                                                            }, 'mother');
-                                                        }}
-                                                        className="truncate font-medium text-stone-700 hover:text-rose-800 hover:underline text-left cursor-pointer"
-                                                        title={t('মাতার পরিচিতি কার্ড দেখুন', 'View Mother Card')}
-                                                    >
-                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
-                                                    </button>
-                                                ) : (
-                                                    <span className="truncate text-stone-700">
-                                                        {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    }
-                                />
+                                    <InfoItem theme={theme} icon={<Briefcase size={14} />} label={t('পেশা', 'Occupation')} value={formatOccupation(member.occupation)} />
+                                    <InfoItem theme={theme} icon={<Building size={14} />} label={t('কর্মস্থল', 'Workplace')} value={member.workplace} />
+                                    <InfoItem theme={theme} icon={<GraduationCap size={14} />} label={t('শিক্ষাগত যোগ্যতা', 'Educational Background')} value={member.education} />
+                                    <InfoItem theme={theme} icon={<Droplet size={14} />} label={t('রক্তের গ্রুপ', 'Blood Group')} value={member.blood_group} highlight />
+                                    <InfoItem theme={theme} icon={<MapPin size={14} />} label={t('আদি গ্রাম', 'Ancestral Village')} value={member.village || member.location || member.ancestral_village} />
+                                    <InfoItem theme={theme} icon={<MapPin size={14} />} label={t('বর্তমান ঠিকানা', 'Current Location')} value={member.present_address} />
+                                </div>
                             </div>
 
-                            {member.bio && (
-                                <div className="text-xs text-stone-600 leading-relaxed italic border-t border-stone-100 pt-3">
-                                    "{member.bio}"
+                            {/* ── Column 2: Contact & Family ── */}
+                            <div className="space-y-4">
+                                <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] border-b pb-2 mb-4 ${theme.headingColor} ${theme.headingBorder}`}>
+                                    {t('যোগাযোগ ও পরিবার', 'Contact & Family')}
+                                </h4>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <InfoItem
+                                        theme={theme}
+                                        icon={<Phone size={14} />}
+                                        label={t('যোগাযোগ নম্বর', 'Contact Number')}
+                                        value={
+                                            member.contact_number ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {member.contact_number.split(/[,;\/\n\r]+/).map((num, i) => {
+                                                        const cleanNum = num.trim();
+                                                        if (!cleanNum) return null;
+                                                        return (
+                                                            <a
+                                                                key={i}
+                                                                href={`tel:${cleanNum}`}
+                                                                className="text-orange-900 hover:text-orange-950 hover:underline font-bold bg-orange-100/60 hover:bg-orange-100 px-2 py-0.5 rounded text-xs transition"
+                                                            >
+                                                                {cleanNum}
+                                                            </a>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : 'N/A'
+                                        }
+                                    />
+                                    {member.social_media && member.social_media.trim() ? (
+                                        <InfoItem
+                                            theme={theme}
+                                            icon={
+                                                member.social_media.toLowerCase().includes('facebook') ? <Facebook size={14} /> :
+                                                    member.social_media.toLowerCase().includes('instagram') ? <Instagram size={14} /> :
+                                                        member.social_media.toLowerCase().includes('twitter') || member.social_media.toLowerCase().includes('x.com') ? <Twitter size={14} /> :
+                                                            member.social_media.toLowerCase().includes('linkedin') ? <Linkedin size={14} /> :
+                                                                <Globe size={14} />
+                                            }
+                                            label={t('সামাজিক যোগাযোগ', 'Social Media')}
+                                            value={
+                                                <a
+                                                    href={member.social_media.startsWith('http') ? member.social_media : `https://${member.social_media}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                                                >
+                                                    {t('প্রোফাইল দেখুন', 'Visit Profile')}
+                                                </a>
+                                            }
+                                        />
+                                    ) : (
+                                        <InfoItem theme={theme} icon={<Globe size={14} />} label={t('সামাজিক যোগাযোগ', 'Social Media')} value="N/A" />
+                                    )}
+
+                                    {/* Spouse / Husband */}
+                                    <InfoItem
+                                        theme={theme}
+                                        icon={<Heart size={14} className={isFemale ? "text-orange-700 fill-orange-700" : "text-rose-600 fill-rose-600"} />}
+                                        label={isFemale ? t('স্বামী', 'Husband') : t('সহধর্মিণী', 'Spouse')}
+                                        value={
+                                            ((member.spouses && member.spouses.length > 0) ? member.spouses : (member.partners || [])).filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).length > 0 ? (
+                                                <div className="flex flex-wrap gap-1.5 mt-1">
+                                                    {((member.spouses && member.spouses.length > 0) ? member.spouses : (member.partners || [])).filter((s, i, a) => a.findIndex(t => String(t.id) === String(s.id)) === i).map(s => (
+                                                        <button
+                                                            key={s.id}
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenOverlayMember(s, isFemale ? 'husband' : 'spouse');
+                                                            }}
+                                                            className={`font-bold hover:underline px-2.5 py-1 rounded-xl text-xs transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs hover:shadow-xs cursor-pointer ${isFemale
+                                                                    ? 'text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-200'
+                                                                    : 'text-stone-800 bg-stone-50 hover:bg-orange-50 border border-stone-200'
+                                                                }`}
+                                                            title={isFemale ? t('স্বামীর সংক্ষিপ্ত পরিচিতি দেখুন', 'View Husband Card') : t('সহধর্মিণীর সংক্ষিপ্ত পরিচিতি দেখুন', 'View Spouse Card')}
+                                                        >
+                                                            <div className="w-4 h-4 rounded-full overflow-hidden bg-white shrink-0 ring-1 ring-orange-200">
+                                                                {s.profile_image_url ? (
+                                                                    <img src={s.profile_image_url} alt="" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <User size={10} className="m-auto opacity-40 text-stone-600" />
+                                                                )}
+                                                            </div>
+                                                            <span>{formatName(s)}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : "N/A"
+                                        }
+                                    />
+
+                                    {/* Parents */}
+                                    <InfoItem
+                                        theme={theme}
+                                        icon={<User size={14} />}
+                                        label={t('পিতা-মাতা', 'Parents')}
+                                        value={
+                                            <div className="flex flex-col gap-1.5 mt-0.5">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black shrink-0">{isBn ? 'পিতা' : 'F'}</span>
+                                                    {member.father_id ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenOverlayMember({
+                                                                    id: member.father_id,
+                                                                    full_name: member.father_name,
+                                                                    name_bangla: member.father_name_bangla,
+                                                                    name_english: member.father_name_english,
+                                                                    gender: 'Male'
+                                                                }, 'father');
+                                                            }}
+                                                            className="truncate font-medium text-stone-700 hover:text-blue-800 hover:underline text-left cursor-pointer"
+                                                            title={t('পিতার পরিচিতি কার্ড দেখুন', 'View Father Card')}
+                                                        >
+                                                            {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="truncate text-stone-700">
+                                                            {formatName({ full_name: member.father_name, name_bangla: member.father_name_bangla, name_english: member.father_name_english }) || t('অজানা', 'Unknown')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-[8px] bg-rose-100 text-rose-700 px-1 rounded font-black shrink-0">{isBn ? 'মাতা' : 'M'}</span>
+                                                    {member.mother_id ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenOverlayMember({
+                                                                    id: member.mother_id,
+                                                                    full_name: member.mother_name,
+                                                                    name_bangla: member.mother_name_bangla,
+                                                                    name_english: member.mother_name_english,
+                                                                    gender: 'Female'
+                                                                }, 'mother');
+                                                            }}
+                                                            className="truncate font-medium text-stone-700 hover:text-rose-800 hover:underline text-left cursor-pointer"
+                                                            title={t('মাতার পরিচিতি কার্ড দেখুন', 'View Mother Card')}
+                                                        >
+                                                            {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="truncate text-stone-700">
+                                                            {formatName({ full_name: member.mother_name, name_bangla: member.mother_name_bangla, name_english: member.mother_name_english }) || t('অজানা', 'Unknown')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        }
+                                    />
                                 </div>
-                            )}
+
+                                {member.bio && (
+                                    <div className="text-xs text-stone-600 leading-relaxed italic border-t border-stone-100 pt-3">
+                                        "{member.bio}"
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
                 {/* Overlaid Small Husband/Spouse Profile Card */}
                 {activeOverlayMember && (
@@ -771,9 +770,9 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                                     const cleanNum = num.trim();
                                                     if (!cleanNum) return null;
                                                     return (
-                                                        <a 
-                                                            key={i} 
-                                                            href={`tel:${cleanNum}`} 
+                                                        <a
+                                                            key={i}
+                                                            href={`tel:${cleanNum}`}
                                                             className={`font-bold hover:underline text-xs bg-white/80 px-1.5 py-0.5 rounded shadow-2xs ${overlayTheme.textLink}`}
                                                         >
                                                             {cleanNum}
@@ -914,11 +913,10 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                                                 return (
                                                     <div
                                                         key={s.id || s.full_name || 'current-spouse'}
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border select-none cursor-default ${
-                                                            sIsFemale
+                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border select-none cursor-default ${sIsFemale
                                                                 ? 'bg-rose-50 border-rose-200/80 text-rose-900'
                                                                 : 'bg-sky-50 border-sky-200/80 text-sky-900'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <div className="w-4 h-4 rounded-full overflow-hidden bg-white shrink-0 ring-1 ring-stone-200">
                                                             {s.profile_image_url ? (

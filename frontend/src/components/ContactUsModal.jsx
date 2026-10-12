@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { 
-    X, Phone, MapPin, Copy, Check, 
+import {
+    X, Phone, MapPin, Copy, Check,
     Users, ShieldCheck, UserCheck
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -76,7 +76,7 @@ const ContactUsModal = ({ isOpen, onClose }) => {
         let bn = admin.name_bangla;
         let en = admin.name_english;
         const rawName = admin.full_name || admin.name || '';
-        
+
         // Extract "বাংলা নাম (English Name)" pattern if present
         const match = rawName.match(/^(.*?)\s*\((.*?)\)$/);
         if (match) {
@@ -151,7 +151,7 @@ const ContactUsModal = ({ isOpen, onClose }) => {
                     {/* Subtitle Banner */}
                     <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/70 border-b border-orange-200/70 px-5 sm:px-7 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-750 font-medium">
                         <span>
-                            {isBn 
+                            {isBn
                                 ? 'বংশলতিকা হালনাগাদ, যেকোনো প্রশ্ন বা তথ্যের জন্য দায়িত্বপ্রাপ্তদের সাথে যোগাযোগ করুন'
                                 : 'Reach out to the clan administration and coordination team for inquiries'}
                         </span>
@@ -178,7 +178,7 @@ const ContactUsModal = ({ isOpen, onClose }) => {
                                     <span>{isBn ? 'অ্যাডমিন ও পরিচালনা পরিষদ' : 'Platform Administrators'}</span>
                                 </h4>
                                 <p className="text-xs text-stone-500 mt-0.5">
-                                    {isBn 
+                                    {isBn
                                         ? 'প্রশাসনিক ও বংশলতিকা তথ্য সংরক্ষণে নিয়োজিত সদস্যবৃন্দ। প্রোফাইল দেখতে যেকোনো সারিতে ক্লিক করুন।'
                                         : 'Lineage administrators & coordinators. Click any row to view full member profile.'}
                                 </p>
@@ -231,11 +231,10 @@ const ContactUsModal = ({ isOpen, onClose }) => {
                                                         {/* Role Column */}
                                                         <td className="py-3.5 px-4 whitespace-nowrap">
                                                             <span
-                                                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-2xs ${
-                                                                    isSuper
+                                                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-2xs ${isSuper
                                                                         ? 'bg-amber-100 text-amber-950 border-amber-300'
                                                                         : 'bg-orange-100 text-orange-950 border-orange-300'
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 <ShieldCheck size={12} className={isSuper ? 'text-amber-800' : 'text-orange-800'} />
                                                                 <span>{isSuper ? (isBn ? 'সুপার অ্যাডমিন' : 'Super Admin') : (isBn ? 'অ্যাডমিন' : 'Admin')}</span>

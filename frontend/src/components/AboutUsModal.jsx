@@ -78,7 +78,7 @@ const AboutUsModal = ({ isOpen, onClose }) => {
                 <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/70 border-b border-orange-200/70 px-4 sm:px-6 py-2 sm:py-2.5 flex items-center gap-2 text-[11px] sm:text-xs text-stone-750 font-medium">
                     <Sparkles size={13} className="text-amber-600 shrink-0" />
                     <span className="leading-tight">
-                        {isBn 
+                        {isBn
                             ? 'শিকড়ের সন্ধান, রক্তের বন্ধন ও প্রজন্মের ঐতিহ্যের মিলনমেলা'
                             : 'Rediscovering Roots, Bloodlines, and Generational Heritage'}
                     </span>
