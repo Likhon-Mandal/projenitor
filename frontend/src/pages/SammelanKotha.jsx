@@ -376,9 +376,18 @@ const SammelanKotha = () => {
                     {/* Scrollable Box Listing (Inline Accordion Details, Mobile-Friendly) */}
                     <div className="max-h-[640px] overflow-y-auto space-y-2 p-2 sm:p-3 scroll-smooth">
                         {loading ? (
-                            <div className="space-y-2.5 p-2">
-                                {[...Array(8)].map((_, i) => (
-                                    <div key={i} className="h-16 bg-orange-50/60 rounded-2xl animate-pulse" />
+                            <div className="space-y-3 p-2">
+                                {[1, 2, 3, 4, 5].map((sk) => (
+                                    <div key={sk} className="p-3.5 bg-orange-50/70 border border-orange-100 rounded-2xl animate-pulse flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-200/60 shrink-0" />
+                                            <div className="space-y-1.5">
+                                                <div className="h-4 w-36 bg-stone-300 rounded" />
+                                                <div className="h-3 w-24 bg-stone-200 rounded" />
+                                            </div>
+                                        </div>
+                                        <div className="h-6 w-16 bg-amber-200/50 rounded-full" />
+                                    </div>
                                 ))}
                             </div>
                         ) : sammelans.length === 0 ? (

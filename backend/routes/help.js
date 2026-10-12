@@ -2,13 +2,16 @@ const express = require('express');
 const router = express.Router();
 const helpController = require('../controllers/helpController');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
+const { cacheRoute, invalidateCache } = require('../middleware/cacheMiddleware');
 
-// Protected: Authenticated users (user, admin, superadmin) can submit help requests
-router.get('/', helpController.getHelpRequests);
-router.post('/', authenticate, helpController.addHelpRequest);
+const clearHelpCache = invalidateCache('/api/help');
 
-// Protected: Admin management actions only
-router.put('/:id', authenticate, requireAdmin, helpController.updateHelpRequest);
-router.delete('/:id', authenticate, requireAdmin, helpController.deleteHelpRequest);
+// Read help requests (Cached 3 minutes)
+router.get('/', cacheRoute(180), helpController.getHelpRequests);
+router.post('/', authenticate, clearHelpCache, helpController.addHelpRequest);
+
+// Protected: Admin management actions
+router.put('/:id', authenticate, requireAdmin, clearHelpCache, helpController.updateHelpRequest);
+router.delete('/:id', authenticate, requireAdmin, clearHelpCache, helpController.deleteHelpRequest);
 
 module.exports = router;

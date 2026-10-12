@@ -377,11 +377,25 @@ const History = () => {
                     </div>
                 </div>
 
-                {/* Loading State */}
+                {/* Loading State - Antique Manuscript Skeleton */}
                 {loading && (
-                    <div className="py-16 flex flex-col items-center justify-center gap-3 text-stone-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-orange-800" />
-                        <p className="text-sm font-medium">{t('ইতিহাসের পাতা লোড হচ্ছে...', 'Loading historical narrative...')}</p>
+                    <div className="space-y-6 animate-pulse py-4">
+                        {[1, 2].map((sk) => (
+                            <div key={sk} className="bg-white/80 rounded-3xl p-6 sm:p-8 border-2 border-orange-200/60 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="h-7 w-48 bg-stone-200 rounded-lg" />
+                                    <div className="h-6 w-20 bg-orange-100 rounded-full" />
+                                </div>
+                                <div className="p-4 bg-amber-50 rounded-2xl border-l-4 border-orange-300 space-y-2">
+                                    <div className="h-5 w-3/4 bg-amber-200/60 rounded mx-auto" />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="h-4 w-full bg-stone-100 rounded" />
+                                    <div className="h-4 w-5/6 bg-stone-100 rounded" />
+                                    <div className="h-4 w-2/3 bg-stone-100 rounded" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 

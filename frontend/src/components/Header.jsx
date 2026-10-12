@@ -198,6 +198,20 @@ const Header = () => {
               </button>
             </div>
 
+            {/* Prominent PWA Install App Button */}
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={promptInstall}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 border border-yellow-300 cursor-pointer animate-pulse"
+                title={t('স্মার্টফোনে বা কম্পিউটারে অ্যাপ ইনস্টল করুন', 'Install App on your device')}
+              >
+                <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline font-bold">{t('অ্যাপ ইনস্টল', 'Install App')}</span>
+                <Download className="w-3 h-3 shrink-0" />
+              </button>
+            )}
+
             {/* Notification Bell (for all users: counts new event, notice, help request) */}
             <NotificationBell inNavbar={true} />
 

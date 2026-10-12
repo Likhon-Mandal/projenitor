@@ -40,15 +40,26 @@ const cacheMiddleware = (ttlSeconds = 300, prefix = 'api') => {
 };
 
 /**
- * Invalidate cache by prefix or tags
+ * Invalidate cache by prefix as an Express middleware or direct function
  * @param {string} prefix
  */
 const invalidateCache = (prefix) => {
+  return (req, res, next) => {
+    memoryCache.delByPrefix(prefix);
+    if (typeof next === 'function') {
+      next();
+    }
+  };
+};
+
+const clearCacheNow = (prefix) => {
   return memoryCache.delByPrefix(prefix);
 };
 
 module.exports = {
   cacheMiddleware,
+  cacheRoute: cacheMiddleware,
   invalidateCache,
+  clearCacheNow,
   memoryCache
 };

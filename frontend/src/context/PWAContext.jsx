@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 const PWAContext = createContext();
 
 const DISMISS_KEY = 'projenitor_pwa_dismissed_until';
-const SNOOZE_DURATION_DAYS = 3; // Show again after 3 days if dismissed
+const SNOOZE_DURATION_DAYS = 0.15; // Show again after ~3.5 hours if dismissed
 
 export const PWAProvider = ({ children }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);

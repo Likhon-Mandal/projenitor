@@ -381,8 +381,17 @@ const EventsAndNotices = () => {
                     <div className="bg-white/70 rounded-2xl border border-orange-200/60 p-2 sm:p-2.5 shadow-sm">
                         <div className="max-h-[580px] sm:max-h-[640px] overflow-y-auto pr-1.5 sm:pr-2.5 space-y-4 custom-scrollbar">
                             {loadingEvents ? (
-                                <div className="bg-white p-10 rounded-2xl text-center shadow-sm border border-stone-100 text-stone-400 animate-pulse font-medium text-sm">
-                                    {t('অনুষ্ঠানমালা লোড হচ্ছে...', 'Loading events...')}
+                                <div className="space-y-3 p-1">
+                                    {[1, 2, 3].map(sk => (
+                                        <div key={sk} className="bg-white p-4 sm:p-5 rounded-2xl border border-stone-200/80 shadow-xs animate-pulse flex flex-col sm:flex-row gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-orange-100 shrink-0" />
+                                            <div className="flex-1 space-y-2">
+                                                <div className="h-4 w-3/4 bg-stone-200 rounded" />
+                                                <div className="h-3 w-1/2 bg-stone-100 rounded" />
+                                                <div className="h-3 w-28 bg-orange-50 rounded" />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : eventTab === 'upcoming' ? (
                                 /* ---------------- UPCOMING EVENTS VIEW ---------------- */
@@ -650,8 +659,17 @@ const EventsAndNotices = () => {
                     <div className="bg-white/70 rounded-2xl border border-orange-200/60 p-2 sm:p-2.5 shadow-sm">
                         <div className="max-h-[580px] sm:max-h-[640px] overflow-y-auto pr-1.5 sm:pr-2.5 space-y-3.5 custom-scrollbar">
                             {loadingNotices ? (
-                                <div className="bg-white p-8 rounded-2xl text-center shadow-sm border border-stone-100 text-stone-400 animate-pulse font-medium text-sm">
-                                    {t('বিজ্ঞপ্তি লোড হচ্ছে...', 'Loading latest announcements...')}
+                                <div className="space-y-3 p-1">
+                                    {[1, 2, 3].map(sk => (
+                                        <div key={sk} className="bg-white p-4 sm:p-5 rounded-xl border border-stone-200/80 shadow-xs animate-pulse space-y-2.5">
+                                            <div className="flex items-center justify-between">
+                                                <div className="h-4 w-20 bg-orange-100 rounded-full" />
+                                                <div className="h-3 w-16 bg-stone-100 rounded" />
+                                            </div>
+                                            <div className="h-4 w-5/6 bg-stone-200 rounded" />
+                                            <div className="h-3 w-full bg-stone-100 rounded" />
+                                        </div>
+                                    ))}
                                 </div>
                             ) : notices.length > 0 ? (
                                 notices.map((notice) => (

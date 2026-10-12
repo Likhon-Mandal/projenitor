@@ -339,8 +339,24 @@ const Help = () => {
             {/* Posts List */}
             <div className="space-y-3.5">
                 {loading ? (
-                    <div className="bg-white p-10 rounded-2xl text-center shadow-xs border border-stone-100 text-stone-400 animate-pulse font-medium">
-                        {t('অনুরোধ লোড হচ্ছে...', 'Loading help requests...')}
+                    <div className="space-y-4 animate-pulse">
+                        {[1, 2, 3].map(sk => (
+                            <div key={sk} className="bg-white rounded-2xl p-5 border border-stone-200/80 shadow-xs space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="h-5 w-24 bg-orange-100 rounded-full" />
+                                    <div className="h-4 w-20 bg-stone-100 rounded" />
+                                </div>
+                                <div className="h-5 w-2/3 bg-stone-200 rounded" />
+                                <div className="h-3.5 w-full bg-stone-100 rounded" />
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-full bg-stone-100" />
+                                        <div className="h-3.5 w-24 bg-stone-100 rounded" />
+                                    </div>
+                                    <div className="h-7 w-20 bg-orange-100 rounded-lg" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : filteredRequests.length > 0 ? (
                     filteredRequests.map((post, index) => {

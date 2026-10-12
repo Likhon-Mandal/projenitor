@@ -518,7 +518,16 @@ const Explorer = () => {
                     viewMode === 'grid' ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             {loading ? (
-                                <div className="col-span-full py-10 flex justify-center text-stone-400 animate-pulse">{t('তথ্য লোড হচ্ছে...', 'Loading data...')}</div>
+                                <>
+                                    {[1, 2, 3, 4, 5, 6].map((sk) => (
+                                        <div key={sk} className="bg-white p-4 sm:p-5 rounded-2xl border border-stone-200/80 shadow-xs animate-pulse space-y-3 text-center">
+                                            <div className="w-10 h-10 rounded-full bg-orange-100 mx-auto" />
+                                            <div className="h-4 w-3/4 bg-stone-200 rounded mx-auto" />
+                                            <div className="h-3 w-1/2 bg-stone-100 rounded mx-auto" />
+                                            <div className="h-5 w-16 bg-orange-50 rounded-full mx-auto" />
+                                        </div>
+                                    ))}
+                                </>
                             ) : (
                                 <>
                                     {/* Quick Return to Previous Level Card in Grid */}

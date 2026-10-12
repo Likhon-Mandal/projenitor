@@ -10,6 +10,7 @@ import MemberSelector from '../components/MemberSelector';
 import api from '../api/api';
 import VerifiedBadge from '../components/VerifiedBadge';
 import SEO from '../components/SEO';
+import ProfileSkeleton from '../components/skeletons/ProfileSkeleton';
 
 const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
   const { user, isAdmin } = useAuth();
@@ -138,11 +139,8 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
   if (!currentId) return null;
 
   if (loading) return (
-    <div className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/40 backdrop-blur-sm p-4`}>
-      <div className="bg-white p-8 rounded-xl shadow-xl flex flex-col items-center">
-        <span className="w-8 h-8 rounded-full bg-orange-500 animate-ping mb-4"></span>
-        <p className="font-bold text-stone-600">Loading profile...</p>
-      </div>
+    <div className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto`}>
+      <ProfileSkeleton />
     </div>
   );
   if (!member) return (
@@ -161,6 +159,12 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
 
   return (
     <>
+      <SEO 
+        title={`${displayName} | বাড়ৈ বংশ`}
+        description={`${displayName} — বাড়ৈ বংশের সদস্য। বাড়ি: ${member.bari_name || 'অজ্ঞাত'}, গ্রাম: ${member.village || 'গোবিন্দপুর'}। রক্ত ও বংশলতিকা তথ্য।`}
+        canonical={`/member/${currentId}`}
+        image={member.profile_image_url || 'https://baraibangsho.vercel.app/og-preview.png'}
+      />
       <div
         onClick={(e) => {
           if (e.target === e.currentTarget) {

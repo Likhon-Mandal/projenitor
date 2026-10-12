@@ -199,8 +199,40 @@ const CommitteeBoard = () => {
 
             <div className="max-w-7xl mx-auto px-6 -mt-8 relative z-20">
                 {loading ? (
-                    <div className="bg-white rounded-3xl p-16 shadow-lg text-center text-stone-400 animate-pulse border border-orange-100 border-t-4 border-t-orange-500">
-                        {t('কমিটির তথ্য লোড হচ্ছে...', 'Loading Committee Records...')}
+                    <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-xl border border-orange-100 border-t-8 border-t-orange-600 mb-12 animate-pulse space-y-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-stone-100 pb-6 gap-4">
+                            <div className="space-y-2">
+                                <div className="h-4 w-28 bg-green-100 rounded-full" />
+                                <div className="h-8 w-64 bg-stone-200 rounded-xl" />
+                                <div className="h-4 w-40 bg-stone-100 rounded" />
+                            </div>
+                            <div className="h-10 w-36 bg-orange-100 rounded-2xl" />
+                        </div>
+                        {/* Leadership cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[1, 2].map(n => (
+                                <div key={n} className="p-5 rounded-2xl bg-orange-50/50 border border-orange-200/60 flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-orange-200/60 shrink-0" />
+                                    <div className="space-y-2 flex-1">
+                                        <div className="h-4 w-20 bg-amber-200/60 rounded" />
+                                        <div className="h-5 w-36 bg-stone-300 rounded" />
+                                        <div className="h-3 w-28 bg-stone-200 rounded" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Members row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pt-4">
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                                <div key={n} className="p-3.5 bg-stone-50 rounded-xl flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-full bg-stone-200 shrink-0" />
+                                    <div className="space-y-1 flex-1">
+                                        <div className="h-3.5 w-20 bg-stone-300 rounded" />
+                                        <div className="h-2.5 w-14 bg-stone-200 rounded" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ) : (
                     <>

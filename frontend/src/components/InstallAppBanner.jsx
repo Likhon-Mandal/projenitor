@@ -34,17 +34,17 @@ const InstallAppBanner = () => {
         {/* Text Info */}
         <div className="flex-1 min-w-0 pr-1">
           <div className="flex items-center gap-1.5">
-            <h4 className="font-serif font-black text-sm text-yellow-400 truncate tracking-wide">
-              {t('ফোনে অ্যাপ ব্যবহার করুন', 'Use as an App')}
+            <h4 className="font-serif font-black text-sm text-yellow-300 truncate tracking-wide flex items-center gap-1">
+              <span>{t('📲 মোবাইলে অ্যাপ ইনস্টল করুন', '📲 Install App on Phone')}</span>
             </h4>
-            <span className="hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-black uppercase rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
-              PWA
+            <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded-full bg-yellow-400 text-orange-950 shadow-xs">
+              {t('সুপার ফাস্ট', 'FAST')}
             </span>
           </div>
-          <p className="text-[11px] text-orange-200/90 leading-tight line-clamp-2 mt-0.5 font-sans">
+          <p className="text-[11px] text-orange-100 leading-tight line-clamp-2 mt-0.5 font-sans">
             {t(
-              'ব্রাউজার ছাড়াই ফোনের হোম স্ক্রিন থেকে দ্রুত ও সহজে ব্যবহার করুন',
-              'Add to home screen for faster, full-screen native app experience'
+              'ইন্টারনেট ছাড়াও অফলাইনে বংশলতিকা দেখুন এবং এক ক্লিকে সরাসরি ওপেন করুন।',
+              'Access offline without internet, lightning fast 1-tap launch from home screen.'
             )}
           </p>
         </div>
