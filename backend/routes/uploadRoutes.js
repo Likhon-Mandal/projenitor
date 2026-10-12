@@ -6,10 +6,14 @@ const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Ensure local upload directory exists as fallback
+// Ensure local upload directory exists as fallback (safe for serverless read-only filesystems)
 const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+try {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+} catch (e) {
+    // Read-only filesystem in serverless (e.g. Vercel)
 }
 
 // Check if Cloudinary is configured

@@ -5,7 +5,7 @@ import { encrypt, decrypt } from '../utils/crypto';
 const TOKEN_KEY = 'projenitor_token';
 
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_URL || '/api',
     withCredentials: true,
 });
 

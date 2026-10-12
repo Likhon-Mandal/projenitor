@@ -34,6 +34,8 @@ const allowedOrigins = [
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // Non-browser clients (curl, Postman, server-to-server)
   if (allowedOrigins.includes(origin)) return true;
+  // Allow any Vercel deployment preview / production domain (*.vercel.app)
+  if (origin.endsWith('.vercel.app')) return true;
   // Allow Cloudflare quick tunnels (*.trycloudflare.com)
   if (origin.endsWith('.trycloudflare.com')) return true;
   // Allow LAN network addresses (e.g. 192.168.x.x, 10.x.x.x for mobile testing on local Wi-Fi)
@@ -107,27 +109,32 @@ app.use((err, req, res, next) => {
   }
 });
 
-// Start Server
-const server = app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`Server running on port ${PORT}`);
-  // Seed SuperAdmin on every startup
-  await seedSuperAdmin();
-});
+// Export app for serverless platforms like Vercel
+module.exports = app;
 
-// Proper handling for nodemon restarts to prevent EADDRINUSE
-process.once('SIGUSR2', () => {
-  server.close(() => {
-    process.kill(process.pid, 'SIGUSR2');
+// Start Server locally or in persistent environments (non-Vercel serverless)
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server running on port ${PORT}`);
+    // Seed SuperAdmin on startup
+    await seedSuperAdmin();
   });
-});
 
-process.on('SIGINT', () => {
-  server.close(() => process.exit(0));
-});
+  // Proper handling for nodemon restarts to prevent EADDRINUSE
+  process.once('SIGUSR2', () => {
+    server.close(() => {
+      process.kill(process.pid, 'SIGUSR2');
+    });
+  });
 
-process.on('SIGTERM', () => {
-  server.close(() => process.exit(0));
-});
+  process.on('SIGINT', () => {
+    server.close(() => process.exit(0));
+  });
+
+  process.on('SIGTERM', () => {
+    server.close(() => process.exit(0));
+  });
+}
 
 // Prevent unhandled promise rejections or uncaught exceptions from killing the process
 process.on('unhandledRejection', (reason, promise) => {
