@@ -296,7 +296,7 @@ const SammelanKotha = () => {
                     </h1>
 
                     <p className="text-amber-100/95 text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto">
-                        {t('৪৫তম থকে সকল ঐতিহাসিক জ্ঞাতি সম্মেলনের ইতিহাস(১৯৭৭ – ২০৩২)', '45th to 100th Annual Lineage Gatherings (1977 – 2032)')}
+                        {t('৪৫তম থকে সকল ঐতিহাসিক জ্ঞাতি সম্মেলনের ইতিহাস (১৯৭৭ – ∞)', 'History of all historical reunions from the 45th onward (1977 – ∞)')}
                     </p>
 
                     {/* Admin Add Button */}

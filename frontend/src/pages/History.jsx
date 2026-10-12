@@ -264,7 +264,7 @@ const History = () => {
             <div className="text-center space-y-3 sm:space-y-4 animate-slide-up mt-4 sm:mt-6">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100/80 border border-orange-200 text-orange-900 text-xs sm:text-sm font-semibold mb-1 shadow-2xs">
                     <Scroll size={15} className="text-orange-800" />
-                    <span>{t('ঐতিহাসিক দলিল ও বংশবৃত্তান্ত (পৃষ্ঠা ১১–২০)', 'Historical Records & Lineage Annals (pp. 11–20)')}</span>
+                    <span>{t('ঐতিহাসিক দলিল ও বংশবৃত্তান্ত', 'Historical Records & Lineage Annals')}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-orange-950 tracking-tight">
                     {t('বাড়ৈ বংশের সংক্ষিপ্ত ইতিহাস', 'Brief History of the Barai Clan')}
