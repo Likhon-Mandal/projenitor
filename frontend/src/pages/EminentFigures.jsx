@@ -7,6 +7,7 @@ import Profile from './Profile';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import api from '../api/api';
 
 const categories = [
@@ -18,6 +19,7 @@ const categories = [
 const EminentFigures = () => {
     const { user, isAdmin } = useAuth();
     const { t, isBn, formatOccupation, formatName, formatAchievement } = useLanguage();
+    const { openImage } = useImageViewer();
     const [searchParams, setSearchParams] = useSearchParams();
     const [figures, setFigures] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -274,7 +276,18 @@ const EminentFigures = () => {
                                         return (
                                             <>
                                                 <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                                                    <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
+                                                    <div 
+                                                        onClick={(e) => {
+                                                            if (figure.profile_image_url) {
+                                                                e.stopPropagation();
+                                                                openImage(figure.profile_image_url, figureDisplayName);
+                                                            }
+                                                        }}
+                                                        className={`w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border border-stone-200 shrink-0 ${
+                                                            figure.profile_image_url ? 'cursor-pointer hover:scale-110 hover:ring-2 hover:ring-yellow-400 active:scale-95 transition-all z-10' : ''
+                                                        }`}
+                                                        title={figure.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                                                    >
                                                         {figure.profile_image_url ? (
                                                             <img src={figure.profile_image_url} alt={figureDisplayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                         ) : (

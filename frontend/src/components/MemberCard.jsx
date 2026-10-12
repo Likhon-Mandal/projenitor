@@ -1,11 +1,13 @@
 import React from 'react';
 import { User, MapPin, Briefcase, GraduationCap, Award, Flame, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import VerifiedBadge from './VerifiedBadge';
 
 const MemberCard = ({ member, onViewProfile }) => {
   const { t, isBn, formatOccupation, formatName, formatNumber } = useLanguage();
+  const { openImage } = useImageViewer();
 
   const identity = getMemberIdentity(member);
   const theme = MEMBER_THEMES[identity] || MEMBER_THEMES.default;
@@ -20,7 +22,18 @@ const MemberCard = ({ member, onViewProfile }) => {
       <div>
         <div className="flex items-start gap-3 sm:gap-3.5">
           {/* Avatar with responsive sizing */}
-          <div className={`h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 ${theme.avatarBg} rounded-full flex items-center justify-center border-2 ${theme.avatarBorder} ${theme.avatarHoverBorder} overflow-hidden transition-all duration-300 shrink-0 group-hover:scale-105`}>
+          <div 
+            onClick={(e) => {
+              if (member.profile_image_url) {
+                e.stopPropagation(); // Don't trigger onViewProfile
+                openImage(member.profile_image_url, displayName);
+              }
+            }}
+            className={`h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 ${theme.avatarBg} rounded-full flex items-center justify-center border-2 ${theme.avatarBorder} ${theme.avatarHoverBorder} overflow-hidden transition-all duration-300 shrink-0 ${
+              member.profile_image_url ? 'cursor-pointer hover:scale-110 hover:ring-2 hover:ring-yellow-400 active:scale-95 z-10' : 'group-hover:scale-105'
+            }`}
+            title={member.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+          >
             {member.profile_image_url ? (
               <img src={member.profile_image_url} alt={displayName} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
             ) : (

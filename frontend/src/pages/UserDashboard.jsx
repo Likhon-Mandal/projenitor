@@ -10,10 +10,12 @@ import {
 import api from '../api/api';
 import MemberForm from '../components/MemberForm';
 import BrilliantStudentRequestModal from '../components/BrilliantStudentRequestModal';
+import { useImageViewer } from '../context/ImageViewerContext';
 
 const UserDashboard = () => {
     const { user, logout, isAdmin, isSuperAdmin, login, token, refreshProfile } = useAuth();
     const { t, formatName, formatAchievement } = useLanguage();
+    const { openImage } = useImageViewer();
     
     const [profile, setProfile] = useState(null);
     const [memberData, setMemberData] = useState(null);
@@ -227,9 +229,11 @@ const UserDashboard = () => {
                             <div className="relative">
                                 {displayPhoto ? (
                                     <img
+                                        onClick={() => openImage(displayPhoto, displayName)}
                                         src={displayPhoto}
                                         alt="Profile"
-                                        className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400 shadow-md ring-2 ring-orange-200"
+                                        className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400 shadow-md ring-2 ring-orange-200 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                                        title={t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo')}
                                     />
                                 ) : (
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-500 to-orange-700 flex items-center justify-center text-orange-950 font-black text-3xl font-serif shadow-md border-4 border-yellow-400">

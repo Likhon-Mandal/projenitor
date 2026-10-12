@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     X, ArrowLeft, MapPin, Briefcase, Calendar, Droplet, User, Edit, Trash2, Heart,
     Building, Phone, Globe, GraduationCap, Award, Facebook, Twitter,
-    Instagram, Linkedin
+    Instagram, Linkedin, ZoomIn
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import api from '../api/api';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -134,6 +135,7 @@ const InfoItem = ({ icon, label, value, highlight, theme }) => {
 const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, onDelete, onAddSpouse, relationType: initialRelationType, showActions = true }) => {
     const { isAdmin } = useAuth();
     const { t, isBn, formatOccupation, formatName } = useLanguage();
+    const { openImage } = useImageViewer();
     const [member, setMember] = useState(initialMember);
     const [loading, setLoading] = useState(false);
     // history stores { member, relationType } tuples
@@ -388,12 +390,27 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                         {/* Avatar */}
                         <div className="relative mb-4 sm:mb-6 flex flex-col items-center">
                             <div className="relative">
-                                <div className={`w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full border-4 p-1.5 shadow-2xl relative z-10 mx-auto ${theme.avatarBorder}`}>
-                                    <div className={`w-full h-full rounded-full overflow-hidden ${theme.avatarBg} backdrop-blur-md flex items-center justify-center`}>
+                                <div 
+                                    onClick={() => member.profile_image_url && openImage(member.profile_image_url, displayName)}
+                                    className={`w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full border-4 p-1.5 shadow-2xl relative z-10 mx-auto ${theme.avatarBorder} ${
+                                        member.profile_image_url ? 'cursor-pointer group/avatar hover:scale-105 active:scale-95 transition-all duration-300' : ''
+                                    }`}
+                                    title={member.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                                >
+                                    <div className={`w-full h-full rounded-full overflow-hidden ${theme.avatarBg} backdrop-blur-md flex items-center justify-center relative`}>
                                         {loading ? (
                                             <div className="w-8 h-8 border-3 border-white/50 border-t-white rounded-full animate-spin" />
                                         ) : member.profile_image_url ? (
-                                            <img src={member.profile_image_url} alt={displayName} className="w-full h-full object-cover" />
+                                            <>
+                                                <img 
+                                                    src={member.profile_image_url} 
+                                                    alt={displayName} 
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110" 
+                                                />
+                                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                    <ZoomIn className="w-8 h-8 text-white drop-shadow-lg" />
+                                                </div>
+                                            </>
                                         ) : (
                                             <User size={68} className="sm:size-24 text-white/40" />
                                         )}
@@ -700,7 +717,18 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                             {/* Header Info */}
                             <div className="flex items-center gap-3.5 mb-4 relative z-10">
                                 <div className="relative shrink-0">
-                                    <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 shadow-md ${overlayTheme.avatarRing}`}>
+                                    <div 
+                                        onClick={(e) => {
+                                            if (overlayTarget?.profile_image_url) {
+                                                e.stopPropagation();
+                                                openImage(overlayTarget.profile_image_url, overlayDisplayName);
+                                            }
+                                        }}
+                                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 shadow-md ${overlayTheme.avatarRing} ${
+                                            overlayTarget?.profile_image_url ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''
+                                        }`}
+                                        title={overlayTarget?.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                                    >
                                         <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center ${overlayTheme.avatarBg}`}>
                                             {loadingOverlay && !overlayData ? (
                                                 <div className="w-5 h-5 border-2 border-stone-400 border-t-stone-700 rounded-full animate-spin" />

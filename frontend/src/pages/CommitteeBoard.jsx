@@ -5,11 +5,13 @@ import CommitteeFormModal from '../components/CommitteeFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import api from '../api/api';
 
 const CommitteeBoard = () => {
     const { isAdmin } = useAuth();
     const { t, isBn, formatNumber, formatOccupation, formatName } = useLanguage();
+    const { openImage } = useImageViewer();
     const [committees, setCommittees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,7 +92,19 @@ const CommitteeBoard = () => {
             <div className="flex-1 p-3 md:px-4 md:py-2 flex flex-row flex-wrap gap-x-2 gap-y-2 items-center">
                 {members.map((member, idx) => (
                     <Link key={idx} to={`/member/${member.member_id}`} className="group flex items-center gap-3 hover:bg-orange-50/50 p-2 rounded-xl transition-colors w-auto sm:w-[48%] md:w-auto pr-4">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-orange-100 bg-stone-100 flex items-center justify-center shrink-0 shadow-sm group-hover:border-orange-300 transition-colors">
+                        <div 
+                            onClick={(e) => {
+                                if (member.profile_image_url) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openImage(member.profile_image_url, formatName(member));
+                                }
+                            }}
+                            className={`w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-orange-100 bg-stone-100 flex items-center justify-center shrink-0 shadow-sm ${
+                                member.profile_image_url ? 'cursor-pointer hover:scale-110 hover:border-orange-400 active:scale-95 transition-all' : 'group-hover:border-orange-300 transition-colors'
+                            }`}
+                            title={member.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                        >
                             {member.profile_image_url ? (
                                 <img src={member.profile_image_url} alt={member.full_name} className="w-full h-full object-cover" />
                             ) : (

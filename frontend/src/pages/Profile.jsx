@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit, Heart, Globe, Facebook, Twitter, Instagram, Linkedin, Lock, Network, ShieldCheck, GitBranch, ArrowRight, Award, Star, Flame } from 'lucide-react';
+import { User, MapPin, Calendar, Briefcase, GraduationCap, Phone, Droplet, X, Edit, Heart, Globe, Facebook, Twitter, Instagram, Linkedin, Lock, Network, ShieldCheck, GitBranch, ArrowRight, Award, Star, Flame, ZoomIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import { calculateRelationshipEngine } from '../utils/relationCalculator';
 import MemberSelector from '../components/MemberSelector';
@@ -12,6 +13,7 @@ import VerifiedBadge from '../components/VerifiedBadge';
 const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
   const { user, isAdmin } = useAuth();
   const { t, isBn, formatOccupation, formatName, formatNumber } = useLanguage();
+  const { openImage } = useImageViewer();
   const params = useParams();
   const navigate = useNavigate();
   const [currentId, setCurrentId] = useState(memberId || params.id);
@@ -190,10 +192,21 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
 
           <div className="px-4 sm:px-6 pb-6 relative">
             <div className="flex flex-col items-center -mt-12 sm:-mt-14 mb-4">
-              <div className="h-24 w-24 sm:h-28 sm:w-28 bg-white rounded-full p-1.5 shadow-lg mb-3">
-                <div className={`h-full w-full ${theme.avatarBigBg} border-2 ${theme.avatarBigBorder} rounded-full flex items-center justify-center overflow-hidden transition-colors duration-300`}>
+              <div 
+                onClick={() => member.profile_image_url && openImage(member.profile_image_url, displayName)}
+                className={`h-24 w-24 sm:h-28 sm:w-28 bg-white rounded-full p-1.5 shadow-lg mb-3 ${
+                  member.profile_image_url ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all duration-300 group/prof' : ''
+                }`}
+                title={member.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+              >
+                <div className={`h-full w-full ${theme.avatarBigBg} border-2 ${theme.avatarBigBorder} rounded-full flex items-center justify-center overflow-hidden transition-colors duration-300 relative`}>
                   {member.profile_image_url ? (
-                    <img src={member.profile_image_url} alt={displayName} className="h-full w-full object-cover" />
+                    <>
+                      <img src={member.profile_image_url} alt={displayName} className="h-full w-full object-cover transition-transform duration-500 group-hover/prof:scale-110" />
+                      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/prof:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <ZoomIn className="w-6 h-6 text-white drop-shadow-md" />
+                      </div>
+                    </>
                   ) : (
                     <User className={`h-12 w-12 sm:h-14 sm:w-14 ${theme.itemIcon}`} />
                   )}

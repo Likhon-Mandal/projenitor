@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { PWAProvider } from './context/PWAContext';
+import { ImageViewerProvider } from './context/ImageViewerContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -39,7 +40,8 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <PWAProvider>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ImageViewerProvider>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             {/* Main app pages — with Layout (header + footer) */}
             <Route path="/*" element={
@@ -101,6 +103,7 @@ function App() {
             } />
           </Routes>
         </Router>
+          </ImageViewerProvider>
         </PWAProvider>
       </AuthProvider>
     </LanguageProvider>
