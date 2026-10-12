@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Heart, Search, Users, MapPin, Briefcase, Building, 
-  Phone, Globe, Droplet, Home, ChevronDown, Sparkles, Filter, X, Eye, Check
+  Phone, Globe, Droplet, Home, ChevronDown, Sparkles, Filter, X, Eye, Check, ZoomIn
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import api from '../api/api';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -49,6 +50,7 @@ const SpousesDirectoryView = ({
   isModal = false 
 }) => {
   const { isBn, t, formatOccupation, formatName } = useLanguage();
+  const { openImage } = useImageViewer();
   const [spouses, setSpouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -498,15 +500,29 @@ const SpousesDirectoryView = ({
                         <div>
                           <div className="flex items-start justify-between gap-2.5 mb-2.5">
                             {/* Avatar with Halo Ring */}
-                            <div className="relative">
+                            <div 
+                              onClick={(e) => {
+                                if (spouse.profile_image_url) {
+                                  e.stopPropagation();
+                                  openImage(spouse.profile_image_url, formatName(spouse));
+                                }
+                              }}
+                              className={`relative ${spouse.profile_image_url ? 'cursor-pointer group/avatar hover:scale-105 active:scale-95 transition-all duration-300' : ''}`}
+                              title={spouse.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                            >
                               <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-orange-600 via-red-600 to-yellow-400 shadow-xs shadow-orange-500/20">
-                                <div className="w-full h-full rounded-full overflow-hidden bg-orange-50 flex items-center justify-center">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-orange-50 flex items-center justify-center relative">
                                   {spouse.profile_image_url ? (
-                                    <img 
-                                      src={spouse.profile_image_url} 
-                                      alt={formatName(spouse)} 
-                                      className="w-full h-full object-cover"
-                                    />
+                                    <>
+                                      <img 
+                                        src={spouse.profile_image_url} 
+                                        alt={formatName(spouse)} 
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-110" 
+                                      />
+                                      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <ZoomIn className="w-4 h-4 text-white drop-shadow-sm" />
+                                      </div>
+                                    </>
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-orange-100 to-amber-50 text-orange-600">
                                       <Heart size={18} className="fill-orange-300/40 text-orange-600" />
@@ -515,7 +531,7 @@ const SpousesDirectoryView = ({
                                 </div>
                               </div>
                               {/* Bottom-right Heart Badge */}
-                              <div className="absolute -bottom-0.5 -right-0.5 bg-red-800 text-white p-0.5 rounded-full shadow-xs border border-white">
+                              <div className="absolute -bottom-0.5 -right-0.5 bg-red-800 text-white p-0.5 rounded-full shadow-xs border border-white pointer-events-none">
                                 <Heart size={8} className="fill-current text-white" />
                               </div>
                             </div>

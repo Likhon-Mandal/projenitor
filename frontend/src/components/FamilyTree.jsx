@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Edit, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles } from 'lucide-react';
+import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Edit, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles, ZoomIn } from 'lucide-react';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useImageViewer } from '../context/ImageViewerContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -78,6 +79,7 @@ const InfoItem = ({ icon, label, value, highlight, color = 'orange' }) => {
 const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDeleteNode, onViewDetails, memberMap, isAdmin: propIsAdmin }) => {
     const { t, isBn, formatOccupation, formatName } = useLanguage();
     const { isAdmin: authIsAdmin } = useAuth();
+    const { openImage } = useImageViewer();
     const isAdmin = propIsAdmin !== undefined ? propIsAdmin : authIsAdmin;
     const [person, setPerson] = useState(initialPerson);
     const [activeSpouse, setActiveSpouse] = useState(null);
@@ -186,16 +188,31 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                             </div>
                         )}
                         <div className="relative">
-                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white/30 p-1 shadow-2xl relative z-10 mx-auto">
-                                <div className="w-full h-full rounded-full overflow-hidden bg-white/20 backdrop-blur-md flex items-center justify-center">
+                            <div 
+                                onClick={() => person.profile_image_url && openImage(person.profile_image_url, formatName(person))}
+                                className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white/30 p-1 shadow-2xl relative z-10 mx-auto ${
+                                    person.profile_image_url ? 'cursor-pointer group/avatar hover:scale-105 active:scale-95 transition-all duration-300' : ''
+                                }`}
+                                title={person.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                            >
+                                <div className="w-full h-full rounded-full overflow-hidden bg-white/20 backdrop-blur-md flex items-center justify-center relative">
                                     {person.profile_image_url ? (
-                                        <img src={person.profile_image_url} alt={person.full_name} className="w-full h-full object-cover" />
+                                        <>
+                                            <img 
+                                                src={person.profile_image_url} 
+                                                alt={person.full_name} 
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110" 
+                                            />
+                                            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                <ZoomIn className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+                                            </div>
+                                        </>
                                     ) : (
                                         <User size={48} className="sm:size-16 text-white/40" />
                                     )}
                                 </div>
                             </div>
-                            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white ${genBadgeText} text-[8px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap`}>
+                            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white ${genBadgeText} text-[8px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-lg uppercase tracking-tighter z-20 whitespace-nowrap pointer-events-none`}>
                                 Gen {person.level}
                             </div>
                         </div>
@@ -376,14 +393,25 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                             {/* Cute Female Profile Header */}
                             <div className="flex items-center gap-3.5 mb-4 relative z-10">
                                 <div className="relative shrink-0">
-                                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-pink-400 via-rose-300 to-amber-200 shadow-md shadow-pink-500/15">
-                                        <div className="w-full h-full rounded-full overflow-hidden bg-rose-50 flex items-center justify-center">
+                                    <div 
+                                        onClick={() => (spouseData?.profile_image_url || activeSpouse.profile_image_url) && openImage(spouseData?.profile_image_url || activeSpouse.profile_image_url, formatName(spouseData || activeSpouse))}
+                                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-pink-400 via-rose-300 to-amber-200 shadow-md shadow-pink-500/15 ${
+                                            (spouseData?.profile_image_url || activeSpouse.profile_image_url) ? 'cursor-pointer group/spouse-avatar hover:scale-105 active:scale-95 transition-all duration-300' : ''
+                                        }`}
+                                        title={(spouseData?.profile_image_url || activeSpouse.profile_image_url) ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                                    >
+                                        <div className="w-full h-full rounded-full overflow-hidden bg-rose-50 flex items-center justify-center relative">
                                             {(spouseData?.profile_image_url || activeSpouse.profile_image_url) ? (
-                                                <img
-                                                    src={spouseData?.profile_image_url || activeSpouse.profile_image_url}
-                                                    alt=""
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                <>
+                                                    <img
+                                                        src={spouseData?.profile_image_url || activeSpouse.profile_image_url}
+                                                        alt=""
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover/spouse-avatar:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/spouse-avatar:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                        <ZoomIn className="w-5 h-5 text-white drop-shadow-md" />
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-pink-100 to-rose-50 text-rose-400">
                                                     <User size={30} />
@@ -391,7 +419,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                                             )}
                                         </div>
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 bg-rose-500 text-white p-1 rounded-full shadow-md border-2 border-white">
+                                    <div className="absolute -bottom-1 -right-1 bg-rose-500 text-white p-1 rounded-full shadow-md border-2 border-white pointer-events-none">
                                         <Heart size={9} className="fill-white" />
                                     </div>
                                 </div>
@@ -590,6 +618,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
 /* SPOUSE DETAILS MODAL (Screenshot Style) */
 const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onViewDetails, memberMap }) => {
     const { t, isBn, formatOccupation, formatName } = useLanguage();
+    const { openImage } = useImageViewer();
     const [person, setPerson] = useState(initialPerson);
     const [loading, setLoading] = useState(false);
 
@@ -654,9 +683,24 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                         {t('ট্রি দেখুন', 'View Tree')}
                     </button>
                     <div className="absolute top-10 left-1/2 -translate-x-1/2">
-                        <div className="w-28 h-28 rounded-full border-4 border-white overflow-hidden bg-orange-100 shadow-xl">
+                        <div 
+                            onClick={() => person.profile_image_url && openImage(person.profile_image_url, formatName(person))}
+                            className={`w-28 h-28 rounded-full border-4 border-white overflow-hidden bg-orange-100 shadow-xl ${
+                                person.profile_image_url ? 'cursor-pointer group/spouse-modal hover:scale-105 active:scale-95 transition-all duration-300' : ''
+                            }`}
+                            title={person.profile_image_url ? t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo') : ''}
+                        >
                             {person.profile_image_url ? (
-                                <img src={person.profile_image_url} alt={person.full_name} className="w-full h-full object-cover" />
+                                <div className="w-full h-full relative">
+                                    <img 
+                                        src={person.profile_image_url} 
+                                        alt={person.full_name} 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover/spouse-modal:scale-110" 
+                                    />
+                                    <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/spouse-modal:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <ZoomIn className="w-6 h-6 text-white drop-shadow-lg" />
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <User size={48} className="text-[#9a3412]/30" />
