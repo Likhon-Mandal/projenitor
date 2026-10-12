@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { pool } = require('./config/db');
 const { seedSuperAdmin } = require('./seedSuperAdmin');
@@ -10,10 +11,49 @@ const { apiLogger } = require('./middleware/apiLogger');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Security Headers with Helmet
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows cross-origin image loading (Cloudinary & local uploads)
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  contentSecurityPolicy: false // API backend - disabled to prevent breaking frontend tunnels / Vite scripts
+}));
+
+// Allowed Origins for CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://localhost:5001',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5000',
+  'http://127.0.0.1:5001',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(s => s.trim()) : [])
+].filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Non-browser clients (curl, Postman, server-to-server)
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow Cloudflare quick tunnels (*.trycloudflare.com)
+  if (origin.endsWith('.trycloudflare.com')) return true;
+  // Allow LAN network addresses (e.g. 192.168.x.x, 10.x.x.x for mobile testing on local Wi-Fi)
+  if (/^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)) return true;
+  return false;
+};
+
 // Middleware
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS Blocked]: Origin "${origin}" not allowed`);
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-encrypted', 'x-device-id']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
