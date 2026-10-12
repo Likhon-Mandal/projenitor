@@ -11,6 +11,9 @@ const { apiLogger } = require('./middleware/apiLogger');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Reverse Proxy & API Gateway trust setting (for Vercel, Cloudflare, Nginx, ALB)
+app.set('trust proxy', 1);
+
 // Security Headers with Helmet
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows cross-origin image loading (Cloudinary & local uploads)
@@ -67,8 +70,12 @@ app.use(apiLogger);
 // Global API Obfuscation Middleware
 app.use(encryptionMiddleware);
 
+// Rate Limiting (API Gateway / DDoS / Brute-force protection)
+const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
+app.use('/api', apiLimiter);
+
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/members', require('./routes/memberRoutes'));
