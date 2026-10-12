@@ -943,7 +943,7 @@ exports.getPublicStats = async (req, res) => {
         });
     } catch (err) {
         console.error('Public stats error:', err);
-        res.status(500).json({ error: 'Server error fetching public stats' });
+        res.status(500).json({ error: 'Server error fetching public stats: ' + (err.message || err) });
     }
 };
 
