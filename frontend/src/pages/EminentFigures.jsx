@@ -8,6 +8,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useImageViewer } from '../context/ImageViewerContext';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 const categories = [
@@ -117,6 +118,12 @@ const EminentFigures = () => {
 
     return (
         <div className="min-h-screen bg-[#fffcf5] pb-20 font-sans">
+            <SEO 
+                title="কৃতি ও স্মরণীয় ব্যক্তিত্ব" 
+                description="বাড়ৈ বংশের গৌরবোজ্জ্বল কৃতি শিক্ষার্থী, আজীবন সম্মানিত ব্যক্তিত্ব এবং মরণোত্তর স্মরণীয় জ্ঞাতিবর্গ।" 
+                canonical="/eminent" 
+                keywords="কৃতি শিক্ষার্থী, মরণোত্তর জ্ঞাতি, আজীবন জ্ঞাতি, বিশিষ্ট ব্যক্তিত্ব, বাড়ৈ বংশ গৌরব"
+            />
             {/* Header Area */}
             <div className={`bg-gradient-to-br ${currentCategoryInfo.bg} ${currentCategoryInfo.textMain} pt-10 pb-16 px-6 relative overflow-hidden transition-colors duration-700`}>
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>

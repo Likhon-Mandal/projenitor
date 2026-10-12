@@ -4,6 +4,7 @@ import { ArrowLeftRight, GitBranch, Search, Sparkles } from 'lucide-react';
 import MemberSelector from '../components/MemberSelector';
 import { useLanguage } from '../context/LanguageContext';
 import { calculateRelationshipEngine } from '../utils/relationCalculator';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 /* ─── Animation Styles ──────────────────────────────────────────────────── */
@@ -69,6 +70,12 @@ const FindRelation = () => {
 
     return (
         <div className="min-h-screen pb-16 font-sans">
+            <SEO 
+                title="সম্পর্ক নির্ণয় ক্যালকুলেটর" 
+                description="বাড়ৈ বংশের যেকোনো দুই সদস্যের মধ্যে বংশলতিকা অনুযায়ী সঠিক রক্ত ও পারিবারিক সম্পর্ক খুঁজে বের করুন।" 
+                canonical="/find-relation" 
+                keywords="সম্পর্ক নির্ণয়, বংশলতিকা সম্পর্ক, আত্মীয়তার বন্ধন, বাড়ৈ বংশ সম্পর্ক ক্যালকুলেটর"
+            />
             <Styles />
 
             {/* Page Header */}

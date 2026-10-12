@@ -90,6 +90,8 @@ app.use('/api/help', require('./routes/help'));
 app.use('/api/sammelans', require('./routes/sammelanRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/system', require('./routes/systemRoutes'));
+app.use('/', require('./routes/sitemapRoute'));
+app.use('/api', require('./routes/sitemapRoute'));
 app.use('/uploads', express.static('uploads'));
 
 // Basic Route

@@ -24,6 +24,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import HistoryFormModal from '../components/HistoryFormModal';
 import ConfirmModal from '../components/ConfirmModal';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 const History = () => {
@@ -259,7 +260,12 @@ const History = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 animate-fade-in font-sans pb-24 px-3 sm:px-6">
-            
+            <SEO 
+                title="বংশবৃত্তান্ত ও ইতিহাস" 
+                description="ভগবান চন্দ্র বাড়ৈর অমর ঐতিহ্য ও জ্ঞাতিবর্গের শতবর্ষের গৌরবময় ইতিহাস ও বংশলতিকা।" 
+                canonical="/history" 
+                keywords="বাড়ৈ বংশের ইতিহাস, ভগবান চন্দ্র বাড়ৈ, বংশবৃত্তান্ত, পঞ্চানন বাড়ৈ, গোবিন্দপুর"
+            />
             {/* Top Page Header Banner */}
             <div className="text-center space-y-3 sm:space-y-4 animate-slide-up mt-4 sm:mt-6">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100/80 border border-orange-200 text-orange-900 text-xs sm:text-sm font-semibold mb-1 shadow-2xs">

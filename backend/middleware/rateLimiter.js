@@ -15,6 +15,7 @@ const apiLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: getClientIp,
+    validate: { keyGeneratorIpFallback: false },
     message: {
         error: 'Too Many Requests',
         message: 'অনুরোধের সীমা অতিক্রম করেছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন। (Too many requests, please try again later.)'
@@ -28,6 +29,7 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: getClientIp,
+    validate: { keyGeneratorIpFallback: false },
     message: {
         error: 'Too Many Attempts',
         message: 'অতিরিক্ত লগইন বা অনুরোধ প্রচেষ্টার কারণে সাময়িকভাবে স্থগিত। অনুগ্রহ করে ১৫ মিনিট পর আবার চেষ্টা করুন।'

@@ -3,8 +3,10 @@ const router = express.Router();
 const systemController = require('../controllers/systemController');
 const { authenticate, requireAdmin, requireSuperAdmin } = require('../middleware/authMiddleware');
 
-router.get('/stats', systemController.getPublicStats);
-router.get('/notifications', systemController.getPublicNotifications);
+const { cacheMiddleware, invalidateCache } = require('../middleware/cacheMiddleware');
+
+router.get('/stats', cacheMiddleware(300, 'system:stats'), systemController.getPublicStats);
+router.get('/notifications', cacheMiddleware(180, 'system:notifications'), systemController.getPublicNotifications);
 
 // Admin only routes
 router.use(authenticate, requireAdmin);

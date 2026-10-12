@@ -26,18 +26,29 @@ const optionalAuth = async (req, res, next) => {
     next();
 };
 
-// Public: Read events
-router.get('/', eventController.getEvents);
+const { cacheMiddleware, invalidateCache } = require('../middleware/cacheMiddleware');
+
+const clearEventsCache = (req, res, next) => {
+  res.on('finish', () => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      invalidateCache('events');
+    }
+  });
+  next();
+};
+
+// Public: Read events (Cached for 5 minutes)
+router.get('/', cacheMiddleware(300, 'events'), eventController.getEvents);
 
 // Protected: Write events (admin/superadmin only)
-router.post('/', authenticate, requireAdmin, eventController.addEvent);
-router.put('/:id', authenticate, requireAdmin, eventController.updateEvent);
-router.delete('/:id', authenticate, requireAdmin, eventController.deleteEvent);
+router.post('/', authenticate, requireAdmin, clearEventsCache, eventController.addEvent);
+router.put('/:id', authenticate, requireAdmin, clearEventsCache, eventController.updateEvent);
+router.delete('/:id', authenticate, requireAdmin, clearEventsCache, eventController.deleteEvent);
 
 // Memories for previous events (Public read, Admin/Superadmin write)
-router.get('/:id/memories', eventController.getEventMemories);
-router.post('/:id/memories', authenticate, requireAdmin, eventController.addEventMemory);
-router.delete('/:id/memories/:memoryId', authenticate, requireAdmin, eventController.deleteEventMemory);
+router.get('/:id/memories', cacheMiddleware(300, 'events:memories'), eventController.getEventMemories);
+router.post('/:id/memories', authenticate, requireAdmin, clearEventsCache, eventController.addEventMemory);
+router.delete('/:id/memories/:memoryId', authenticate, requireAdmin, clearEventsCache, eventController.deleteEventMemory);
 
 module.exports = router;
 

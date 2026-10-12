@@ -13,6 +13,7 @@ import LocationForm from '../components/LocationForm';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 const toBnDigits = (num) => {
@@ -416,6 +417,11 @@ const Explorer = () => {
 
     return (
         <div className="space-y-6 animate-fade-in relative">
+            <SEO 
+                title={t('বংশলতিকা ও বাড়ি এক্সপ্লোরার', 'Lineage & House Explorer')}
+                description={t('দেশ, জেলা, উপজেলা, গ্রাম ও বাড়ি নির্বাচন করে বাড়ৈ বংশের বংশলতিকা এবং সদস্যদের বিস্তারিত জানুন।', 'Explore Barai Bangsho genealogy tree, family houses, and member profiles across regions.')}
+                canonicalPath="/explorer"
+            />
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-orange-100 animate-slide-up flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary mb-1 sm:mb-2">{t('বংশের বাড়ি খুঁজুন এবং সদস্যদের সম্পর্কে জানুন', 'Search for houses and learn about members.')}</h1>

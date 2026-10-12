@@ -11,6 +11,7 @@ import EventDetailsModal from '../components/EventDetailsModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 import api from '../api/api';
 import { formatDateDDMMYYYY } from '../utils/dateUtils';
 
@@ -301,6 +302,12 @@ const EventsAndNotices = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-fade-in font-sans pb-20 px-4">
+            <SEO 
+                title="অনুষ্ঠান ও নোটিশবোর্ড" 
+                description="বাড়ৈ বংশের অফিশিয়াল বিজ্ঞপ্তি, জরুরি ঘোষণা, আসন্ন অনুষ্ঠানমালা ও স্মৃতি গ্যালারি।" 
+                canonical="/events" 
+                keywords="বাড়ৈ বংশ নোটিশ, অনুষ্ঠানমালা, বংশীয় বিজ্ঞপ্তি, স্মৃতি গ্যালারি"
+            />
             {/* Header Banner */}
             <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-stone-100 gap-4 mt-6">
                 <div className="flex items-center gap-3">

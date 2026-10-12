@@ -24,6 +24,7 @@ import Profile from './Profile';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDateDDMMYYYY } from '../utils/dateUtils';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 const Help = () => {
@@ -227,6 +228,12 @@ const Help = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-12">
+            <SEO 
+                title="সহায়তা কেন্দ্র" 
+                description="বাড়ৈ বংশ পোর্টালের যেকোনো সমস্যা, তথ্য সংশোধন কিংবা রক্তের গ্রুপ ও জরুরি প্রয়োজনে সহায়তা কেন্দ্র।" 
+                canonical="/help" 
+                keywords="সহায়তা কেন্দ্র, যোগাযোগ, তথ্য সংশোধন, রক্ত সহায়তা, হেল্প ডেস্ক"
+            />
             {/* Header section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-slide-up">
                 <div>

@@ -6,6 +6,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useImageViewer } from '../context/ImageViewerContext';
+import SEO from '../components/SEO';
 import api from '../api/api';
 
 const CommitteeBoard = () => {
@@ -161,6 +162,12 @@ const CommitteeBoard = () => {
 
     return (
         <div className="min-h-screen bg-[#fffcf5] pb-20 font-sans">
+            <SEO 
+                title="কার্যনির্বাহী পরিষদ" 
+                description="ভগবান চন্দ্র বাড়ৈ বংশের কেন্দ্রীয় পরিচালনা ও কার্যনির্বাহী পরিষদের নেতৃত্ব ও সদস্যবৃন্দ।" 
+                canonical="/committee" 
+                keywords="কার্যনির্বাহী পরিষদ, বাড়ৈ বংশ কমিটি, পরিচালনা পর্ষদ, নেতৃত্ব"
+            />
 
             {/* Header Area */}
             <div className="bg-gradient-to-br from-orange-900 to-red-900 text-white pt-12 pb-16 px-6 relative overflow-hidden">

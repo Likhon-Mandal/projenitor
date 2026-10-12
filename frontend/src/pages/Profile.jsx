@@ -9,6 +9,7 @@ import { calculateRelationshipEngine } from '../utils/relationCalculator';
 import MemberSelector from '../components/MemberSelector';
 import api from '../api/api';
 import VerifiedBadge from '../components/VerifiedBadge';
+import SEO from '../components/SEO';
 
 const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
   const { user, isAdmin } = useAuth();

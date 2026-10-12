@@ -12,6 +12,7 @@ import Profile from './Profile';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 /* ANIMATION STYLES */
 const AnimationStyles = () => (
@@ -562,6 +563,11 @@ const Home = () => {
 
     return (
         <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-20">
+            <SEO 
+                title={t('মূলপাতা', 'Home')}
+                description={t('৮+ প্রজন্মের পারিবারিক ঐতিহ্য, রক্তের বন্ধন, বংশলতিকা এবং সম্মেলনের ইতিহাস সংরক্ষণ প্ল্যাটফর্ম।', 'Connecting 8+ generations. Preserving our shared history, stories, and bloodline for the future.')}
+                canonicalPath="/"
+            />
             <AnimationStyles />
 
             {/* HERO SECTION - 50vh Centered Design (Light Theme) */}

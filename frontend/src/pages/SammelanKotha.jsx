@@ -14,6 +14,7 @@ import SammelanFormModal from '../components/SammelanFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import SammelanPhotoCollage from '../components/SammelanPhotoCollage';
 import PhotoLightboxModal from '../components/PhotoLightboxModal';
+import SEO from '../components/SEO';
 
 // Extract all unique photos for a sammelan item
 const getSammelanPhotos = (item) => {
@@ -287,6 +288,12 @@ const SammelanKotha = () => {
 
     return (
         <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-24">
+            <SEO 
+                title="সম্মেলন কথা ও ইতিহাস" 
+                description="বাড়ৈ বংশের ঐতিহাসিক জ্ঞাতি সম্মেলনসমূহের বিস্তারিত ইতিহাস, স্থান, সভাপতি ও স্মারক তথ্য।" 
+                canonical="/sammelan-kotha" 
+                keywords="জ্ঞাতি সম্মেলন, বাড়ৈ বংশ সম্মেলন, সম্মেলন কথা, বংশীয় ইতিহাস"
+            />
 
             {/* HERITAGE HERO HEADER - Clean, Colorful & Simple */}
             <div className="relative bg-gradient-to-r from-orange-700 via-amber-600 to-red-700 text-white py-8 sm:py-10 px-4 text-center shadow-md border-b-4 border-amber-400/60 overflow-hidden">

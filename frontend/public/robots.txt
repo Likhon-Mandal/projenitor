@@ -1,0 +1,24 @@
+# Robots.txt for Barai Bangsho (Projenitor)
+User-agent: *
+Allow: /
+Allow: /explorer
+Allow: /history
+Allow: /sammelan
+Allow: /committee
+Allow: /eminent
+Allow: /board
+Allow: /help
+Allow: /directory
+Allow: /relation
+Allow: /spouses 
+Allow: /member/
+
+# Disallow internal administrative panels and sensitive routes
+Disallow: /admin
+Disallow: /dashboard/
+Disallow: /recycle-bin
+Disallow: /reset-password
+Disallow: /change-password
+
+# Sitemap Index
+Sitemap: https://baraibangsho.vercel.app/sitemap.xml
