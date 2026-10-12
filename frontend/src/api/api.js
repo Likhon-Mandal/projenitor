@@ -4,8 +4,18 @@ import { encrypt, decrypt } from '../utils/crypto';
 
 const TOKEN_KEY = 'projenitor_token';
 
+const getApiBaseUrl = () => {
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    if (import.meta.env.PROD) {
+        return 'https://baraibangsho-backend.vercel.app/api';
+    }
+    return '/api';
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api',
+    baseURL: getApiBaseUrl(),
     withCredentials: true,
 });
 
