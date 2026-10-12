@@ -68,13 +68,22 @@ const Sidebar = ({ isOpen, onClose, adminPendingCount = 0 }) => {
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-orange-800">
-                    <div>
-                        <p className="font-serif font-bold text-white text-lg sm:text-xl truncate">
-                            বাড়ৈ বংশের ইতিবৃত্ত
-                        </p>
-                        <p className="text-orange-300 text-xs">
-                            {t('পারিবারিক ইতিবৃত্ত', 'Ancestral Records')}
-                        </p>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl p-0.5 bg-orange-950/80 border border-yellow-400/40 shadow-sm shrink-0 flex items-center justify-center">
+                            <img
+                                src="/pwa-icon.svg"
+                                alt="বাড়ৈ বংশ প্রতীক"
+                                className="w-full h-full object-cover rounded-lg"
+                            />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-serif font-bold text-white text-base sm:text-lg truncate">
+                                বাড়ৈ বংশের ইতিবৃত্ত
+                            </p>
+                            <p className="text-orange-300 text-xs truncate">
+                                {t('পারিবারিক ইতিবৃত্ত', 'Ancestral Records')}
+                            </p>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Language Switcher Pill */}

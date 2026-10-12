@@ -118,7 +118,14 @@ const Header = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <Link to="/" className="group flex items-center gap-2">
+            <Link to="/" className="group flex items-center gap-2.5 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-orange-950/80 border border-yellow-400/50 shadow-md group-hover:border-yellow-300 group-hover:scale-105 group-hover:shadow-yellow-500/25 transition-all duration-300 shrink-0 flex items-center justify-center">
+                <img
+                  src="/pwa-icon.svg"
+                  alt="বাড়ৈ বংশ প্রতীক"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
               <span className="font-serif font-black text-xl sm:text-2xl text-yellow-500 group-hover:text-yellow-400 transition-colors tracking-tight">
                 বাড়ৈ বংশের ইতিবৃত্ত
               </span>
