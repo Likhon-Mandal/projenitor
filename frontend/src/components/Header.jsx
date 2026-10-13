@@ -291,7 +291,7 @@ const Header = () => {
 
               {/* ─── Profile Dropdown Popup Box ─── */}
               {profileMenuOpen && (
-                <div className="absolute top-full right-0 mt-2.5 w-72 sm:w-80 bg-orange-950/95 backdrop-blur-xl border border-orange-700/60 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up divide-y divide-orange-800/60 text-white">
+                <div className="absolute top-full right-0 mt-2.5 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-orange-950/95 backdrop-blur-xl border border-orange-700/60 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up divide-y divide-orange-800/60 text-white">
 
                   {user ? (
                     /* ── Logged In Content ── */

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Calendar, Megaphone, HelpCircle, ExternalLink, CheckCheck } from 'lucide-react';
+import { Bell, Calendar, Megaphone, HelpCircle, ExternalLink, CheckCheck, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,7 +43,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
         fetchNotifications();
     }, []);
 
-    // Close on outside click
+    // Close on outside click or touch
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,9 +52,11 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
         };
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
         }
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
         };
     }, [isOpen]);
 
@@ -167,13 +169,25 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                 )}
             </button>
 
-            {/* Simplistic Small Floating Box */}
+            {/* Backdrop on mobile screens */}
             {isOpen && (
-                <div className="absolute right-0 mt-2.5 w-72 sm:w-88 md:w-96 max-w-[calc(100vw-1.5rem)] bg-white text-stone-800 border border-orange-200 rounded-2xl shadow-2xl z-[150] overflow-hidden animate-fade-in origin-top-right">
+                <div
+                    className="sm:hidden fixed inset-0 bg-black/30 z-[140] backdrop-blur-[1px] animate-fade-in"
+                    onClick={() => setIsOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* Notification Dropdown Box */}
+            {isOpen && (
+                <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="fixed left-3 right-3 top-16 sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-2.5 w-auto sm:w-88 md:w-96 sm:max-w-md bg-white text-stone-800 border border-orange-200/90 rounded-2xl shadow-2xl z-[150] overflow-hidden animate-fade-in sm:origin-top-right flex flex-col max-h-[calc(100vh-5rem)] sm:max-h-[32rem]"
+                >
                     {/* Header */}
-                    <div className="px-4 py-3 bg-gradient-to-r from-orange-50 via-amber-50/40 to-white border-b border-orange-100 flex items-center justify-between">
+                    <div className="px-4 py-3 bg-gradient-to-r from-orange-50 via-amber-50/40 to-white border-b border-orange-100 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-orange-800" />
+                            <Bell className="w-4 h-4 text-orange-800 shrink-0" />
                             <h4 className="font-serif font-bold text-stone-900 text-sm">
                                 {t('বিজ্ঞপ্তি ও আপডেট', 'Notifications & Updates')}
                             </h4>
@@ -184,21 +198,32 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                             )}
                         </div>
 
-                        {unseenCount > 0 && (
+                        <div className="flex items-center gap-2">
+                            {unseenCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleMarkAllAsRead}
+                                    className="text-[11px] font-semibold text-orange-800 hover:text-orange-950 flex items-center gap-1 hover:underline cursor-pointer transition-colors"
+                                    title={t('সব পঠিত হিসেবে চিহ্নিত করুন', 'Mark all as read')}
+                                >
+                                    <CheckCheck className="w-3.5 h-3.5" />
+                                    <span>{t('পঠিত', 'Mark read')}</span>
+                                </button>
+                            )}
                             <button
                                 type="button"
-                                onClick={handleMarkAllAsRead}
-                                className="text-[11px] font-semibold text-orange-800 hover:text-orange-950 flex items-center gap-1 hover:underline cursor-pointer transition-colors"
-                                title={t('সব পঠিত হিসেবে চিহ্নিত করুন', 'Mark all as read')}
+                                onClick={() => setIsOpen(false)}
+                                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-orange-100/60 transition-colors cursor-pointer"
+                                title={t('বন্ধ করুন', 'Close')}
+                                aria-label="Close notifications"
                             >
-                                <CheckCheck className="w-3.5 h-3.5" />
-                                <span>{t('পঠিত', 'Mark read')}</span>
+                                <X className="w-4 h-4" />
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     {/* Notification Items List - Only unseen notifications are shown */}
-                    <div className="max-h-80 overflow-y-auto divide-y divide-stone-100">
+                    <div className="flex-1 overflow-y-auto divide-y divide-stone-100 custom-scroll min-h-0">
                         {loading && notifications.length === 0 ? (
                             <div className="p-8 text-center text-xs text-stone-500 animate-pulse">
                                 {t('বিজ্ঞপ্তি লোড হচ্ছে...', 'Loading notifications...')}
@@ -255,6 +280,21 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                 );
                             })
                         )}
+                    </div>
+
+                    {/* Footer - Link to all notices and events */}
+                    <div className="px-4 py-2.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between text-xs shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsOpen(false);
+                                navigate('/board');
+                            }}
+                            className="text-xs font-bold text-orange-800 hover:text-orange-950 flex items-center gap-1.5 hover:underline cursor-pointer transition-colors"
+                        >
+                            <span>{t('সকল বিজ্ঞপ্তি ও অনুষ্ঠান দেখুন', 'View all notices & events')}</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
                     </div>
                 </div>
             )}
