@@ -182,28 +182,28 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
             {isOpen && (
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className="fixed left-3 right-3 top-16 sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-2.5 w-auto sm:w-88 md:w-96 sm:max-w-md bg-white text-stone-800 border border-orange-200/90 rounded-2xl shadow-2xl z-[150] overflow-hidden animate-fade-in sm:origin-top-right flex flex-col max-h-[calc(100vh-5rem)] sm:max-h-[32rem]"
+                    className="fixed right-2 sm:right-0 top-14 sm:top-full sm:mt-2.5 w-[290px] sm:w-88 md:w-96 max-w-[calc(100vw-1rem)] bg-white text-stone-800 border border-orange-200/90 rounded-2xl shadow-2xl z-[150] overflow-hidden animate-fade-in origin-top-right flex flex-col max-h-[340px] sm:max-h-[30rem]"
                 >
                     {/* Header */}
-                    <div className="px-4 py-3 bg-gradient-to-r from-orange-50 via-amber-50/40 to-white border-b border-orange-100 flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-2">
+                    <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-orange-50 via-amber-50/40 to-white border-b border-orange-100 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                             <Bell className="w-4 h-4 text-orange-800 shrink-0" />
-                            <h4 className="font-serif font-bold text-stone-900 text-sm">
+                            <h4 className="font-serif font-bold text-stone-900 text-xs sm:text-sm truncate">
                                 {t('বিজ্ঞপ্তি ও আপডেট', 'Notifications & Updates')}
                             </h4>
                             {unseenCount > 0 && (
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-800 text-white">
+                                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-orange-800 text-white shrink-0">
                                     {formatNumber(unseenCount)}
                                 </span>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 shrink-0">
                             {unseenCount > 0 && (
                                 <button
                                     type="button"
                                     onClick={handleMarkAllAsRead}
-                                    className="text-[11px] font-semibold text-orange-800 hover:text-orange-950 flex items-center gap-1 hover:underline cursor-pointer transition-colors"
+                                    className="text-[10px] sm:text-[11px] font-semibold text-orange-800 hover:text-orange-950 flex items-center gap-1 hover:underline cursor-pointer transition-colors"
                                     title={t('সব পঠিত হিসেবে চিহ্নিত করুন', 'Mark all as read')}
                                 >
                                     <CheckCheck className="w-3.5 h-3.5" />
@@ -223,20 +223,20 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                     </div>
 
                     {/* Notification Items List - Only unseen notifications are shown */}
-                    <div className="flex-1 overflow-y-auto divide-y divide-stone-100 custom-scroll min-h-0">
+                    <div className="max-h-52 sm:max-h-72 overflow-y-auto divide-y divide-stone-100 custom-scroll min-h-0 flex-1">
                         {loading && notifications.length === 0 ? (
-                            <div className="p-8 text-center text-xs text-stone-500 animate-pulse">
+                            <div className="p-6 text-center text-xs text-stone-500 animate-pulse">
                                 {t('বিজ্ঞপ্তি লোড হচ্ছে...', 'Loading notifications...')}
                             </div>
                         ) : unseenNotifications.length === 0 ? (
-                            <div className="p-8 text-center flex flex-col items-center justify-center">
-                                <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2.5">
-                                    <CheckCheck className="w-5 h-5 text-emerald-600" />
+                            <div className="p-6 text-center flex flex-col items-center justify-center">
+                                <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2">
+                                    <CheckCheck className="w-4 h-4 text-emerald-600" />
                                 </div>
                                 <p className="text-xs font-bold text-stone-700" style={{ color: '#374151' }}>
                                     {t('কোনো নতুন বিজ্ঞপ্তি নেই', 'No new notifications')}
                                 </p>
-                                <p className="text-[11px] text-stone-400 mt-0.5">
+                                <p className="text-[10px] text-stone-400 mt-0.5">
                                     {t('সব নোটিফিকেশন পঠিত হিসেবে সম্পন্ন হয়েছে', 'All notifications have been read')}
                                 </p>
                             </div>
@@ -249,33 +249,33 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                         key={item.id}
                                         type="button"
                                         onClick={() => handleNotificationClick(item)}
-                                        className="w-full text-left p-3.5 flex items-start gap-3 transition-all duration-200 hover:bg-orange-50/70 group cursor-pointer bg-white"
+                                        className="w-full text-left p-2.5 sm:p-3.5 flex items-start gap-2.5 transition-all duration-200 hover:bg-orange-50/70 group cursor-pointer bg-white"
                                         style={{ color: '#1c1917' }}
                                     >
                                         {/* Icon bubble */}
-                                        <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-2xs">
+                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-2xs">
                                             {getTypeIcon(item.type)}
                                         </div>
 
                                         {/* Title link & metadata */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border ${badgeInfo.badgeClass}`}>
+                                            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                                                <span className={`text-[8.5px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeInfo.badgeClass}`}>
                                                     {badgeInfo.label}
                                                 </span>
-                                                <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" title={t('নতুন', 'New')} />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" title={t('নতুন', 'New')} />
                                             </div>
 
                                             {/* Clickable Heading */}
                                             <p
-                                                className="text-xs font-bold line-clamp-2 leading-snug group-hover:text-orange-950 transition-colors"
+                                                className="text-[11px] sm:text-xs font-bold line-clamp-2 leading-snug group-hover:text-orange-950 transition-colors"
                                                 style={{ color: '#1c1917' }}
                                             >
                                                 {item.title}
                                             </p>
                                         </div>
 
-                                        <ExternalLink className="w-3.5 h-3.5 text-stone-400 group-hover:text-orange-700 shrink-0 mt-1 transition-colors" />
+                                        <ExternalLink className="w-3 h-3 text-stone-400 group-hover:text-orange-700 shrink-0 mt-1 transition-colors" />
                                     </button>
                                 );
                             })
