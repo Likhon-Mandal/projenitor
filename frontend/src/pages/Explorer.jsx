@@ -302,24 +302,11 @@ const Explorer = () => {
                 setHierarchyData([...hierarchyData]);
                 setActiveGraphPath(newPath);
 
-                // Scroll container horizontally to the right to reveal new nodes
-                setTimeout(() => {
-                    const scrollContainer = document.getElementById('location-tree-scroll');
-                    if (scrollContainer) {
-                        scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
-                    }
-                }, 100);
             } catch (e) {
                 console.error(e);
             }
         } else {
             setActiveGraphPath(newPath);
-            setTimeout(() => {
-                const scrollContainer = document.getElementById('location-tree-scroll');
-                if (scrollContainer) {
-                    scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
-                }
-            }, 100);
         }
     };
 
@@ -706,14 +693,18 @@ const Explorer = () => {
                         </div>
                     ) : (
                         /* Graph View */
-                        <div id="explorer-graph-container" className="bg-background border border-orange-100 rounded-2xl shadow-inner min-h-[400px] sm:min-h-[500px] overflow-hidden animate-slide-up relative">
-                            {/* Background Pattern */}
-                            <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
-                                style={{ backgroundImage: 'linear-gradient(#9a3412 1px, transparent 1px), linear-gradient(90deg, #9a3412 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-                            </div>
+                        <div id="explorer-graph-container" className="relative overflow-hidden rounded-3xl border border-orange-100 bg-background shadow-inner min-h-[420px] sm:min-h-[520px] animate-slide-up">
+                            {/* Background: dotted grid + warm diya glow */}
+                            <div className="absolute inset-0 pointer-events-none text-orange-900/[0.09]"
+                                style={{ backgroundImage: 'radial-gradient(currentColor 1.2px, transparent 1.2px)', backgroundSize: '22px 22px' }} />
+                            <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-orange-300/20 blur-3xl pointer-events-none" />
+                            <div className="absolute -bottom-28 right-0 w-96 h-96 rounded-full bg-amber-300/15 blur-3xl pointer-events-none" />
 
                             {loading ? (
-                                <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 animate-pulse text-stone-500">{t('কাঠামো লোড হচ্ছে...', 'Loading hierarchy...')}</div>
+                                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/70 backdrop-blur-[2px] text-sm font-semibold text-stone-500">
+                                    <span className="w-10 h-10 rounded-full border-[3px] border-orange-200 border-t-orange-600 animate-spin" />
+                                    {t('কাঠামো লোড হচ্ছে...', 'Loading hierarchy...')}
+                                </div>
                             ) : null}
 
                             <LocationTree
