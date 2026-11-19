@@ -141,7 +141,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
 
     return (
         <React.Fragment>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-stone-950/80 backdrop-blur-md" onClick={onClose}>
+            <div className="fixed inset-0 app-sheet z-[100] flex items-center justify-center p-4 sm:p-6 bg-stone-950/80 backdrop-blur-md" onClick={onClose}>
                 <div
                     className="bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-modal relative max-h-[90vh] md:h-[620px] flex flex-col md:flex-row"
                     onClick={e => e.stopPropagation()}
@@ -248,7 +248,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
                     <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3.5 sm:gap-y-4 mt-2 sm:mt-4 overflow-y-auto pr-2 custom-scrollbar">
                         {/* Left Column: Personal Info */}
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-800 border-b border-stone-100 pb-2 mb-4">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h4>
                             <div className="grid grid-cols-1 gap-3">
                                 <InfoItem icon={<Calendar size={14} />} label={t('জন্ম তারিখ', 'Birth Date')} value={
                                     <React.Fragment>
@@ -269,7 +269,7 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
 
                         {/* Right Column: Contact & Family */}
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9a3412] border-b border-stone-100 pb-2 mb-4">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-800 border-b border-stone-100 pb-2 mb-4">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h4>
                             <div className="grid grid-cols-1 gap-3">
                                 <InfoItem icon={<Phone size={14} />} label={t('যোগাযোগ নম্বর', 'Contact Number')} value={person.contact_number} color="yellow" />
                                 {person.social_media ? (
@@ -370,11 +370,11 @@ const PersonDetailsModal = ({ person: initialPerson, onClose, onEditNode, onDele
     {/* Overlaid Cute Female Spouse Profile Card */}
         {activeSpouse && (
             <div
-                className="fixed inset-0 z-[140] bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+                className="fixed inset-0 app-sheet z-[140] bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
                 onClick={() => setActiveSpouse(null)}
             >
                         <div
-                            className="w-full max-w-sm sm:max-w-md bg-gradient-to-b from-[#fff6f7] via-white to-[#fff0f3] rounded-3xl shadow-2xl border-2 border-pink-200 p-4 sm:p-6 relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar"
+                            className="w-full max-w-sm sm:max-w-md bg-gradient-to-b from-rose-50 via-white to-rose-50 rounded-3xl shadow-2xl border-2 border-pink-200 p-4 sm:p-6 relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Decorative background glow */}
@@ -656,12 +656,12 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
     const SpouseInfoItem = ({ icon, label, value, onClick }) => (
         <div className={`flex items-start gap-4 mb-6 ${onClick ? 'cursor-pointer group' : ''}`} onClick={onClick}>
-            <div className={`mt-1 text-[#9a3412] shrink-0 ${onClick ? 'group-hover:scale-110 transition-transform' : ''}`}>
+            <div className={`mt-1 text-orange-800 shrink-0 ${onClick ? 'group-hover:scale-110 transition-transform' : ''}`}>
                 {icon}
             </div>
             <div>
                 <p className="text-stone-400 text-xs font-semibold mb-0.5">{label}</p>
-                <p className={`text-stone-800 font-bold text-sm leading-tight ${onClick ? 'group-hover:text-[#9a3412]' : ''}`}>
+                <p className={`text-stone-800 font-bold text-sm leading-tight ${onClick ? 'group-hover:text-orange-800' : ''}`}>
                     {value || (loading ? (isBn ? 'লোড হচ্ছে...' : 'Loading...') : 'N/A')}
                 </p>
             </div>
@@ -669,16 +669,16 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
     );
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-[110] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm" onClick={onClose}>
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div className="bg-[#9a3412] h-28 relative">
+                <div className="bg-orange-800 h-28 relative">
                     <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors cursor-pointer">
                         <X size={24} />
                     </button>
                     <button
                         onClick={() => onViewTree(person)}
-                        className="absolute top-4 right-14 bg-white text-[#9a3412] px-3 py-1 rounded-full text-[10px] font-bold shadow-md hover:bg-orange-50 transition-colors uppercase tracking-wider cursor-pointer"
+                        className="absolute top-4 right-14 bg-white text-orange-800 px-3 py-1 rounded-full text-[10px] font-bold shadow-md hover:bg-orange-50 transition-colors uppercase tracking-wider cursor-pointer"
                     >
                         {t('ট্রি দেখুন', 'View Tree')}
                     </button>
@@ -703,7 +703,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                                 </div>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <User size={48} className="text-[#9a3412]/30" />
+                                    <User size={48} className="text-orange-800/30" />
                                 </div>
                             )}
                         </div>
@@ -713,7 +713,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                 {/* Name and Location */}
                 <div className="mt-14 text-center px-6">
                     <div className="flex items-center justify-center gap-1.5">
-                        <h2 className="text-2xl font-serif font-bold text-[#9a3412]">
+                        <h2 className="text-2xl font-serif font-bold text-orange-800">
                             {formatName(person)}
                         </h2>
                         {(person.is_active || person.user_status === 'active' || person.user_account?.status === 'active') && (
@@ -721,7 +721,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                         )}
                     </div>
                     <div className="flex items-center justify-center gap-1.5 text-stone-500 text-sm mt-1">
-                        <MapPin size={14} className="text-[#9a3412]" />
+                        <MapPin size={14} className="text-orange-800" />
                         <span>{person.village || person.location || 'N/A'}</span>
                     </div>
                 </div>
@@ -730,7 +730,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
                 <div className="p-8 grid grid-cols-2 gap-8 mt-4">
                     {/* Left Column: Personal Info */}
                     <div>
-                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h3>
+                        <h3 className="text-orange-800 font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('ব্যক্তিগত তথ্য', 'Personal Info')}</h3>
                         <SpouseInfoItem icon={<Briefcase size={18} />} label={t('পেশা', 'Occupation')} value={formatOccupation(person.occupation)} />
                         <SpouseInfoItem icon={<Building size={18} />} label={t('কর্মস্থল', 'Workplace')} value={person.workplace} />
                         <SpouseInfoItem icon={<GraduationCap size={18} />} label={t('শিক্ষাগত যোগ্যতা', 'Education')} value={person.education} />
@@ -740,7 +740,7 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
 
                     {/* Right Column: Contact & Family */}
                     <div>
-                        <h3 className="text-[#9a3412] font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h3>
+                        <h3 className="text-orange-800 font-serif font-bold text-lg border-b border-stone-100 pb-2 mb-6">{t('যোগাযোগ ও পরিবার', 'Contact & Family')}</h3>
                         <SpouseInfoItem icon={<Phone size={18} />} label={t('যোগাযোগ নম্বর', 'Phone')} value={person.contact_number} />
                         <SpouseInfoItem icon={<MapPin size={18} />} label={t('বর্তমান ঠিকানা', 'Address')} value={person.present_address} />
                         {person.social_media && (

@@ -74,7 +74,7 @@ const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
             <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
 
             <div

@@ -11,7 +11,7 @@ const InstallAppBanner = () => {
 
   return (
     <div 
-      className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] lg:bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up"
       role="region"
       aria-label="Install Projenitor App Banner"
     >

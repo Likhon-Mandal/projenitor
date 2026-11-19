@@ -114,7 +114,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-xs flex justify-center items-center z-[9999] px-4 animate-fade-in">
+        <div className="fixed inset-0 app-sheet bg-stone-900/50 backdrop-blur-xs flex justify-center items-center z-[9999] px-4 animate-fade-in">
             <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-slide-up border border-orange-200"
                 onClick={e => e.stopPropagation()}

@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  UserCircle, Search, Map, Home as HomeIcon, Menu,
+  UserCircle, Search, Map, Home as HomeIcon,
   LogOut, LayoutDashboard, Trash2, Shield, Key, ChevronDown,
   Users, Calendar, UsersRound, Star, HelpCircle, Heart, BookOpen,
-  User, Sparkles, CheckCircle2, Smartphone, Download
+  User, Sparkles, CheckCircle2, Smartphone, Download, Sun, Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePWA } from '../context/PWAContext';
-import Sidebar from './Sidebar';
+import { useTheme } from '../context/ThemeContext';
 import LogoutModal from './LogoutModal';
 import NotificationBell from './NotificationBell';
 import api from '../api/api';
@@ -20,7 +20,7 @@ const Header = () => {
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
   const { setLanguage, isBn, t, formatName, formatNumber } = useLanguage();
   const { isInstalled, promptInstall, isMobileOrTablet } = usePWA();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -103,42 +103,33 @@ const Header = () => {
 
   return (
     <>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} adminPendingCount={adminPendingCount} />
+      <header className="bg-gradient-to-r from-orange-900 via-orange-800 to-orange-900 text-white shadow-[0_6px_24px_-12px_rgba(67,20,7,0.6)] sticky top-0 z-40 border-b border-orange-700/40 font-sans pt-safe">
+        <div className="container mx-auto px-3 sm:px-4 h-14 md:h-16 flex justify-between items-center gap-2">
 
-      <header className="bg-orange-800 text-white shadow-lg sticky top-0 z-40 border-b border-orange-700/50 font-sans">
-        <div className="container mx-auto px-4 py-2.5 flex justify-between items-center gap-2">
-
-          {/* Logo + Hamburger */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <button
-              id="sidebar-toggle"
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl hover:bg-orange-700 transition-all active:scale-95 cursor-pointer"
-              aria-label="Open menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <Link to="/" className="group flex items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-orange-950/80 border border-yellow-400/50 shadow-md group-hover:border-yellow-300 group-hover:scale-105 group-hover:shadow-yellow-500/25 transition-all duration-300 shrink-0 flex items-center justify-center">
+          {/* Logo */}
+          <div className="flex items-center min-w-0">
+            <Link to="/" className="group flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl p-0.5 bg-orange-950/80 border border-yellow-400/50 shadow-md group-hover:border-yellow-300 group-hover:scale-105 group-hover:shadow-yellow-500/25 transition-all duration-300 shrink-0 flex items-center justify-center">
                 <img
                   src="/pwa-icon.svg"
-                  alt="বাড়ৈ বংশ প্রতীক"
+                  alt="বাড়ৈ বংশ প্রতীক"
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              <span className="hidden sm:inline font-serif font-black text-xl sm:text-2xl text-yellow-500 group-hover:text-yellow-400 transition-colors tracking-tight">
-                বাড়ৈ বংশের ইতিবৃত্ত
+              <span className="font-serif font-black text-lg sm:text-xl lg:text-2xl text-yellow-400 group-hover:text-yellow-300 transition-colors tracking-tight truncate">
+                <span className="sm:hidden lg:inline xl:hidden">বাড়ৈ বংশ</span>
+                <span className="hidden sm:inline lg:hidden xl:inline">বাড়ৈ বংশের ইতিবৃত্ত</span>
               </span>
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center bg-orange-900/40 rounded-2xl p-1 border border-white/5">
+          <nav className="hidden lg:flex items-center bg-orange-950/30 rounded-2xl p-1 border border-white/10">
             {primaryNav.map(({ to, label, icon: Icon, exact }) => (
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:text-yellow-400 ${isActive(to, exact) ? 'bg-orange-700 text-yellow-400 shadow-md' : 'text-orange-100/80 hover:bg-orange-800/50'}`}
+                className={`flex items-center gap-2 px-3 xl:px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 hover:text-yellow-400 ${isActive(to, exact) ? 'bg-orange-700 text-yellow-400 shadow-md' : 'text-orange-100/80 hover:bg-orange-800/50'}`}
               >
                 {Icon && <Icon className="w-4 h-4 shadow-sm" />}
                 <span>{label}</span>
@@ -149,7 +140,7 @@ const Header = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:text-yellow-400 cursor-pointer ${isSecondaryActive || dropdownOpen ? 'text-yellow-400' : 'text-orange-100/80 hover:bg-orange-800/50'}`}
+                className={`flex items-center gap-2 px-3 xl:px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 hover:text-yellow-400 cursor-pointer ${isSecondaryActive || dropdownOpen ? 'text-yellow-400' : 'text-orange-100/80 hover:bg-orange-800/50'}`}
               >
                 <span>{t('কমিউনিটি', 'Community')}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -178,7 +169,7 @@ const Header = () => {
           <div className="flex items-center gap-1.5 sm:gap-2.5">
 
             {/* Language Toggle Pill: Displayed on Desktop (md: and up), hidden on mobile to prevent navbar overflow */}
-            <div className="hidden md:flex items-center bg-orange-950/70 border border-orange-700/70 rounded-full p-0.5 text-xs font-bold transition-all shadow-inner">
+            <div className="hidden lg:flex items-center bg-orange-950/70 border border-orange-700/70 rounded-full p-0.5 text-xs font-bold transition-all shadow-inner">
               <button
                 type="button"
                 onClick={() => setLanguage('bn')}
@@ -199,12 +190,23 @@ const Header = () => {
               </button>
             </div>
 
+            {/* Light / dark theme switch */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="relative p-1.5 sm:p-2 rounded-xl border border-orange-700/60 bg-orange-900/60 hover:bg-orange-700/80 hover:border-yellow-400/50 text-orange-100 hover:text-yellow-400 transition-all duration-200 active:scale-95 cursor-pointer"
+              title={isDark ? t('দিনের থিম', 'Light theme') : t('রাতের থিম', 'Dark theme')}
+              aria-label={isDark ? t('দিনের থিম', 'Switch to light theme') : t('রাতের থিম', 'Switch to dark theme')}
+            >
+              {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+            </button>
+
             {/* PWA Install App Button: Mobile and Tablet only (hidden on laptop/desktop) */}
             {!isInstalled && isMobileOrTablet && (
               <button
                 type="button"
                 onClick={promptInstall}
-                className="lg:hidden flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-orange-950 text-xs sm:text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 border border-yellow-300 cursor-pointer animate-pulse"
+                className="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-400 hover:from-amber-400 hover:to-yellow-300 text-orange-950 text-sm font-black transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 border border-yellow-300 cursor-pointer"
                 title={t('মোবাইল বা ট্যাবলেটে অ্যাপ ইনস্টল করুন', 'Install App on mobile/tablet')}
               >
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
@@ -224,10 +226,10 @@ const Header = () => {
                 title={isSuperAdmin ? t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard') : t('এডমিন ড্যাশবোর্ড', 'Admin Dashboard')}
               >
                 <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-950 group-hover:scale-110 transition-transform shrink-0" />
-                <span className="hidden md:inline font-bold">
+                <span className="hidden lg:inline font-bold">
                   {isSuperAdmin ? t('সুপার এডমিন ড্যাশবোর্ড', 'SuperAdmin Dashboard') : t('এডমিন ড্যাশবোর্ড', 'Admin Dashboard')}
                 </span>
-                <span className="md:hidden font-bold">
+                <span className="hidden sm:inline lg:hidden font-bold">
                   {t('ড্যাশবোর্ড', 'Dashboard')}
                 </span>
 

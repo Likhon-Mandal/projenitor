@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { PWAProvider } from './context/PWAContext';
 import { ImageViewerProvider } from './context/ImageViewerContext';
 import Layout from './components/Layout';
@@ -37,6 +38,7 @@ import UserDashboard from './pages/UserDashboard';
 
 function App() {
   return (
+    <ThemeProvider>
     <LanguageProvider>
       <AuthProvider>
         <PWAProvider>
@@ -107,6 +109,7 @@ function App() {
         </PWAProvider>
       </AuthProvider>
     </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

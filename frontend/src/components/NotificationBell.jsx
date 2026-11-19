@@ -233,7 +233,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                 <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2">
                                     <CheckCheck className="w-4 h-4 text-emerald-600" />
                                 </div>
-                                <p className="text-xs font-bold text-stone-700" style={{ color: '#374151' }}>
+                                <p className="text-xs font-bold text-stone-700" style={{ color: 'rgb(var(--tx-stone-700))' }}>
                                     {t('কোনো নতুন বিজ্ঞপ্তি নেই', 'No new notifications')}
                                 </p>
                                 <p className="text-[10px] text-stone-400 mt-0.5">
@@ -250,7 +250,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                         type="button"
                                         onClick={() => handleNotificationClick(item)}
                                         className="w-full text-left p-2.5 sm:p-3.5 flex items-start gap-2.5 transition-all duration-200 hover:bg-orange-50/70 group cursor-pointer bg-white"
-                                        style={{ color: '#1c1917' }}
+                                        style={{ color: 'rgb(var(--tx-stone-900))' }}
                                     >
                                         {/* Icon bubble */}
                                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-2xs">
@@ -269,7 +269,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                             {/* Clickable Heading */}
                                             <p
                                                 className="text-[11px] sm:text-xs font-bold line-clamp-2 leading-snug group-hover:text-orange-950 transition-colors"
-                                                style={{ color: '#1c1917' }}
+                                                style={{ color: 'rgb(var(--tx-stone-900))' }}
                                             >
                                                 {item.title}
                                             </p>

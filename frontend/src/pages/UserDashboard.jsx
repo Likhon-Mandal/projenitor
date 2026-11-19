@@ -691,7 +691,7 @@ const UserDashboard = () => {
 
             {/* ─── Admin Request Confirmation Modal ──────────────────────── */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="fixed inset-0 app-sheet bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 text-center border border-orange-100 animate-zoom-in">
                         <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 border border-orange-200">
                             <ShieldAlert className="w-7 h-7 text-orange-800" />

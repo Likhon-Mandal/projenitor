@@ -164,7 +164,7 @@ const CommitteeBoard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] pb-20 font-sans">
+        <div className="min-h-screen bg-background pb-20 font-sans">
             <SEO 
                 title="কার্যনির্বাহী পরিষদ" 
                 description="ভগবান চন্দ্র বাড়ৈ বংশের কেন্দ্রীয় পরিচালনা ও কার্যনির্বাহী পরিষদের নেতৃত্ব ও সদস্যবৃন্দ।" 
@@ -330,7 +330,7 @@ const CommitteeBoard = () => {
                                                 {/* Expanded Content */}
                                                 <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                                                     <div className="overflow-hidden">
-                                                        <div className="p-6 border-t border-stone-100 bg-[#fffcf5]">
+                                                        <div className="p-6 border-t border-stone-100 bg-background">
                                                             {renderCommitteeMembers(committee.members)}
                                                         </div>
                                                     </div>

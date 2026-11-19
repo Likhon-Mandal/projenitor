@@ -160,7 +160,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
             <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
 
             <div

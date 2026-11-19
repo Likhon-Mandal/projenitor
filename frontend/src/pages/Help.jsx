@@ -595,7 +595,7 @@ const Help = () => {
             {/* Offer Assistance Modal */}
             {contactingPost && (
                 <div 
-                    className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex justify-center items-center z-[9999] px-4 animate-fade-in"
+                    className="fixed inset-0 app-sheet bg-stone-900/40 backdrop-blur-xs flex justify-center items-center z-[9999] px-4 animate-fade-in"
                     onClick={() => setContactingPost(null)}
                 >
                     <div 

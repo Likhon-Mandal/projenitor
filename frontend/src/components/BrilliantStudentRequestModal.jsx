@@ -307,7 +307,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" onClick={onClose}>
             {/* Backdrop */}
             <div className="fixed inset-0 bg-stone-950/70 backdrop-blur-xs transition-opacity animate-fade-in" />
 

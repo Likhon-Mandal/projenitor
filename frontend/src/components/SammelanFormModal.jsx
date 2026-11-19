@@ -368,7 +368,7 @@ const SammelanFormModal = ({ isOpen, onClose, sammelan, onSave }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
             <div className="relative w-full max-w-3xl my-8 bg-white rounded-3xl shadow-2xl border border-orange-100 overflow-hidden flex flex-col max-h-[92vh]">
 
                 {/* Header */}

@@ -389,7 +389,7 @@ const UserAuth = () => {
                                     onClick={() => switchMode('register')}
                                     className="mt-1 text-xs font-bold text-red-700 hover:text-red-900 hover:underline"
                                 >
-                                    {t('বংশতালিকা থেকে অ্যাকাউন্ট চালু করুন &rarr;', 'Activate account from Lineage Explorer &rarr;')}
+                                    {t('বংশতালিকা থেকে অ্যাকাউন্ট চালু করুন →', 'Activate account from Lineage Explorer →')}
                                 </button>
                             </div>
                         </form>

@@ -264,7 +264,7 @@ const LocationTree = ({
     }, [activePath.length]);
 
     return (
-        <div id="location-tree-scroll" className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] hide-scrollbar py-4 sm:py-8 px-2 sm:px-4 lg:px-12 bg-[#fffcf5]">
+        <div id="location-tree-scroll" className="w-full relative flex flex-row items-stretch overflow-x-auto overflow-y-auto min-h-[400px] sm:min-h-[500px] hide-scrollbar py-4 sm:py-8 px-2 sm:px-4 lg:px-12 bg-background">
             <AnimationStyles />
 
             <div className="flex flex-row items-center gap-0 w-fit h-fit my-auto">

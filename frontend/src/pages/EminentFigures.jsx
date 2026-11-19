@@ -117,7 +117,7 @@ const EminentFigures = () => {
     const activeCategoryLabel = isBn ? currentCategoryInfo.bnLabel : currentCategoryInfo.enLabel;
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] pb-20 font-sans">
+        <div className="min-h-screen bg-background pb-20 font-sans">
             <SEO 
                 title="কৃতি ও স্মরণীয় ব্যক্তিত্ব" 
                 description="বাড়ৈ বংশের গৌরবোজ্জ্বল কৃতি শিক্ষার্থী, আজীবন সম্মানিত ব্যক্তিত্ব এবং মরণোত্তর স্মরণীয় জ্ঞাতিবর্গ।" 
@@ -188,7 +188,7 @@ const EminentFigures = () => {
 
                 {/* Brilliant Student Encouragement Banner */}
                 {activeTab === 'কৃতি শিক্ষার্থী' && (
-                    <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md border border-blue-400/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                    <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-red-900 via-orange-900 to-stone-900 text-white shadow-md border border-yellow-400/25 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
                         <div className="flex items-center gap-3.5">
                             <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
                                 <GraduationCap className="w-6 h-6 text-yellow-300" />

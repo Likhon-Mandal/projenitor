@@ -706,7 +706,7 @@ const Explorer = () => {
                         </div>
                     ) : (
                         /* Graph View */
-                        <div id="explorer-graph-container" className="bg-[#fffcf5] border border-orange-100 rounded-2xl shadow-inner min-h-[400px] sm:min-h-[500px] overflow-hidden animate-slide-up relative">
+                        <div id="explorer-graph-container" className="bg-background border border-orange-100 rounded-2xl shadow-inner min-h-[400px] sm:min-h-[500px] overflow-hidden animate-slide-up relative">
                             {/* Background Pattern */}
                             <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
                                 style={{ backgroundImage: 'linear-gradient(#9a3412 1px, transparent 1px), linear-gradient(90deg, #9a3412 1px, transparent 1px)', backgroundSize: '40px 40px' }}>

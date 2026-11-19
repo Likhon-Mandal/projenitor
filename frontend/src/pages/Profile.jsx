@@ -139,7 +139,7 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
   if (!currentId) return null;
 
   if (loading) return (
-    <div className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto`}>
+    <div className={`fixed inset-0 app-sheet ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto`}>
       <ProfileSkeleton />
     </div>
   );
@@ -172,7 +172,7 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
             else navigate(-1);
           }
         }}
-        className={`fixed inset-0 ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto custom-scroll py-6`}
+        className={`fixed inset-0 app-sheet ${zIndex} flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto custom-scroll py-6`}
       >
         <div className={`max-w-4xl w-full mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border ${theme.cardBorder} animate-fade-in animate-slide-up relative mt-auto mb-auto transition-all duration-200 ${(floatingRelation || guestRelationOpen) ? 'filter blur-[1.5px] select-none pointer-events-none' : ''}`}>
           <button
@@ -543,20 +543,20 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
       {/* Floating Single-Line Relationship Card Modal */}
       {floatingRelation && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-[2px] animate-fade-in"
+          className="fixed inset-0 app-sheet z-[200] flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-[2px] animate-fade-in"
           onClick={() => setFloatingRelation(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgb(var(--surface))',
               borderColor: '#ea580c',
               boxShadow: '0 25px 60px -12px rgba(67, 20, 7, 0.35), 0 0 0 1px rgba(251, 191, 36, 0.6), 0 8px 24px -4px rgba(154, 52, 18, 0.2)'
             }}
             className="border-2 rounded-2xl sm:rounded-full px-6 py-3.5 sm:px-8 sm:py-4.5 flex items-center gap-3.5 sm:gap-4 max-w-2xl mx-auto transform animate-slide-up transition-all hover:scale-[1.01] cursor-default"
           >
             <div 
-              style={{ backgroundColor: '#fff7ed', borderColor: '#ea580c' }}
+              style={{ backgroundColor: 'rgb(var(--bg-orange-50))', borderColor: '#ea580c' }}
               className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-sm select-none"
             >
               {floatingRelation.emoji || '🔗'}
@@ -599,13 +599,13 @@ const Profile = ({ memberId, onClose, zIndex = 'z-[120]', onEdit }) => {
       {/* Guest Mode Floating Relation Modal over Profile Card */}
       {guestRelationOpen && (
         <div
-          className="fixed inset-0 z-[160] flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-[2px] animate-fade-in"
+          className="fixed inset-0 app-sheet z-[160] flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-[2px] animate-fade-in"
           onClick={() => setGuestRelationOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgb(var(--surface))',
               borderColor: '#ea580c',
               boxShadow: '0 25px 60px -12px rgba(67, 20, 7, 0.35), 0 0 0 1px rgba(251, 191, 36, 0.6), 0 8px 24px -4px rgba(154, 52, 18, 0.2)'
             }}

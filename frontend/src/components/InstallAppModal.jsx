@@ -10,7 +10,7 @@ const InstallAppModal = () => {
   if (!showIOSModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 app-sheet z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       <div 
         className="relative w-full max-w-md bg-orange-50 dark:bg-stone-900 border-2 border-orange-700/60 dark:border-orange-600/50 rounded-3xl shadow-2xl overflow-hidden animate-scale-up"
         onClick={(e) => e.stopPropagation()}

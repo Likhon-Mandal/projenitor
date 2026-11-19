@@ -575,7 +575,7 @@ const BrilliantStudentRequestsAdmin = () => {
 
             {/* Approve / Reject Modal Dialog */}
             {actionModal.isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs animate-fade-in">
+                <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs animate-fade-in">
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-orange-100 animate-zoom-in font-sans">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-serif font-bold text-lg text-stone-900 flex items-center gap-2">
@@ -693,7 +693,7 @@ const BrilliantStudentRequestsAdmin = () => {
             {/* Submitter User Details Modal (if not linked to a tree member) */}
             {submitterModal.isOpen && (
                 <div 
-                    className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fade-in"
+                    className="fixed inset-0 app-sheet z-60 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fade-in"
                     onClick={() => setSubmitterModal({ isOpen: false, submitter: null })}
                 >
                     <div 

@@ -257,7 +257,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                 label: isBn ? 'পিতা' : 'Father',
                 badgeCls: 'bg-blue-100/90 border-blue-200 text-blue-800',
                 dotCls: 'bg-blue-600',
-                cardTheme: 'bg-gradient-to-b from-[#f0f7ff] via-white to-[#f8fafc] border-blue-200',
+                cardTheme: 'bg-gradient-to-b from-sky-50 via-white to-stone-50 border-blue-200',
                 glowTop: 'bg-blue-400/20',
                 glowBottom: 'bg-sky-300/20',
                 avatarRing: 'bg-gradient-to-tr from-blue-600 via-sky-500 to-indigo-500 shadow-blue-500/15',
@@ -275,7 +275,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                 label: isBn ? 'মাতা' : 'Mother',
                 badgeCls: 'bg-rose-100/90 border-rose-200 text-rose-800',
                 dotCls: 'bg-rose-500',
-                cardTheme: 'bg-gradient-to-b from-[#fff5f6] via-white to-[#fff0f3] border-rose-200',
+                cardTheme: 'bg-gradient-to-b from-rose-50 via-white to-rose-50 border-rose-200',
                 glowTop: 'bg-rose-400/20',
                 glowBottom: 'bg-pink-300/20',
                 avatarRing: 'bg-gradient-to-tr from-pink-500 via-rose-400 to-amber-200 shadow-rose-500/15',
@@ -293,7 +293,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                 label: isBn ? 'স্বামী' : 'Husband',
                 badgeCls: 'bg-sky-100/90 border-sky-200 text-sky-800',
                 dotCls: 'bg-sky-600',
-                cardTheme: 'bg-gradient-to-b from-[#f0f9ff] via-white to-[#f8fafc] border-sky-200',
+                cardTheme: 'bg-gradient-to-b from-sky-50 via-white to-stone-50 border-sky-200',
                 glowTop: 'bg-sky-300/20',
                 glowBottom: 'bg-blue-200/20',
                 avatarRing: 'bg-gradient-to-tr from-sky-500 via-blue-400 to-indigo-500 shadow-sky-500/15',
@@ -310,7 +310,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
             label: isBn ? 'সহধর্মিণী' : 'Spouse',
             badgeCls: 'bg-pink-100/80 border-pink-200 text-rose-700',
             dotCls: 'bg-rose-500',
-            cardTheme: 'bg-gradient-to-b from-[#fff6f7] via-white to-[#fff0f3] border-pink-200',
+            cardTheme: 'bg-gradient-to-b from-rose-50 via-white to-rose-50 border-pink-200',
             glowTop: 'bg-pink-300/25',
             glowBottom: 'bg-rose-200/25',
             avatarRing: 'bg-gradient-to-tr from-pink-400 via-rose-300 to-amber-200 shadow-pink-500/15',
@@ -327,7 +327,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
 
     return (
         <div
-            className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-stone-950/80 backdrop-blur-md transition-opacity"
+            className="fixed inset-0 app-sheet z-[150] flex items-center justify-center p-3 sm:p-6 bg-stone-950/80 backdrop-blur-md transition-opacity"
             onClick={onClose}
         >
             <div
@@ -686,7 +686,7 @@ const MemberProfileModal = ({ member: initialMember, isOpen, onClose, onEdit, on
                 {/* Overlaid Small Husband/Spouse Profile Card */}
                 {activeOverlayMember && (
                     <div
-                        className="fixed inset-0 z-[160] bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+                        className="fixed inset-0 app-sheet z-[160] bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
                         onClick={(e) => {
                             e.stopPropagation();
                             setActiveOverlayMember(null);

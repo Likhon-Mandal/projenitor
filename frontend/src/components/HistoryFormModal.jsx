@@ -74,7 +74,7 @@ const HistoryFormModal = ({ isOpen, onClose, onSuccess, initialData, nextOrder =
 
     return (
         <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+            className="fixed inset-0 app-sheet z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
             onClick={onClose}
         >
             {/* Backdrop */}

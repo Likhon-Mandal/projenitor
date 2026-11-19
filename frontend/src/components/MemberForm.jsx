@@ -1156,7 +1156,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
 
             {/* Quick Add Spouse Modal Overlay */}
             {isQuickAddOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                <div className="fixed inset-0 app-sheet bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
                         <div className="flex items-center justify-between border-b border-orange-100 pb-3 mb-4">
                             <div>

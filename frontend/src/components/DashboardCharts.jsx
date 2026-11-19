@@ -4,8 +4,9 @@ import {
     BarChart, Bar, PieChart, Pie, Cell, Legend, AreaChart, Area
 } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
-const COLORS = ['#9a3412', '#991b1b', '#eab308', '#10b981', '#6366f1', '#a855f7', '#ec4899', '#64748b'];
+const COLORS = ['#a0400d', '#a11a1a', '#f8b81a', '#10b981', '#17909f', '#da810d', '#ec4899', '#8a775e'];
 
 const ChartContainer = ({ children, height = 300 }) => {
     const { t } = useLanguage();
@@ -55,6 +56,10 @@ const ChartContainer = ({ children, height = 300 }) => {
 };
 
 const DashboardCharts = ({ data }) => {
+    const { isDark } = useTheme();
+    const chart = isDark
+        ? { main: '#f9ab5c', bar: '#fb978c', grid: '#3a2c22', tick: '#bfae93', cursor: '#2a1d15' }
+        : { main: '#a0400d', bar: '#a11a1a', grid: '#efe5d6', tick: '#8a775e', cursor: '#fff6ec' };
     const { t } = useLanguage();
     const [isMounted, setIsMounted] = useState(false);
 
@@ -91,22 +96,22 @@ const DashboardCharts = ({ data }) => {
                             <AreaChart data={data.registrations} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#9a3412" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#9a3412" stopOpacity={0} />
+                                        <stop offset="5%" stopColor={chart.main} stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor={chart.main} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chart.grid} />
                                 <XAxis
                                     dataKey="name"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    tick={{ fill: chart.tick, fontSize: 12 }}
                                     dy={10}
                                 />
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    tick={{ fill: chart.tick, fontSize: 12 }}
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
@@ -114,7 +119,7 @@ const DashboardCharts = ({ data }) => {
                                 <Area
                                     type="monotone"
                                     dataKey="members"
-                                    stroke="#9a3412"
+                                    stroke={chart.main}
                                     strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorMembers)"
@@ -138,23 +143,23 @@ const DashboardCharts = ({ data }) => {
                     {hasVillages ? (
                         <ChartContainer height={300}>
                             <BarChart data={data.villages} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chart.grid} />
                                 <XAxis type="number" hide />
                                 <YAxis
                                     dataKey="name"
                                     type="category"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    tick={{ fill: chart.tick, fontSize: 12 }}
                                     width={100}
                                 />
                                 <Tooltip
-                                    cursor={{ fill: '#fff7ed' }}
+                                    cursor={{ fill: chart.cursor }}
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                                 />
                                 <Bar
                                     dataKey="value"
-                                    fill="#991b1b"
+                                    fill={chart.bar}
                                     radius={[0, 10, 10, 0]}
                                     barSize={20}
                                 />

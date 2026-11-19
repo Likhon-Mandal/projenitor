@@ -640,7 +640,7 @@ const ApiLogsAdmin = () => {
             {/* ── Diagnostic Detail Modal ── */}
             {selectedLog && (
                 <div 
-                    className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+                    className="fixed inset-0 app-sheet z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
                     onClick={() => setSelectedLog(null)}
                 >
                     <div 
@@ -846,7 +846,7 @@ const ApiLogsAdmin = () => {
             {/* ── Clear Logs Modal ── */}
             {clearModalOpen && (
                 <div 
-                    className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 app-sheet z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setClearModalOpen(false)}
                 >
                     <div 

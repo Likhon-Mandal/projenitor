@@ -309,7 +309,7 @@ const OccupationSelect = ({
 
       {/* Modal / Inline Popover to Add Custom Occupation */}
       {showCustomModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-orange-100 p-5 space-y-4 animate-scale-up">
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
               <div className="flex items-center gap-2">

@@ -20,9 +20,9 @@ const Styles = () => (
         }
         .fr-animate-in { animation: fr-slideUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
         .fr-glass {
-            background: rgba(255,255,255,0.72);
+            background: rgb(var(--surface) / 0.72);
             backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255,255,255,0.6);
+            border: 1px solid rgb(var(--bd-white) / 0.6);
             box-shadow: 0 8px 40px rgba(154,52,18,0.09), 0 1.5px 0 rgba(255,255,255,0.9) inset;
         }
         .fr-swap { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background-color 0.2s; }
@@ -95,7 +95,7 @@ const FindRelation = () => {
                         </div>
                         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900 leading-tight mb-1">
                             {t('\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 ', 'Find ')}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700 dark:from-amber-300 dark:to-orange-500">
                                 {t('\u09a8\u09bf\u09b0\u09cd\u09a3\u09df', 'Relationship')}
                             </span>
                         </h1>

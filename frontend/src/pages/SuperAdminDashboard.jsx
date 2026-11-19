@@ -64,7 +64,7 @@ const AdminModal = ({ admin, onClose, onSave }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 app-sheet bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                 <div className="bg-orange-800 px-6 py-4 flex items-center justify-between">
                     <h3 className="text-white font-serif text-lg font-semibold">
@@ -683,7 +683,7 @@ const SuperAdminDashboard = () => {
             )}
 
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 app-sheet bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 text-center border border-orange-100">
                         <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 border border-orange-200">
                             <ShieldAlert className="w-7 h-7 text-orange-800" />

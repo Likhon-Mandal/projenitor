@@ -287,7 +287,7 @@ const SammelanKotha = () => {
     const nextSammelan = sammelans.find(s => s.is_next);
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-24">
+        <div className="min-h-screen bg-background text-stone-800 font-sans pb-24">
             <SEO 
                 title="সম্মেলন কথা ও ইতিহাস" 
                 description="বাড়ৈ বংশের ঐতিহাসিক জ্ঞাতি সম্মেলনসমূহের বিস্তারিত ইতিহাস, স্থান, সভাপতি ও স্মারক তথ্য।" 
