@@ -6,6 +6,28 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/api';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const tagsList = [
     { id: 'Research', bn: 'গবেষণা', en: 'Research' },
     { id: 'Medical', bn: 'চিকিৎসা', en: 'Medical' },
@@ -114,27 +136,30 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 app-sheet bg-stone-900/50 backdrop-blur-xs flex justify-center items-center z-[9999] px-4 animate-fade-in">
+        <div className="fixed inset-0 app-sheet bg-stone-900/50 backdrop-blur-xs flex justify-center items-center z-[9999] p-4 animate-fade-in">
             <div
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-slide-up border border-orange-200"
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-slide-up border border-orange-200 flex flex-col max-h-[92vh]"
                 onClick={e => e.stopPropagation()}
             >
+                <style>{FM_CSS}</style>
                 {/* Header - High contrast with explicit white title to prevent theme color clashing */}
-                <div className={`px-6 py-4 flex justify-between items-center text-white shadow-xs ${
+                <div className={`shrink-0 px-5 sm:px-6 py-4 flex justify-between items-center gap-3 text-white shadow-xs ${
                     type === 'alert' 
                         ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-800' 
                         : 'bg-gradient-to-r from-orange-950 via-orange-900 to-red-950'
                 }`}>
                     <div className="flex items-center gap-2.5">
                         {type === 'alert' && <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0" />}
-                        <h2 className="text-xl font-serif font-bold text-white !text-white tracking-wide drop-shadow-sm">
+                        <h2 className="text-lg sm:text-xl font-serif font-bold text-white !text-white tracking-wide drop-shadow-sm">
                             {initialData ? t('অনুরোধ সম্পাদনা করুন', 'Edit Request') : t('নতুন সহায়তার অনুরোধ', 'Create New Request')}
                         </h2>
                     </div>
                     <button 
                         onClick={onClose} 
-                        className="p-1.5 hover:bg-white/20 text-white rounded-full transition-colors cursor-pointer"
+                        type="button"
+                        className="shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
                         title={t('বন্ধ করুন', 'Close')}
+                        aria-label={t('বন্ধ করুন', 'Close')}
                     >
                         <X size={20} />
                     </button>
@@ -155,11 +180,11 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                 'To submit a help request, you must be logged in as a user, admin, or superadmin.'
                             )}
                         </p>
-                        <div className="pt-3 flex justify-center gap-3">
+                        <div className="pt-3 grid grid-cols-2 sm:flex sm:justify-center gap-2.5 sm:gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-5 py-2.5 text-stone-600 hover:text-stone-800 font-semibold text-sm border border-stone-200 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer"
+                                className="min-h-[46px] sm:min-h-0 justify-center flex items-center px-5 py-2.5 text-stone-600 hover:text-stone-800 font-semibold text-sm border border-stone-200 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer"
                             >
                                 {t('বাতিল', 'Cancel')}
                             </button>
@@ -169,7 +194,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                                     onClose();
                                     navigate('/login', { state: { from: '/help' } });
                                 }}
-                                className="px-6 py-2.5 bg-primary hover:bg-orange-900 text-white font-semibold text-sm rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                                className="min-h-[46px] sm:min-h-0 justify-center px-6 py-2.5 bg-primary hover:bg-orange-900 text-white font-semibold text-sm rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
                             >
                                 <LogIn size={16} />
                                 <span>{t('লগইন করুন', 'Login Now')}</span>
@@ -178,7 +203,7 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                     </div>
                 ) : (
                     /* Authenticated Form */
-                    <form onSubmit={handleSubmit} autoComplete="off" className="p-6 space-y-4.5 max-h-[85vh] overflow-y-auto custom-scrollbar">
+                    <form onSubmit={handleSubmit} autoComplete="off" className="fm-skin fm-rise flex-1 min-h-0 p-5 sm:p-6 pb-0 sm:pb-0 space-y-4.5 overflow-y-auto overscroll-contain custom-scrollbar">
                         {/* Poster notification bar */}
                         <div className="bg-orange-50/70 border border-orange-200/80 rounded-xl p-3 flex items-center justify-between text-xs text-stone-700">
                             <div className="flex items-center gap-2">
@@ -318,18 +343,18 @@ const HelpRequestModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                         </div>
 
                         {/* Form Actions */}
-                        <div className="pt-3 flex justify-end gap-3 border-t border-stone-100">
+                        <div className="sticky bottom-0 z-10 -mx-5 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t border-stone-100 bg-white/95 backdrop-blur grid grid-cols-2 sm:flex sm:justify-end gap-2.5 sm:gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-5 py-2 text-stone-600 hover:text-stone-800 font-semibold hover:bg-stone-100 rounded-xl transition-colors cursor-pointer text-sm"
+                                className="min-h-[46px] sm:min-h-0 justify-center flex items-center px-5 py-2 text-stone-600 font-bold bg-white hover:bg-stone-100 border border-stone-200 rounded-xl transition-colors text-sm cursor-pointer"
                             >
                                 {t('বাতিল', 'Cancel')}
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 cursor-pointer text-sm ${
+                                className={`min-h-[46px] sm:min-h-0 justify-center px-6 py-2.5 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 cursor-pointer text-sm ${
                                     type === 'alert' ? 'bg-red-700 hover:bg-red-800' : 'bg-primary hover:bg-orange-900'
                                 }`}
                             >

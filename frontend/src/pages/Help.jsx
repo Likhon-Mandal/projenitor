@@ -29,7 +29,7 @@ import api from '../api/api';
 
 const Help = () => {
     const { user, isAdmin } = useAuth();
-    const { t, formatName } = useLanguage();
+    const { t, formatName, formatNumber } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -234,39 +234,58 @@ const Help = () => {
                 canonical="/help" 
                 keywords="সহায়তা কেন্দ্র, যোগাযোগ, তথ্য সংশোধন, রক্ত সহায়তা, হেল্প ডেস্ক"
             />
-            {/* Header section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-slide-up">
-                <div>
-                    <h1 className="text-3xl sm:text-4xl font-serif font-bold text-primary flex items-center gap-3">
-                        <HelpCircle className="h-9 w-9 sm:h-10 sm:w-10 text-secondary" />
-                        {t('সহায়তা কেন্দ্র', 'Help Desk')}
-                    </h1>
-                    <p className="text-stone-500 mt-1.5 text-sm sm:text-base">
-                        {t('সাহায্য চান বা সমাজের সদস্যদের সাহায্য করুন।', 'Ask for help or offer support to community members.')}
-                    </p>
+            {/* Hero header */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-800 via-red-900 to-orange-950 text-white p-5 sm:p-7 shadow-lg shadow-red-950/20 animate-slide-up">
+                <div className="absolute -top-16 -right-12 w-48 h-48 rounded-full bg-yellow-400/15 blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-orange-400/10 blur-3xl pointer-events-none" />
+                <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                        <span className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shadow-inner">
+                            <HelpCircle className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-300" />
+                        </span>
+                        <div className="min-w-0">
+                            <h1 className="text-2xl sm:text-4xl font-serif font-bold text-yellow-300 leading-tight">
+                                {t('সহায়তা কেন্দ্র', 'Help Desk')}
+                            </h1>
+                            <p className="text-orange-100/90 mt-1 text-sm sm:text-base">
+                                {t('সাহায্য চান বা জ্ঞাতিবর্গের পাশে দাঁড়ান।', 'Ask for help or stand by community members.')}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-3 text-xs font-semibold">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 border border-white/20">
+                                    {t('সক্রিয় অনুরোধ', 'Active requests')}: {formatNumber(helpRequests.length)}
+                                </span>
+                                {helpRequests.some(r => r.type === 'alert') && (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-400 text-red-950">
+                                        <AlertTriangle className="w-3.5 h-3.5" />
+                                        {t('জরুরি', 'Urgent')}: {formatNumber(helpRequests.filter(r => r.type === 'alert').length)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    {user ? (
+                        <button
+                            onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
+                            className="w-full sm:w-auto justify-center bg-yellow-400 hover:bg-yellow-300 text-red-950 px-5 py-3 rounded-2xl transition-all flex items-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] font-bold cursor-pointer text-sm sm:text-base"
+                        >
+                            <PlusCircle className="h-5 w-5" />
+                            <span>{t('নতুন অনুরোধ', 'New Request')}</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => navigate('/login', { state: { from: '/help' } })}
+                            className="w-full sm:w-auto justify-center bg-white/15 hover:bg-white/25 border border-white/25 text-white px-5 py-3 rounded-2xl transition-all flex items-center gap-2 font-semibold text-sm sm:text-base cursor-pointer active:scale-[0.98]"
+                            title={t('সহায়তার অনুরোধ প্রদান করতে লগইন আবশ্যক', 'Login required to submit request')}
+                        >
+                            <LogIn className="h-4 w-4 text-yellow-300" />
+                            <span>{t('অনুরোধ পাঠাতে লগইন করুন', 'Login to Request')}</span>
+                        </button>
+                    )}
                 </div>
-                {user ? (
-                    <button
-                        onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
-                        className="bg-primary text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-orange-900 transition-all flex items-center gap-2 shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 duration-200 font-semibold cursor-pointer text-sm sm:text-base"
-                    >
-                        <PlusCircle className="h-5 w-5" />
-                        <span>{t('নতুন অনুরোধ', 'New Request')}</span>
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => navigate('/login', { state: { from: '/help' } })}
-                        className="bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl transition-all flex items-center gap-2 font-semibold text-sm sm:text-base cursor-pointer shadow-xs hover:shadow-sm"
-                        title={t('সহায়তার অনুরোধ প্রদান করতে লগইন আবশ্যক', 'Login required to submit request')}
-                    >
-                        <LogIn className="h-4 w-4 text-orange-700" />
-                        <span>{t('অনুরোধ পাঠাতে লগইন করুন', 'Login to Request')}</span>
-                    </button>
-                )}
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white p-4 rounded-2xl shadow-xs border border-orange-100/90 space-y-3 animate-slide-up" style={{ animationDelay: '0.05s' }}>
+            <div className="sticky top-14 lg:top-16 z-20 bg-white/95 backdrop-blur p-3 sm:p-4 rounded-2xl shadow-sm border border-orange-100/90 space-y-3 animate-slide-up" style={{ animationDelay: '0.05s' }}>
                 <div className="flex items-center gap-2 bg-stone-50 border border-stone-200/80 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-orange-200 transition-all">
                     <Search className="h-5 w-5 text-stone-400 shrink-0" />
                     <input
@@ -297,7 +316,7 @@ const Help = () => {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setSelectedCategory(tab.id)}
-                                className={`px-3 py-1 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer font-medium ${
+                                className={`px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer font-medium active:scale-95 ${
                                     isActive
                                         ? 'bg-primary text-white shadow-xs font-semibold'
                                         : 'bg-stone-50 hover:bg-orange-50/80 text-stone-600 hover:text-primary border border-stone-200/70'
@@ -313,7 +332,7 @@ const Help = () => {
             {/* List Controls: Count and Expand/Collapse All */}
             <div className="flex items-center justify-between px-1 text-xs sm:text-sm text-stone-500">
                 <span className="font-medium">
-                    {t(`মোট ${filteredRequests.length} টি অনুরোধ প্রদর্শিত`, `Showing ${filteredRequests.length} help requests`)}
+                    {t(`মোট ${formatNumber(filteredRequests.length)} টি অনুরোধ প্রদর্শিত`, `Showing ${filteredRequests.length} help requests`)}
                 </span>
                 {filteredRequests.length > 0 && (
                     <div className="flex items-center gap-2 font-medium">

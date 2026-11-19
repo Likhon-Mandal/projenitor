@@ -172,16 +172,16 @@ const ApiLogsAdmin = () => {
     };
 
     return (
-        <div className="space-y-6 animate-fade-in font-sans">
+        <div className="space-y-3 sm:space-y-5 animate-fade-in font-sans">
             {/* ── Top Header & Actions ── */}
-            <div className="bg-white rounded-2xl shadow-xs border border-orange-100 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white rounded-2xl shadow-xs border border-orange-100 p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
                 <div>
                     <div className="flex items-center gap-2.5">
                         <div className="w-10 h-10 rounded-xl bg-orange-800 text-white flex items-center justify-center shadow-xs">
                             <Terminal className="w-5 h-5 text-amber-300" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-serif font-bold text-stone-900">
+                            <h2 className="text-base sm:text-xl font-serif font-bold text-stone-900 leading-tight">
                                 {t('এপিআই লগ ও ডায়াগনস্টিক মনিটর', 'API Audit & Error Logs')}
                             </h2>
                             <p className="text-xs text-stone-500 mt-0.5">
@@ -191,9 +191,9 @@ const ApiLogsAdmin = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="grid grid-cols-[1fr_auto_auto_auto] sm:flex sm:flex-wrap items-center gap-2">
                     {/* Auto Refresh Select */}
-                    <div className="flex items-center gap-1.5 bg-orange-50/70 border border-orange-200/80 rounded-xl px-2.5 py-1.5 text-xs text-stone-700">
+                    <div className="min-h-[40px] flex items-center gap-1.5 bg-orange-50/70 border border-orange-200/80 rounded-xl px-2.5 text-xs text-stone-700">
                         <Zap size={14} className={autoRefreshInterval > 0 ? "text-amber-600 animate-pulse" : "text-stone-400"} />
                         <span className="font-medium hidden sm:inline">{t('লাইভ রিফ্রেশ:', 'Live:')}</span>
                         <select
@@ -213,7 +213,7 @@ const ApiLogsAdmin = () => {
                         type="button"
                         onClick={() => fetchLogs()}
                         disabled={refreshing}
-                        className="px-3 py-1.5 rounded-xl border border-orange-200 bg-white hover:bg-orange-50 text-orange-900 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                        className="min-h-[40px] min-w-[40px] justify-center px-3 rounded-xl border border-orange-200 bg-white hover:bg-orange-50 text-orange-900 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
                         title={t('পুনরায় লোড করুন', 'Refresh')}
                     >
                         <RefreshCw size={14} className={refreshing ? 'animate-spin text-orange-700' : 'text-stone-500'} />
@@ -225,7 +225,7 @@ const ApiLogsAdmin = () => {
                         type="button"
                         onClick={handleExportJson}
                         disabled={logs.length === 0}
-                        className="px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs disabled:opacity-40"
+                        className="min-h-[40px] min-w-[40px] justify-center px-3 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs disabled:opacity-40"
                         title={t('লগ ডাউনলোড করুন (JSON)', 'Export Logs (JSON)')}
                     >
                         <HardDriveDownload size={14} className="text-stone-500" />
@@ -236,7 +236,7 @@ const ApiLogsAdmin = () => {
                     <button
                         type="button"
                         onClick={() => setClearModalOpen(true)}
-                        className="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50/70 hover:bg-red-100/80 text-red-800 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                        className="min-h-[40px] min-w-[40px] justify-center px-3 rounded-xl border border-red-200 bg-red-50/70 hover:bg-red-100/80 text-red-800 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
                         title={t('লগ মুছুন', 'Clear Logs')}
                     >
                         <Trash2 size={14} className="text-red-600" />
@@ -246,7 +246,7 @@ const ApiLogsAdmin = () => {
             </div>
 
             {/* ── KPI Stats Cards ── */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
                 {/* Total Requests */}
                 <div className="bg-white p-4 rounded-2xl border border-orange-100 shadow-2xs flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center shrink-0">
@@ -477,7 +477,44 @@ const ApiLogsAdmin = () => {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <>
+                    {/* Phone: compact log rows — tap for full diagnostics */}
+                    <ul className="md:hidden divide-y divide-stone-100">
+                        {logs.map((log) => {
+                            const isError = !log.success;
+                            return (
+                                <li key={log.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedLog(log)}
+                                        className={`w-full text-left px-3.5 py-3 flex items-start gap-3 active:bg-orange-50 transition-colors ${isError ? 'bg-red-50/40' : ''}`}
+                                    >
+                                        <span className={`shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border ${getStatusBadge(log.status_code)}`}>
+                                            {isError ? <AlertCircle size={12} className="text-rose-600" /> : <CheckCircle2 size={12} className="text-emerald-600" />}
+                                            {log.status_code}
+                                        </span>
+                                        <span className="flex-1 min-w-0">
+                                            <span className="flex items-center gap-1.5 min-w-0">
+                                                <span className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${getMethodBadge(log.method)}`}>{log.method}</span>
+                                                <span className="font-mono text-[11px] font-bold text-stone-800 truncate">{log.endpoint}</span>
+                                            </span>
+                                            {isError && (
+                                                <span className="mt-1 block text-[11px] font-semibold text-red-700 truncate">{log.error_message || 'Unknown Server Error'}</span>
+                                            )}
+                                            <span className="mt-1 flex items-center gap-2 text-[10px] text-stone-400">
+                                                <span>{formatTime(log.timestamp)}</span>
+                                                <span className={`font-mono font-bold ${log.response_time_ms > 800 ? 'text-red-600' : log.response_time_ms > 300 ? 'text-amber-600' : 'text-stone-500'}`}>{log.response_time_ms} ms</span>
+                                                <span className="truncate">{log.user_name || log.user_email?.split('@')[0] || (isBn ? 'অতিথি' : 'Guest')}</span>
+                                            </span>
+                                        </span>
+                                        <ChevronRight size={16} className="shrink-0 mt-1 text-stone-300" />
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr className="bg-orange-50/70 text-stone-600 border-b border-orange-100 font-bold uppercase tracking-wider text-[10px]">
@@ -596,6 +633,7 @@ const ApiLogsAdmin = () => {
                             </tbody>
                         </table>
                     </div>
+                    </>
                 )}
 
                 {/* ── Pagination Footer ── */}
@@ -614,7 +652,7 @@ const ApiLogsAdmin = () => {
                             type="button"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page <= 1}
-                            className="px-2.5 py-1 rounded-lg border border-stone-200 bg-white text-stone-700 disabled:opacity-40 hover:bg-orange-50 font-bold transition flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                            className="min-h-[38px] px-3 rounded-xl border border-stone-200 bg-white text-stone-700 disabled:opacity-40 hover:bg-orange-50 font-bold transition flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed active:scale-95"
                         >
                             <ChevronLeft size={14} />
                             <span>{t('পূর্ববর্তী', 'Prev')}</span>
@@ -628,7 +666,7 @@ const ApiLogsAdmin = () => {
                             type="button"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page >= totalPages}
-                            className="px-2.5 py-1 rounded-lg border border-stone-200 bg-white text-stone-700 disabled:opacity-40 hover:bg-orange-50 font-bold transition flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                            className="min-h-[38px] px-3 rounded-xl border border-stone-200 bg-white text-stone-700 disabled:opacity-40 hover:bg-orange-50 font-bold transition flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed active:scale-95"
                         >
                             <span>{t('পরবর্তী', 'Next')}</span>
                             <ChevronRight size={14} />

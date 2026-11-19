@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Edit, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles, ZoomIn } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import { User, Plus, X, GraduationCap, Briefcase, MapPin, Droplet, Calendar, Phone, Mail, Award, Landmark, Edit2, Edit, Trash2, Building, Link, Facebook, Twitter, Instagram, Linkedin, Globe, Heart, Sparkles, ZoomIn, Flower2, ChevronRight, Users, GitBranch } from 'lucide-react';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -810,215 +810,229 @@ const SpouseDetailsModal = ({ person: initialPerson, onClose, onViewTree, onView
     );
 };
 
-/* TreeNode Component */
-const TreeNode = ({ node, isActive, isDimmed, onClick, onAddChild, onViewDetails, onEditNode, onDeleteNode, level, layerIndex, index, className, isAdmin }) => {
-    const { t, isBn, formatNumber, formatName } = useLanguage();
-    const nodeRef = useRef(null);
-    const hasChildren = node.children && node.children.length > 0;
-    const childrenCount = node.children ? node.children.length : 0;
-
-    // Identity theming: son = sky-blue, daughter = rose-pink. Spouse nodes untouched.
-    const _identity = getMemberIdentity(node);
-    const _useTheme = _identity === 'son' || _identity === 'daughter';
-    const _theme = MEMBER_THEMES[_useTheme ? _identity : 'default'];
-
-    useEffect(() => {
-        if (isActive && nodeRef.current) {
-            setTimeout(() => {
-                nodeRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' });
-            }, 300);
+/* ──────────────────────────────────────────────────────────────────────────
+ * Household family tree — generation rows
+ *
+ * Each generation is a horizontally scrollable row. Tapping a person opens
+ * their children in the next row; branches are drawn as animated SVG curves
+ * measured from the real card positions (re-measured on row scroll/resize),
+ * and the selected lineage carries a flowing "diya-light" pulse.
+ * ────────────────────────────────────────────────────────────────────────── */
+const TreeStyles = () => (
+    <style>{`
+        @keyframes ft-pop   { 0% { opacity: 0; transform: translateY(14px) scale(.94); filter: blur(4px); } 60% { opacity: 1; filter: blur(0); } 100% { opacity: 1; transform: none; filter: none; } }
+        @keyframes ft-draw  { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @keyframes ft-flow  { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -40; } }
+        @keyframes ft-fade  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ft-halo  { 0%, 100% { opacity: .5; transform: scale(1); } 50% { opacity: .15; transform: scale(1.05); } }
+        @keyframes ft-row   { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+        .ft-pop   { animation: ft-pop .55s cubic-bezier(.2,.9,.3,1.15) both; }
+        .ft-row   { animation: ft-row .4s ease-out both; }
+        .ft-edge  { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ft-draw .7s cubic-bezier(.65,0,.35,1) forwards; }
+        .ft-flow  { stroke-dasharray: 4 16; animation: ft-fade .4s ease .7s both, ft-flow 1.1s linear infinite; }
+        .ft-dot   { animation: ft-fade .35s ease-out both; }
+        .ft-halo  { animation: ft-halo 2.4s ease-in-out infinite; }
+        .ft-scroll { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
+        .ft-scroll::-webkit-scrollbar { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .ft-pop, .ft-row, .ft-dot, .ft-halo { animation: none !important; }
+            .ft-edge { animation: none !important; stroke-dashoffset: 0; }
+            .ft-flow { animation: none !important; }
         }
-    }, [isActive]);
+    `}</style>
+);
 
-    const staggerStyle = {
-        animationDelay: `${0.2 + (index * 0.05)}s`,
-        opacity: 0
+const yearOf = (d) => {
+    if (!d) return null;
+    const y = new Date(d).getFullYear();
+    return Number.isFinite(y) ? y : null;
+};
+
+const TreeNode = ({ node, isActive, isDimmed, isHovered, onClick, onAddChild, onViewDetails, onEditNode, onDeleteNode, level, index, isAdmin, memberMap, slotRef, onHover }) => {
+    const { t, isBn, formatNumber, formatName } = useLanguage();
+    const childrenCount = node.children ? node.children.length : 0;
+    const identity = getMemberIdentity(node);
+    const isDeceased = node.is_alive === false || Boolean(node.death_date);
+    const born = yearOf(node.birth_date);
+    const died = yearOf(node.death_date);
+    const spouses = Array.isArray(node.spouses) ? node.spouses.filter(Boolean) : [];
+    const firstSpouse = spouses[0];
+
+    const accent = identity === 'son'
+        ? { ring: 'from-sky-500 via-orange-500 to-amber-400', soft: 'bg-sky-50 text-sky-700', pill: 'bg-sky-600' }
+        : identity === 'daughter'
+            ? { ring: 'from-rose-500 via-orange-500 to-amber-400', soft: 'bg-rose-50 text-rose-700', pill: 'bg-rose-600' }
+            : { ring: 'from-orange-500 via-red-600 to-amber-400', soft: 'bg-orange-50 text-orange-700', pill: 'bg-orange-600' };
+
+    const openSpouse = (e) => {
+        e.stopPropagation();
+        const full = firstSpouse && memberMap?.[String(firstSpouse.id)];
+        onViewDetails?.(full || { ...firstSpouse, gender: 'Female', relationType: 'spouse' });
     };
 
     return (
         <div
             id={`node-${node.id}`}
-            ref={nodeRef}
-            className={`flex flex-col items-center relative ${layerIndex > 0 ? 'pt-8 sm:pt-12' : 'pt-2'} pb-6 animate-unfold origin-top shrink-0 ${className || ''}`}
-            style={staggerStyle}
+            ref={slotRef}
+            className="relative shrink-0 snap-center pt-1 pb-6"
+            onMouseEnter={() => onHover?.(node.id)}
+            onMouseLeave={() => onHover?.(null)}
         >
-            {/* Connector Line UP — rises from top-0 of this node wrapper up to the horizontal bus */}
-            {layerIndex > 0 && (
-                <div className="absolute top-0 left-1/2 -translate-x-[1px] w-[2px] h-8 sm:h-12 bg-orange-400 z-20" />
-            )}
-
-            {/* CARD */}
-            <div
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onClick();
-                }}
-                className={`
-                    group relative z-30 flex flex-col items-center w-32 sm:w-44 pt-2.5 sm:pt-4 pb-3 sm:pb-6
-                    bg-white rounded-xl sm:rounded-2xl cursor-pointer 
-                    transition-all duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)]
-                    border mb-0
-                    ${isActive
-                        ? (_identity === 'son'
-                            ? 'border-sky-400 ring-4 ring-sky-400/15 shadow-xl shadow-sky-100/60 -translate-y-2 scale-105 z-50'
-                            : _identity === 'daughter'
-                                ? 'border-rose-400 ring-4 ring-rose-400/15 shadow-xl shadow-rose-100/60 -translate-y-2 scale-105 z-50'
-                                : 'border-orange-500 ring-4 ring-orange-500/10 shadow-xl -translate-y-2 scale-105 z-50')
-                        : isDimmed
-                            ? 'border-stone-200 opacity-50 scale-95 grayscale-[0.8] hover:grayscale-0 hover:opacity-100 hover:scale-100'
-                            : _identity === 'son'
-                                ? 'border-sky-100 shadow-sm hover:border-sky-300 hover:shadow-md hover:shadow-sky-100/50 hover:-translate-y-1'
-                                : _identity === 'daughter'
-                                    ? 'border-rose-100 shadow-sm hover:border-rose-300 hover:shadow-md hover:shadow-rose-100/50 hover:-translate-y-1'
-                                    : 'border-stone-200 shadow-sm hover:border-orange-300 hover:shadow-md hover:-translate-y-1'
-                    }
-                `}
-            >
-                {/* Active Indicator Top Strip - ONLY for Level > 1 */}
-                {isActive && level > 1 && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 sm:w-8 h-1 bg-orange-500 rounded-b-full"></div>
+            <div className="ft-pop relative" style={{ animationDelay: `${Math.min(index, 10) * 55}ms` }}>
+                {isActive && (
+                    <div className={`ft-halo pointer-events-none absolute -inset-2 rounded-[26px] bg-gradient-to-br ${accent.ring} opacity-40 blur-lg`} />
                 )}
 
-                {/* Edit & Delete Actions (Always Visible on Top Right) */}
-                <div className="absolute top-1.5 right-1.5 flex gap-0.5 sm:gap-1 z-50">
-                    {isAdmin && onDeleteNode && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteNode(node);
-                            }}
-                            className="p-1 sm:p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                            title={t('সদস্য মুছুন', 'Delete Member')}
-                        >
-                            <Trash2 size={12} className="sm:size-[14px]" />
-                        </button>
-                    )}
-                    {isAdmin && onEditNode && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEditNode(node);
-                            }}
-                            className="p-1 sm:p-1.5 text-stone-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
-                            title={t('সদস্য সম্পাদনা', 'Edit Member')}
-                        >
-                            <Edit2 size={12} className="sm:size-[14px]" />
-                        </button>
-                    )}
-                </div>
-
-                {/* Eminent Category / কৃতি ও স্মরণীয় ব্যক্তিত্ব Tag (Top-Left Corner) */}
-                {node.eminent_category && (
+                {/* Gradient frame when selected */}
+                <div className={`relative rounded-[22px] p-[1.5px] transition-all duration-300 ${isActive ? `bg-gradient-to-br ${accent.ring} shadow-xl shadow-orange-900/15` : 'bg-transparent'}`}>
                     <div
-                        className="absolute top-1.5 left-1.5 flex items-center gap-0.5 sm:gap-1 bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 border border-amber-300 text-[6.5px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap z-20 shadow-xs max-w-[48%] sm:max-w-[55%] hover:border-amber-400 hover:bg-amber-100 transition-colors"
-                        title={node.eminent_category}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isActive}
+                        aria-label={formatName(node)}
+                        onClick={(e) => { e.stopPropagation(); onClick(); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+                        className={`group relative flex flex-col items-center w-[136px] sm:w-[176px] px-2 pt-3 pb-3.5 sm:pb-4 rounded-[20.5px] border cursor-pointer select-none
+                            transition-all duration-300 ease-out active:scale-[0.98]
+                            ${isActive
+                                ? 'bg-white border-transparent'
+                                : isDimmed
+                                    ? 'bg-white/80 border-stone-200 opacity-55 saturate-50 hover:opacity-100 hover:saturate-100'
+                                    : `bg-white border-stone-200 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-900/10 ${isHovered ? 'border-orange-300' : 'hover:border-orange-300'}`}
+                            ${isDeceased && !isActive ? 'bg-stone-50' : ''}`}
                     >
-                        <Award size={9} className="text-amber-600 shrink-0" />
-                        <span className="truncate leading-none">{node.eminent_category}</span>
-                    </div>
-                )}
+                        {/* Admin actions */}
+                        {isAdmin && (onDeleteNode || onEditNode) && (
+                            <div className="absolute top-1.5 right-1.5 flex gap-0.5 z-20">
+                                {onEditNode && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); onEditNode(node); }}
+                                        className="p-1 rounded-md text-stone-400 hover:text-orange-700 hover:bg-orange-50 transition-colors" title={t('সদস্য সম্পাদনা', 'Edit Member')}>
+                                        <Edit2 size={12} />
+                                    </button>
+                                )}
+                                {onDeleteNode && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); onDeleteNode(node); }}
+                                        className="p-1 rounded-md text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors" title={t('সদস্য মুছুন', 'Delete Member')}>
+                                        <Trash2 size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
-                {/* Profile Picture */}
-                <div
-                    className="relative mb-2 sm:mb-3 group/avatar"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (onViewDetails) onViewDetails(node, 'member');
-                    }}
-                >
-                    <div className={`
-                        relative w-10 h-10 sm:w-16 sm:h-16 rounded-full p-1 transition-all duration-500
-                        ${isActive
-                            ? (_identity === 'son'
-                                ? 'bg-gradient-to-tr from-sky-500 to-blue-400'
-                                : _identity === 'daughter'
-                                    ? 'bg-gradient-to-tr from-rose-500 to-pink-400'
-                                    : 'bg-gradient-to-tr from-orange-500 to-yellow-500')
-                            : (_identity === 'son'
-                                ? 'bg-sky-50 group-hover/avatar:bg-sky-100'
-                                : _identity === 'daughter'
-                                    ? 'bg-rose-50 group-hover/avatar:bg-rose-100'
-                                    : 'bg-stone-100 group-hover/avatar:bg-orange-200')
-                        }
-                    `}>
-                        <div className="w-full h-full rounded-full overflow-hidden bg-white border-2 border-white">
-                            {node.profile_image_url ? (
-                                <img src={node.profile_image_url} alt={node.full_name} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className={`w-full h-full flex items-center justify-center ${_identity === 'son' ? 'bg-sky-50 text-sky-300' : _identity === 'daughter' ? 'bg-rose-50 text-rose-300' : 'bg-stone-50 text-stone-300'}`}>
-                                    <User size={18} className="sm:size-6" />
+                        {/* Eminent tag */}
+                        {node.eminent_category && (
+                            <div className="absolute top-1.5 left-1.5 z-20 max-w-[52%] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900 text-[8px] font-bold"
+                                title={node.eminent_category}>
+                                <Award size={9} className="shrink-0 text-amber-600" />
+                                <span className="truncate leading-none">{node.eminent_category}</span>
+                            </div>
+                        )}
+
+                        {/* Avatar */}
+                        <div
+                            className="relative mt-3 mb-2.5 group/avatar"
+                            onClick={(e) => { e.stopPropagation(); onViewDetails?.(node, 'member'); }}
+                            title={t('বিস্তারিত দেখুন', 'View details')}
+                        >
+                            <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full p-[3px] transition-all duration-500
+                                ${isActive ? `bg-gradient-to-tr ${accent.ring}` : isDeceased ? 'bg-stone-200' : identity === 'son' ? 'bg-sky-100' : identity === 'daughter' ? 'bg-rose-100' : 'bg-orange-100'}
+                                group-hover/avatar:scale-105`}>
+                                <div className={`w-full h-full rounded-full overflow-hidden border-2 border-white ${isDeceased ? 'grayscale-[0.6]' : ''}`}>
+                                    {node.profile_image_url ? (
+                                        <img src={node.profile_image_url} alt={formatName(node)} className="w-full h-full object-cover" loading="lazy" />
+                                    ) : (
+                                        <div className={`w-full h-full flex items-center justify-center font-serif font-bold text-lg sm:text-2xl ${isDeceased ? 'bg-stone-100 text-stone-400' : accent.soft}`}>
+                                            {(formatName(node) || '?').trim().charAt(0)}
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
+                            {/* Generation pill */}
+                            <span className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-full text-[8.5px] sm:text-[9.5px] font-bold whitespace-nowrap border shadow-sm
+                                ${isActive ? `${accent.pill} text-white border-transparent` : 'bg-white text-stone-500 border-stone-200'}`}>
+                                {isBn ? `প্রজন্ম ${formatNumber(node.level || level)}` : `Gen ${node.level || level}`}
+                            </span>
+                            {/* Remembrance mark */}
+                            {isDeceased && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shadow-sm" title={t('প্রয়াত', 'Late')}>
+                                    <Flower2 size={11} className="text-amber-600" />
+                                </span>
                             )}
                         </div>
-                    </div>
-                    <div className={`
-                        absolute -bottom-2 left-1/2 -translate-x-1/2 text-[6px] sm:text-[9px] font-bold px-1 sm:px-2 py-0.5 rounded-full border shadow-sm whitespace-nowrap z-10 transition-colors
-                        ${isActive
-                            ? (_identity === 'son'
-                                ? 'bg-sky-600 text-white border-sky-500'
-                                : _identity === 'daughter'
-                                    ? 'bg-rose-500 text-white border-rose-400'
-                                    : 'bg-orange-600 text-white border-orange-500')
-                            : 'bg-white text-stone-500 border-stone-200'
-                        }
-                    `}>
-                        {isBn ? `প্র-${formatNumber(node.level || level)}` : `G${node.level || level}`}
-                    </div>
-                </div>
 
-                {/* Basic Identity Info */}
-                <div className="w-full flex flex-col items-center text-center px-1.5">
-                    <div className="flex items-center justify-center gap-1 w-full max-w-full">
-                        <h3 className={`text-xs sm:text-sm font-serif font-bold leading-tight truncate mb-0.5 transition-colors ${isActive
-                            ? (_identity === 'son' ? 'text-sky-900' : _identity === 'daughter' ? 'text-rose-900' : 'text-orange-900')
-                            : 'text-stone-800'
-                        }`}>
-                            {formatName(node)}
-                        </h3>
-                        {(node.is_active || node.user_status === 'active') && (
-                            <VerifiedBadge size={13} />
+                        {/* Name */}
+                        <div className="w-full flex items-start justify-center gap-1 px-0.5">
+                            <h3 className={`text-center font-serif font-bold text-[13px] sm:text-sm leading-snug line-clamp-2 break-words ${isActive ? 'text-orange-900' : isDeceased ? 'text-stone-600' : 'text-stone-800'}`}>
+                                {formatName(node)}
+                            </h3>
+                            {(node.is_active || node.user_status === 'active') && (
+                                <span className="shrink-0 mt-0.5"><VerifiedBadge size={12} /></span>
+                            )}
+                        </div>
+
+                        {/* Life years / children */}
+                        <div className="mt-1 text-[10px] sm:text-[11px] font-medium text-stone-400 text-center leading-tight">
+                            {isDeceased
+                                ? <span>{t('প্রয়াত', 'Late')}{(born || died) ? ` · ${born ? formatNumber(born) : '…'}–${died ? formatNumber(died) : '…'}` : ''}</span>
+                                : born ? <span>{t('জন্ম', 'Born')} {formatNumber(born)}</span> : null}
+                        </div>
+                        <div className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${childrenCount > 0 ? (isActive ? 'bg-orange-600 text-white' : 'bg-orange-50 text-orange-800') : 'bg-stone-100 text-stone-400'}`}>
+                            <Users size={10} />
+                            {childrenCount > 0
+                                ? (isBn ? `${formatNumber(childrenCount)} সন্তান` : `${childrenCount} ${childrenCount === 1 ? 'child' : 'children'}`)
+                                : t('সন্তান নেই', 'No children')}
+                        </div>
+
+                        {/* Spouse */}
+                        {firstSpouse && (
+                            <button
+                                type="button"
+                                onClick={openSpouse}
+                                className="mt-2 w-full flex items-center gap-1.5 px-1.5 py-1 rounded-xl bg-rose-50/80 border border-rose-100 hover:border-rose-300 hover:bg-rose-50 transition-colors text-left"
+                                title={t('সহধর্মিণীর বিস্তারিত', 'Spouse details')}
+                            >
+                                <span className="w-5 h-5 rounded-full overflow-hidden bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-[10px] font-bold">
+                                    {firstSpouse.profile_image_url
+                                        ? <img src={firstSpouse.profile_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                        : <Heart size={10} className="fill-rose-400 text-rose-400" />}
+                                </span>
+                                <span className="min-w-0 flex-1 text-[10.5px] font-semibold text-rose-800 truncate">{formatName(firstSpouse)}</span>
+                                {spouses.length > 1 && (
+                                    <span className="text-[9px] font-bold text-rose-500 shrink-0">+{formatNumber(spouses.length - 1)}</span>
+                                )}
+                            </button>
+                        )}
+
+                        {/* Add child (sons only — daughters are leaf nodes) */}
+                        {isAdmin && node.gender !== 'Female' && (
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); onAddChild?.(node); }}
+                                className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white shadow-md transition-transform hover:scale-110 active:scale-95
+                                    ${isActive ? 'bg-orange-600 text-white' : 'bg-white text-stone-400 hover:bg-orange-100 hover:text-orange-700'}`}
+                                title={t('সন্তান যোগ করুন', 'Add Child')}
+                            >
+                                <Plus size={14} strokeWidth={3} />
+                            </button>
                         )}
                     </div>
-                    <div className="text-[9px] font-medium text-stone-400 uppercase tracking-wide">
-                        {childrenCount > 0 ? (isBn ? `${formatNumber(childrenCount)} জন সন্তান` : `${childrenCount} Children`) : (isBn ? 'সন্তান নেই' : 'No Children')}
-                    </div>
                 </div>
-
-
-                {/* Centered Add Button — only for male members (daughters are leaf nodes) */}
-                {isAdmin && node.gender !== 'Female' && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onAddChild) onAddChild(node);
-                        }}
-                        className={`
-                        absolute -bottom-4 left-1/2 -translate-x-1/2
-                        w-8 h-8 rounded-full flex items-center justify-center
-                        border-2 border-white shadow-md transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer
-                        ${isActive ? 'bg-orange-600 text-white' : 'bg-stone-50 text-stone-400 hover:bg-orange-100 hover:text-orange-600'}
-                    `}
-                        title={t('সন্তান যোগ করুন', 'Add Child')}
-                    >
-                        <Plus size={16} strokeWidth={3} />
-                    </button>
-                )}
-
             </div>
-
-            {/* Connector Line DOWN — drops from bottom of card to meet the next layer's horizontal bus */}
-            {isActive && hasChildren && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-[1px] w-[2px] h-8 sm:h-12 bg-orange-400 z-20 animate-draw-v origin-top" />
-            )}
         </div>
     );
 };
 
 /* Main Component */
 const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, onViewDetails, isAdmin, autoExpandId }) => {
-    const { t } = useLanguage();
+    const { t, isBn, formatNumber, formatName } = useLanguage();
     const [activePathIds, setActivePathIds] = useState([]);
     const [selectedPerson, setSelectedPerson] = useState(null);
+    const [hoverId, setHoverId] = useState(null);
+    const [edges, setEdges] = useState({ list: [], w: 0, h: 0 });
+    const wrapRef = useRef(null);
+    const rowRefs = useRef({});
+    const slotRefs = useRef({});
+    const rafRef = useRef(0);
 
     // Transform Flat List to Hierarchy
     const { roots, map, spouseIds } = useMemo(() => {
@@ -1032,7 +1046,7 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
 
         members.forEach(member => {
             map[String(member.id)] = { ...member, children: [] };
-            
+
             // Collect IDs that act as spouses so they are not treated as independent roots.
             // Since member_spouses is bidirectional, we only want the wives (females) to be in spouseIds
             // so that the husbands (males) can properly be roots if they have no father.
@@ -1117,7 +1131,7 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
         // Resolve spouse target → main member's ID in tree hierarchy
         let resolvedTargetId = targetId;
         const targetMember = map[targetId];
-        
+
         // If target acts as a spouse of a member in the tree, expand their partner's tree instead
         const partner = members.find(m => String(m.id) !== targetId && (
             String(m.spouse_id) === targetId ||
@@ -1207,10 +1221,91 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
         return _layers;
     }, [roots, activePathIds]);
 
+    // Lineage trail (breadcrumb) for the selected path
+    const trail = useMemo(() => activePathIds.map((id) => map[String(id)]).filter(Boolean), [activePathIds, map]);
+
+    /* ── Branch curves: parent (bottom-centre) → each child (top-centre) ── */
+    const measure = useCallback(() => {
+        const wrap = wrapRef.current;
+        if (!wrap) return;
+        const base = wrap.getBoundingClientRect();
+        const list = [];
+        layers.forEach((layerNodes, i) => {
+            if (i === 0) return;
+            const parentId = String(activePathIds[i - 1]);
+            const pEl = slotRefs.current[parentId];
+            if (!pEl) return;
+            const p = pEl.getBoundingClientRect();
+            const sx = p.left + p.width / 2 - base.left;
+            const sy = p.bottom - base.top - 10;
+            layerNodes.forEach((child, j) => {
+                const cEl = slotRefs.current[String(child.id)];
+                if (!cEl) return;
+                const c = cEl.getBoundingClientRect();
+                const ex = c.left + c.width / 2 - base.left;
+                const ey = c.top - base.top + 4;
+                const dy = Math.max(16, (ey - sy) * 0.6);
+                list.push({
+                    key: `${parentId}->${child.id}`,
+                    d: `M ${sx} ${sy} C ${sx} ${sy + dy}, ${ex} ${ey - dy}, ${ex} ${ey}`,
+                    start: { x: sx, y: sy },
+                    end: { x: ex, y: ey },
+                    onPath: String(activePathIds[i]) === String(child.id),
+                    hovered: String(hoverId) === String(child.id),
+                    delay: Math.min(j, 10) * 55,
+                });
+            });
+        });
+        setEdges({ list, w: wrap.offsetWidth, h: wrap.offsetHeight });
+    }, [layers, activePathIds, hoverId]);
+
+    const scheduleMeasure = useCallback(() => {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(measure);
+    }, [measure]);
+
+    useLayoutEffect(() => { measure(); }, [measure]);
+
+    useEffect(() => {
+        const wrap = wrapRef.current;
+        if (!wrap) return undefined;
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduleMeasure) : null;
+        ro?.observe(wrap);
+        window.addEventListener('resize', scheduleMeasure);
+        // Cards settle after their pop-in animation; re-measure once they land
+        const late = window.setTimeout(scheduleMeasure, 650);
+        return () => {
+            ro?.disconnect();
+            window.removeEventListener('resize', scheduleMeasure);
+            window.clearTimeout(late);
+            cancelAnimationFrame(rafRef.current);
+        };
+    }, [scheduleMeasure]);
+
+    // Centre the selected person in each row, and bring a newly opened row into view
+    const prevDepth = useRef(0);
+    useEffect(() => {
+        activePathIds.forEach((id, i) => {
+            const row = rowRefs.current[i];
+            const slot = slotRefs.current[String(id)];
+            if (row && slot) {
+                const left = slot.offsetLeft + slot.offsetWidth / 2 - row.clientWidth / 2;
+                row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+            }
+        });
+        if (layers.length > prevDepth.current && layers.length > 1) {
+            const newRow = rowRefs.current[layers.length - 1];
+            window.setTimeout(() => newRow?.closest('[data-ft-row]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 180);
+        }
+        prevDepth.current = layers.length;
+    }, [activePathIds, layers.length]);
+
+    const genOf = (layerNodes, i) => layerNodes[0]?.level || i + 1;
+
     return (
-        <div className="w-full bg-transparent p-0 font-sans">
-            <div className="w-full min-h-screen flex flex-col items-center">
-                <AnimationStyles />
+        <div className="w-full font-sans">
+            <TreeStyles />
+            <AnimationStyles />
 
             {/* Person Detail Modal */}
             {selectedPerson && (
@@ -1225,44 +1320,118 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                 />
             )}
 
-            {/* Background Pattern */}
-            <div className="fixed inset-0 opacity-[0.04] pointer-events-none"
-                style={{ backgroundImage: 'linear-gradient(#9a3412 1px, transparent 1px), linear-gradient(90deg, #9a3412 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-            </div>
+            <div className="relative overflow-hidden rounded-3xl border border-orange-100 bg-background shadow-inner">
+                {/* Background: dotted grid + warm glow */}
+                <div className="absolute inset-0 pointer-events-none text-orange-900/[0.08]"
+                    style={{ backgroundImage: 'radial-gradient(currentColor 1.2px, transparent 1.2px)', backgroundSize: '22px 22px' }} />
+                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[28rem] h-64 rounded-full bg-orange-300/20 blur-3xl pointer-events-none" />
 
-            {/* Compact Admin Add Root Member Button */}
-            {isAdmin && onAddRoot && (
-                <div className="relative z-10 flex justify-center mb-3 mt-1">
-                    <button
-                        onClick={() => onAddRoot && onAddRoot()}
-                        className="group relative inline-flex items-center gap-1.5 px-4 py-1.5 bg-orange-800 hover:bg-orange-700 text-white font-bold rounded-xl shadow-xs transition-all active:scale-95 text-xs tracking-wider cursor-pointer"
-                    >
-                        <Plus size={14} strokeWidth={2.5} />
-                        <span>{t('মূল সদস্য যোগ করুন', 'Add Root Member')}</span>
-                    </button>
+                {/* Toolbar: lineage trail + add root */}
+                <div className="relative z-20 flex items-center gap-2 px-3 sm:px-5 pt-3 sm:pt-4">
+                    <div className="ft-scroll flex-1 min-w-0 flex items-center gap-1 overflow-x-auto">
+                        <button
+                            type="button"
+                            onClick={() => setActivePathIds([])}
+                            className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors
+                                ${trail.length === 0 ? 'bg-orange-700 text-white border-transparent' : 'bg-white text-stone-600 border-stone-200 hover:border-orange-300 hover:text-orange-800'}`}
+                        >
+                            <GitBranch size={12} />
+                            {t('বংশধারা', 'Lineage')}
+                        </button>
+                        {trail.map((p, i) => (
+                            <React.Fragment key={p.id}>
+                                <ChevronRight size={12} className="shrink-0 text-stone-300" />
+                                <button
+                                    type="button"
+                                    onClick={() => setActivePathIds(activePathIds.slice(0, i + 1))}
+                                    className={`shrink-0 max-w-[9rem] truncate px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors
+                                        ${i === trail.length - 1 ? 'bg-orange-100 text-orange-900 border-orange-200' : 'bg-white text-stone-600 border-stone-200 hover:border-orange-300'}`}
+                                >
+                                    {formatName(p)}
+                                </button>
+                            </React.Fragment>
+                        ))}
+                    </div>
+                    {isAdmin && onAddRoot && (
+                        <button
+                            type="button"
+                            onClick={() => onAddRoot && onAddRoot()}
+                            className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-700 to-red-800 text-white text-[11px] sm:text-xs font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                        >
+                            <Plus size={13} strokeWidth={2.6} />
+                            <span className="hidden sm:inline">{t('মূল সদস্য যোগ করুন', 'Add Root Member')}</span>
+                            <span className="sm:hidden">{t('মূল সদস্য', 'Root')}</span>
+                        </button>
+                    )}
                 </div>
-            )}
 
-            {/* Tree Content Area */}
-            <div className="w-full flex flex-col gap-0 pb-16">
-                {layers.map((layerNodes, layerIndex) => {
-                    const activeNodeId = activePathIds[layerIndex];
-                    const hasActiveNode = !!activeNodeId;
+                {/* Tree */}
+                <div ref={wrapRef} className="relative z-10 pb-6 sm:pb-10">
+                    <svg className="absolute left-0 top-0 pointer-events-none" width={edges.w} height={edges.h} aria-hidden="true">
+                        <defs>
+                            <linearGradient id="ft-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" style={{ stopColor: 'rgb(var(--tx-orange-500))' }} />
+                                <stop offset="100%" style={{ stopColor: 'rgb(var(--tx-amber-400))' }} />
+                            </linearGradient>
+                            <filter id="ft-glow" x="-50%" y="-20%" width="200%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="b" />
+                                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        {edges.list.map((e) => (
+                            <g key={e.key}>
+                                <path
+                                    d={e.d}
+                                    pathLength={1}
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    strokeWidth={e.onPath ? 2.5 : e.hovered ? 2.2 : 1.5}
+                                    stroke={e.onPath ? 'url(#ft-grad)' : undefined}
+                                    className={`ft-edge transition-[stroke-width] ${e.onPath ? '' : e.hovered ? 'stroke-orange-500' : 'stroke-orange-300/80'}`}
+                                    style={{ animationDelay: `${e.delay}ms` }}
+                                />
+                                {e.onPath && (
+                                    <path d={e.d} fill="none" strokeWidth={3} strokeLinecap="round" className="ft-flow stroke-yellow-300" filter="url(#ft-glow)" />
+                                )}
+                                <circle cx={e.end.x} cy={e.end.y} r={e.onPath ? 3.5 : 2.5}
+                                    className={`ft-dot ${e.onPath ? 'fill-orange-600' : 'fill-orange-300'}`}
+                                    style={{ animationDelay: `${e.delay + 450}ms` }} />
+                            </g>
+                        ))}
+                        {edges.list.filter((e, i, arr) => arr.findIndex((x) => x.start.x === e.start.x && x.start.y === e.start.y) === i).map((e) => (
+                            <circle key={`o-${e.key}`} cx={e.start.x} cy={e.start.y} r={4} className="ft-dot fill-orange-600" style={{ stroke: 'rgb(var(--surface))' }} strokeWidth={2} />
+                        ))}
+                    </svg>
 
-                    return (
-                        <div key={layerIndex} className="flex flex-col items-center relative w-full max-w-[100vw] mb-0">
+                    {roots.length === 0 && (
+                        <div className="relative flex flex-col items-center justify-center gap-2 py-16 text-center text-stone-400">
+                            <Users className="w-9 h-9 text-orange-200" />
+                            <p className="text-sm font-semibold">{t('এই বাড়িতে এখনো কোনো সদস্য যুক্ত হয়নি', 'No members have been added to this home yet')}</p>
+                        </div>
+                    )}
 
-                            {/* Horizontal Bus Line - Full screen width, sits at the top of each child row */}
-                            {layerIndex > 0 && layerNodes.length > 0 && (
-                                <div className="absolute top-0 left-0 right-0 h-[2px] bg-orange-400 z-10 opacity-90" />
-                            )}
+                    {roots.length > 0 && layers.map((layerNodes, layerIndex) => {
+                        const activeNodeId = activePathIds[layerIndex];
+                        const hasActiveNode = !!activeNodeId;
+                        const gen = genOf(layerNodes, layerIndex);
+                        return (
+                            <div key={`${layerIndex}-${layerNodes[0]?.id}`} data-ft-row className={`relative ${layerIndex > 0 ? 'mt-5 sm:mt-8' : 'mt-3'}`}>
+                                {/* Generation label */}
+                                <div className="ft-row relative z-10 flex justify-center mb-2">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/85 border border-orange-100 shadow-sm text-[10.5px] sm:text-[11px] font-bold text-stone-500 backdrop-blur-sm">
+                                        <Sparkles size={11} className="text-orange-600" />
+                                        {isBn ? `প্রজন্ম ${formatNumber(gen)}` : `Generation ${gen}`}
+                                        <span className="text-orange-700">· {isBn ? `${formatNumber(layerNodes.length)} জন` : layerNodes.length}</span>
+                                    </span>
+                                </div>
 
-                            {/* Gen Row Container - Scrollable horizontally if children exceed screen */}
-                            <div className="w-full relative group p-0 overflow-x-auto custom-scrollbar text-center whitespace-nowrap">
-
-                                {/* Content Wrapper - inline-flex centers small content, scrollable for large */}
-                                <div className="inline-flex flex-nowrap gap-x-6 sm:gap-x-12 items-start relative pt-0 px-4 sm:px-8 min-h-[160px] z-10 text-left align-top">
-
+                                {/* Row (scrolls horizontally on its own) */}
+                                <div
+                                    ref={(el) => { rowRefs.current[layerIndex] = el; }}
+                                    onScroll={scheduleMeasure}
+                                    className="ft-scroll relative overflow-x-auto snap-x snap-proximity"
+                                >
+                                    <div className="flex w-max min-w-full justify-center items-start gap-3 sm:gap-6 px-4 sm:px-8 pt-3">
                                         {layerNodes.map((node, index) => (
                                             <TreeNode
                                                 key={node.id}
@@ -1270,22 +1439,32 @@ const FamilyTree = ({ members, onAddChild, onAddRoot, onEditNode, onDeleteNode, 
                                                 index={index}
                                                 isActive={String(activeNodeId) === String(node.id)}
                                                 isDimmed={hasActiveNode && String(node.id) !== String(activeNodeId)}
+                                                isHovered={String(hoverId) === String(node.id)}
+                                                onHover={setHoverId}
+                                                slotRef={(el) => { slotRefs.current[String(node.id)] = el; }}
                                                 onClick={() => handleNodeClick(node, layerIndex)}
                                                 onAddChild={onAddChild}
                                                 onViewDetails={setSelectedPerson}
                                                 onEditNode={onEditNode}
                                                 onDeleteNode={onDeleteNode}
                                                 level={node.level || (layerIndex + 1)}
-                                                layerIndex={layerIndex}
                                                 isAdmin={isAdmin}
+                                                memberMap={map}
                                             />
                                         ))}
                                     </div>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+
+                    {/* Hint under the deepest row */}
+                    {roots.length > 0 && (
+                        <p className="relative mt-2 text-center text-[11px] text-stone-400 px-4">
+                            {t('কার্ডে চাপ দিলে পরবর্তী প্রজন্ম খুলবে · ছবিতে চাপ দিলে বিস্তারিত', 'Tap a card to open the next generation · tap the photo for details')}
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );

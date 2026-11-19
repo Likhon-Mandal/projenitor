@@ -62,19 +62,32 @@ const DashboardCharts = ({ data }) => {
         : { main: '#a0400d', bar: '#a11a1a', grid: '#efe5d6', tick: '#8a775e', cursor: '#fff6ec' };
     const { t } = useLanguage();
     const [isMounted, setIsMounted] = useState(false);
+    const [isNarrow, setIsNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
 
     useEffect(() => {
         setIsMounted(true);
+        const onResize = () => setIsNarrow(window.innerWidth < 640);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
     }, []);
+
+    // Tooltips follow the theme (surface + text colours flip in dark mode)
+    const tooltipStyle = {
+        borderRadius: '14px',
+        border: '1px solid rgb(var(--bd-orange-100))',
+        background: 'rgb(var(--surface))',
+        color: 'rgb(var(--tx-stone-800))',
+        boxShadow: '0 10px 15px -3px rgb(var(--bg-stone-900) / 0.15)',
+    };
 
     if (!data) return null;
 
     if (!isMounted) {
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs h-[380px] animate-pulse" />
-                <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs h-[380px] animate-pulse" />
-                <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs h-[380px] lg:col-span-2 animate-pulse" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
+                <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs h-[320px] sm:h-[380px] animate-pulse" />
+                <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs h-[320px] sm:h-[380px] animate-pulse" />
+                <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs h-[320px] sm:h-[380px] lg:col-span-2 animate-pulse" />
             </div>
         );
     }
@@ -84,15 +97,15 @@ const DashboardCharts = ({ data }) => {
     const hasBloodGroups = Array.isArray(data.bloodGroups) && data.bloodGroups.length > 0;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
             {/* Member Growth Line Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 min-w-0">
-                <h3 className="text-lg font-serif font-bold text-stone-800 mb-6">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 min-w-0">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-stone-800 mb-3 sm:mb-6">
                     {t('সদস্য নিবন্ধন প্রবৃদ্ধি', 'Member Registrations')}
                 </h3>
                 <div className="w-full min-w-0">
                     {hasRegistrations ? (
-                        <ChartContainer height={300}>
+                        <ChartContainer height={isNarrow ? 240 : 300}>
                             <AreaChart data={data.registrations} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
@@ -114,7 +127,7 @@ const DashboardCharts = ({ data }) => {
                                     tick={{ fill: chart.tick, fontSize: 12 }}
                                 />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                    contentStyle={tooltipStyle}
                                 />
                                 <Area
                                     type="monotone"
@@ -127,7 +140,7 @@ const DashboardCharts = ({ data }) => {
                             </AreaChart>
                         </ChartContainer>
                     ) : (
-                        <div className="h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
+                        <div className="h-[200px] sm:h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
                             {t('কোনো নিবন্ধন তথ্য পাওয়া যায়নি', 'No registration data available')}
                         </div>
                     )}
@@ -135,13 +148,13 @@ const DashboardCharts = ({ data }) => {
             </div>
 
             {/* Village Distribution Bar Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 min-w-0">
-                <h3 className="text-lg font-serif font-bold text-stone-800 mb-6">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 min-w-0">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-stone-800 mb-3 sm:mb-6">
                     {t('শীর্ষ গ্রামসমূহ', 'Top Villages')}
                 </h3>
                 <div className="w-full min-w-0">
                     {hasVillages ? (
-                        <ChartContainer height={300}>
+                        <ChartContainer height={isNarrow ? 240 : 300}>
                             <BarChart data={data.villages} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chart.grid} />
                                 <XAxis type="number" hide />
@@ -151,11 +164,11 @@ const DashboardCharts = ({ data }) => {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fill: chart.tick, fontSize: 12 }}
-                                    width={100}
+                                    width={isNarrow ? 78 : 100}
                                 />
                                 <Tooltip
                                     cursor={{ fill: chart.cursor }}
-                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                    contentStyle={tooltipStyle}
                                 />
                                 <Bar
                                     dataKey="value"
@@ -166,7 +179,7 @@ const DashboardCharts = ({ data }) => {
                             </BarChart>
                         </ChartContainer>
                     ) : (
-                        <div className="h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
+                        <div className="h-[200px] sm:h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
                             {t('কোনো গ্রামের তথ্য পাওয়া যায়নি', 'No village data available')}
                         </div>
                     )}
@@ -174,20 +187,20 @@ const DashboardCharts = ({ data }) => {
             </div>
 
             {/* Blood Group Distribution Pie Chart */}
-            <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 lg:col-span-2 min-w-0">
-                <h3 className="text-lg font-serif font-bold text-stone-800 mb-6 text-center">
+            <div className="bg-white p-4 sm:p-6 rounded-3xl border border-orange-100 shadow-xs hover:shadow-md hover:border-orange-200 transition-all duration-300 lg:col-span-2 min-w-0">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-stone-800 mb-3 sm:mb-6 text-center">
                     {t('রক্তের গ্রুপের অনুপাত', 'Blood Group Distribution')}
                 </h3>
                 <div className="w-full min-w-0">
                     {hasBloodGroups ? (
-                        <ChartContainer height={300}>
+                        <ChartContainer height={isNarrow ? 240 : 300}>
                             <PieChart>
                                 <Pie
                                     data={data.bloodGroups}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={100}
+                                    innerRadius={isNarrow ? 48 : 60}
+                                    outerRadius={isNarrow ? 78 : 100}
                                     paddingAngle={5}
                                     dataKey="value"
                                 >
@@ -196,13 +209,13 @@ const DashboardCharts = ({ data }) => {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                    contentStyle={tooltipStyle}
                                 />
-                                <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
+                                <Legend verticalAlign={isNarrow ? 'bottom' : 'middle'} align={isNarrow ? 'center' : 'right'} layout={isNarrow ? 'horizontal' : 'vertical'} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                             </PieChart>
                         </ChartContainer>
                     ) : (
-                        <div className="h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
+                        <div className="h-[200px] sm:h-[300px] flex items-center justify-center text-stone-400 text-sm italic">
                             {t('কোনো রক্তের গ্রুপের তথ্য পাওয়া যায়নি', 'No blood group data available')}
                         </div>
                     )}

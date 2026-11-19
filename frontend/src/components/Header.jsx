@@ -103,7 +103,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-orange-900 via-orange-800 to-orange-900 text-white shadow-[0_6px_24px_-12px_rgba(67,20,7,0.6)] sticky top-0 z-40 border-b border-orange-700/40 font-sans pt-safe">
+      <header className="bg-gradient-to-r from-orange-900 via-orange-800 to-orange-900 text-white shadow-[0_6px_24px_-12px_rgba(67,20,7,0.6)] sticky top-0 z-50 border-b border-orange-700/40 font-sans pt-safe">
         <div className="container mx-auto px-3 sm:px-4 h-14 md:h-16 flex justify-between items-center gap-2">
 
           {/* Logo */}

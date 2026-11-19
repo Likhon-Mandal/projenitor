@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Home, MapPin, Calendar, Bell, Star, Shield, ShieldAlert, Plus, Pencil, Trash2, X, Eye, EyeOff, LogOut, Key, RefreshCw, AlertCircle, GraduationCap, Terminal } from 'lucide-react';
+import { Users, Home, MapPin, Calendar, Bell, Star, Shield, ShieldAlert, Plus, Pencil, Trash2, X, Eye, EyeOff, Key, RefreshCw, AlertCircle, GraduationCap, Terminal, LayoutGrid, Check, Mail, Phone, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
 import ProfileTab from '../components/ProfileTab';
 import DashboardCharts from '../components/DashboardCharts';
@@ -11,19 +10,7 @@ import Profile from './Profile';
 import BrilliantStudentRequestsAdmin from '../components/BrilliantStudentRequestsAdmin';
 import ConfirmModal from '../components/ConfirmModal';
 import ApiLogsAdmin from '../components/ApiLogsAdmin';
-
-// ── Stat Card ──────────────────────────────────────────────────────────────────
-const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className={`bg-white rounded-xl shadow-sm border border-orange-100 p-4 flex items-center gap-3 hover:shadow-md transition-shadow group`}>
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
-            <Icon className="w-5 h-5 text-white" />
-        </div>
-        <div>
-            <p className="text-[11px] text-stone-500 font-sans uppercase tracking-wider">{label}</p>
-            <p className="text-xl font-bold text-stone-800 font-serif">{value ?? '—'}</p>
-        </div>
-    </div>
-);
+import { DashboardStyles, DashboardHero, StatTile, StatTileSkeleton, DashTabs, SectionHeader, StatusBadge, EmptyState, Avatar } from '../components/DashboardUI';
 
 // ── Admin Form Modal ────────────────────────────────────────────────────────────
 const AdminModal = ({ admin, onClose, onSave }) => {
@@ -70,7 +57,7 @@ const AdminModal = ({ admin, onClose, onSave }) => {
                     <h3 className="text-white font-serif text-lg font-semibold">
                         {admin ? t('এডমিন সম্পাদনা', 'Edit Admin') : t('নতুন এডমিন তৈরি', 'Create New Admin')}
                     </h3>
-                    <button onClick={onClose} className="text-orange-200 hover:text-white transition-colors cursor-pointer">
+                    <button onClick={onClose} className="w-9 h-9 -mr-2 rounded-full flex items-center justify-center text-orange-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" aria-label={t('বন্ধ করুন', 'Close')}>
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -86,7 +73,7 @@ const AdminModal = ({ admin, onClose, onSave }) => {
                     ].map(({ label, name, type, placeholder }) => (
                         <div key={name}>
                             <label className="block text-sm font-medium text-stone-700 mb-1">{label}</label>
-                            <input type={type} name={name} value={form[name]} onChange={handleChange} placeholder={placeholder} required className="w-full border border-orange-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50" />
+                            <input type={type} name={name} value={form[name]} onChange={handleChange} placeholder={placeholder} required className="w-full border border-orange-200 rounded-xl px-4 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50" />
                         </div>
                     ))}
                     <div>
@@ -101,7 +88,7 @@ const AdminModal = ({ admin, onClose, onSave }) => {
                                 onChange={handleChange}
                                 placeholder={admin ? t('নতুন পাসওয়ার্ড (ঐচ্ছিক)', 'New password (optional)') : t('কমপক্ষে ৬ অক্ষর', 'Min. 6 characters')}
                                 required={!admin}
-                                className="w-full border border-orange-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50 pr-10"
+                                className="w-full border border-orange-200 rounded-xl px-4 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50 pr-11"
                             />
                             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-orange-700 cursor-pointer">
                                 {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -115,7 +102,7 @@ const AdminModal = ({ admin, onClose, onSave }) => {
                             value={form.role} 
                             onChange={handleChange} 
                             disabled={admin?.role === 'superadmin'}
-                            className={`w-full border border-orange-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 ${admin?.role === 'superadmin' ? 'bg-orange-100/60 text-stone-500 cursor-not-allowed' : 'bg-orange-50'}`}
+                            className={`w-full border border-orange-200 rounded-xl px-4 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 ${admin?.role === 'superadmin' ? 'bg-orange-100/60 text-stone-500 cursor-not-allowed' : 'bg-orange-50'}`}
                         >
                             <option value="admin">{t('এডমিন', 'Admin')}</option>
                             <option value="superadmin">{t('সুপারএডমিন', 'Super Admin')}</option>
@@ -127,10 +114,10 @@ const AdminModal = ({ admin, onClose, onSave }) => {
                         )}
                     </div>
                     <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 border border-stone-200 text-stone-600 hover:bg-stone-50 rounded-lg py-2 text-sm font-medium transition-colors cursor-pointer">
+                        <button type="button" onClick={onClose} className="flex-1 border border-stone-200 text-stone-600 hover:bg-stone-50 rounded-xl py-2.5 min-h-[44px] text-sm font-medium transition-colors cursor-pointer">
                             {t('বাতিল', 'Cancel')}
                         </button>
-                        <button type="submit" disabled={loading} className="flex-1 bg-orange-800 hover:bg-orange-900 text-white rounded-lg py-2 text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <button type="submit" disabled={loading} className="flex-1 bg-orange-800 hover:bg-orange-900 text-white rounded-xl py-2.5 min-h-[44px] text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                             {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : (admin ? t('সংরক্ষণ করুন', 'Save Changes') : t('এডমিন তৈরি করুন', 'Create Admin'))}
                         </button>
                     </div>
@@ -142,9 +129,8 @@ const AdminModal = ({ admin, onClose, onSave }) => {
 
 // ── Main Dashboard ──────────────────────────────────────────────────────────────
 const SuperAdminDashboard = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const { t, formatNumber, formatName, isBn } = useLanguage();
-    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
     const [chartData, setChartData] = useState(null);
@@ -280,16 +266,14 @@ const SuperAdminDashboard = () => {
         }
     };
 
-    const handleLogout = () => { logout(); navigate('/login'); };
-
     const statCards = [
-        { icon: Users, label: t('মোট সদস্য', 'Total Members'), value: formatNumber(stats?.totalMembers), color: 'bg-orange-700' },
-        { icon: Home, label: t('মোট বাড়ি', 'Total Homes'), value: formatNumber(stats?.totalHomes), color: 'bg-red-800' },
-        { icon: MapPin, label: t('গ্রাম', 'Villages'), value: formatNumber(stats?.totalVillages), color: 'bg-yellow-600' },
-        { icon: Calendar, label: t('অনুষ্ঠানসমূহ', 'Events'), value: formatNumber(stats?.totalEvents), color: 'bg-emerald-700' },
-        { icon: Bell, label: t('নোটিশ', 'Notices'), value: formatNumber(stats?.totalNotices), color: 'bg-indigo-700' },
-        { icon: Star, label: t('বিশিষ্ট ব্যক্তিবর্গ', 'Eminent Figures'), value: formatNumber(stats?.totalEminentFigures), color: 'bg-purple-700' },
-        { icon: Shield, label: t('এডমিন ব্যবহারকারী', 'Admin Users'), value: formatNumber(stats?.totalAdmins), color: 'bg-stone-700' },
+        { icon: Users, label: t('মোট সদস্য', 'Total Members'), value: formatNumber(stats?.totalMembers) },
+        { icon: Home, label: t('মোট বাড়ি', 'Total Homes'), value: formatNumber(stats?.totalHomes) },
+        { icon: MapPin, label: t('গ্রাম', 'Villages'), value: formatNumber(stats?.totalVillages) },
+        { icon: Calendar, label: t('অনুষ্ঠানসমূহ', 'Events'), value: formatNumber(stats?.totalEvents) },
+        { icon: Bell, label: t('নোটিশ', 'Notices'), value: formatNumber(stats?.totalNotices) },
+        { icon: Star, label: t('বিশিষ্ট ব্যক্তিবর্গ', 'Eminent Figures'), value: formatNumber(stats?.totalEminentFigures) },
+        { icon: Shield, label: t('এডমিন ব্যবহারকারী', 'Admin Users'), value: formatNumber(stats?.totalAdmins) },
     ];
 
     const pendingStudentRequests = stats?.pendingStudentRequests || 0;
@@ -300,7 +284,7 @@ const SuperAdminDashboard = () => {
         : (pendingStudentRequests + pendingUserAccounts + pendingAdminRequests);
 
     const tabs = [
-        { id: 'overview', label: t('সারসংক্ষেপ', 'Overview'), icon: Home },
+        { id: 'overview', label: t('সারসংক্ষেপ', 'Overview'), icon: LayoutGrid },
         { 
             id: 'brilliant-requests', 
             label: t('কৃতি শিক্ষার্থী আবেদন', 'Student Requests'), 
@@ -328,72 +312,51 @@ const SuperAdminDashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-orange-50 font-sans">
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                {/* Welcome */}
-                <div className="mb-8">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-2xl font-serif font-bold text-stone-800">
-                            {t('স্বাগতম', 'Welcome back')}, {user?.name?.split(' ')[0]}! 👋
-                        </h1>
-                        {totalAdminPending > 0 && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
-                                <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-                                <span>{formatNumber(totalAdminPending)} {t('টি নতুন আবেদন', 'Pending Requests')}</span>
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-stone-500 text-sm mt-1">
-                        {t('প্রোজেনিটর সিস্টেমের সার্বিক চিত্র ও পরিসংখ্যান।', "Here's what's happening across Projenitor.")}
-                    </p>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex gap-2 mb-8 bg-white border border-orange-100 rounded-xl p-1.5 shadow-sm w-fit flex-wrap">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`px-4 sm:px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer ${
-                                    activeTab === tab.id ? 'bg-orange-800 text-white shadow-sm' : 'text-stone-600 hover:text-orange-800 hover:bg-orange-50'
-                                }`}
-                            >
-                                {Icon && <Icon className="w-4 h-4 shrink-0" />}
-                                <span>{tab.label}</span>
-                                {tab.badge > 0 && (
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                                        activeTab === tab.id ? 'bg-amber-400 text-stone-900' : 'bg-red-600 text-white animate-pulse'
-                                    }`}>
-                                        {formatNumber(tab.badge)}
+        <div className="font-sans">
+            <DashboardStyles />
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+                <DashboardHero
+                    name={formatName(user) || user?.name || t('সুপারএডমিন', 'Super Admin')}
+                    avatarUrl={user?.profile_image_url}
+                    roleLabel={t('সুপারএডমিন', 'Super Admin')}
+                    subtitle={t('প্রোজেনিটর সিস্টেমের সার্বিক চিত্র ও পরিসংখ্যান।', "Here's what's happening across Projenitor.")}
+                    pendingCount={totalAdminPending}
+                    onRefresh={() => { fetchStats(); fetchAdminRequests(); }}
+                    refreshing={statsLoading}
+                >
+                    <div className="grid grid-cols-3 gap-2">
+                        {[
+                            { id: 'users', icon: UserCheck, label: t('অ্যাকাউন্ট', 'Accounts'), count: pendingUserAccounts },
+                            { id: 'brilliant-requests', icon: GraduationCap, label: t('শিক্ষার্থী', 'Students'), count: pendingStudentRequests },
+                            { id: 'admins', icon: Shield, label: t('এডমিন', 'Admins'), count: pendingAdminRequests },
+                        ].map(({ id, icon: Icon, label, count }) => (
+                            <button key={id} type="button" onClick={() => setActiveTab(id)}
+                                className="relative min-h-[56px] flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[11px] sm:text-xs font-bold active:scale-95 transition-all">
+                                <Icon className="w-[18px] h-[18px] text-yellow-300" />
+                                <span>{label}</span>
+                                {count > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-400 text-orange-950 text-[10px] font-black flex items-center justify-center shadow">
+                                        {formatNumber(count)}
                                     </span>
                                 )}
                             </button>
-                        );
-                    })}
-                </div>
+                        ))}
+                    </div>
+                </DashboardHero>
+
+                <DashTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
                 {/* Overview Tab */}
                 {activeTab === 'overview' && (
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-serif font-semibold text-stone-700">
-                                {t('সিস্টেম সারসংক্ষেপ', 'System Overview')}
-                            </h2>
-                            <button onClick={fetchStats} className="flex items-center gap-1 text-sm text-orange-700 hover:text-orange-900 transition-colors cursor-pointer">
-                                <RefreshCw className="w-4 h-4" /> {t('রিফ্রেশ', 'Refresh')}
-                            </button>
-                        </div>
-                        {statsLoading ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {[...Array(7)].map((_, i) => <div key={i} className="bg-white rounded-xl h-24 animate-pulse border border-orange-100" />)}
+                    <div className="db-rise space-y-4 sm:space-y-6">
+                        <section>
+                            <SectionHeader title={t('সিস্টেম সারসংক্ষেপ', 'System Overview')} />
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                                {statsLoading && !stats
+                                    ? <StatTileSkeleton count={7} />
+                                    : statCards.map((card, i) => <StatTile key={card.label} index={i} {...card} />)}
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {statCards.map((card) => <StatCard key={card.label} {...card} />)}
-                            </div>
-                        )}
+                        </section>
 
                         <DashboardCharts data={chartData} />
                     </div>
@@ -401,39 +364,70 @@ const SuperAdminDashboard = () => {
 
                 {/* Admins Tab */}
                 {activeTab === 'admins' && (
-                    <div>
+                    <div className="db-rise">
                         {/* ─── Pending Admin Role Requests from Members ───────────── */}
                         <div className="mb-8">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                                <div>
-                                    <h3 className="text-base font-serif font-bold text-stone-800 flex items-center gap-2 flex-wrap">
-                                        <span>{t('সদস্যদের এডমিন পদের আবেদনসমূহ', 'Admin Role Requests from Members')}</span>
-                                        {adminRequests.filter(r => r.status === 'pending').length > 0 && (
-                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                                                <span>{formatNumber(adminRequests.filter(r => r.status === 'pending').length)} {t('নতুন আবেদন', 'Pending Requests')}</span>
-                                            </span>
-                                        )}
-                                    </h3>
-                                    <p className="text-xs text-stone-500">
-                                        {t('বংশতালিকায় তথ্য সংযোজন ও সম্পাদনার অনুমতি চেয়ে পাঠানো আবেদন', 'Requests sent by members to add and edit genealogical records')}
-                                    </p>
-                                </div>
-                                <button onClick={fetchAdminRequests} className="flex items-center gap-1 text-xs text-orange-700 hover:text-orange-900 transition-colors cursor-pointer self-start sm:self-auto">
-                                    <RefreshCw className="w-3.5 h-3.5" /> {t('রিফ্রেশ', 'Refresh Requests')}
-                                </button>
-                            </div>
+                            <SectionHeader
+                                icon={UserCheck}
+                                title={t('সদস্যদের এডমিন পদের আবেদনসমূহ', 'Admin Role Requests from Members')}
+                                subtitle={t('বংশতালিকায় তথ্য সংযোজন ও সম্পাদনার অনুমতি চেয়ে পাঠানো আবেদন', 'Requests sent by members to add and edit genealogical records')}
+                                count={adminRequests.filter(r => r.status === 'pending').length}
+                                action={
+                                    <button onClick={fetchAdminRequests} className="w-10 h-10 rounded-xl border border-orange-200 bg-white text-orange-700 hover:bg-orange-50 flex items-center justify-center active:scale-95 transition cursor-pointer" title={t('রিফ্রেশ', 'Refresh Requests')} aria-label={t('রিফ্রেশ', 'Refresh Requests')}>
+                                        <RefreshCw className={`w-4 h-4 ${requestsLoading ? 'animate-spin' : ''}`} />
+                                    </button>
+                                }
+                            />
 
                             {requestsLoading ? (
                                 <div className="bg-white rounded-xl border border-orange-100 p-6 text-center">
                                     <div className="animate-spin rounded-full h-8 w-8 border-3 border-orange-800 border-t-transparent mx-auto" />
                                 </div>
                             ) : adminRequests.length === 0 ? (
-                                <div className="bg-white rounded-xl border border-orange-100 p-5 text-center text-xs text-stone-400">
-                                    {t('কোনো এডমিন আবেদন জমা পড়েনি।', 'No admin requests submitted yet.')}
-                                </div>
+                                <EmptyState icon={UserCheck} title={t('কোনো এডমিন আবেদন জমা পড়েনি।', 'No admin requests submitted yet.')} />
                             ) : (
-                                <div className="bg-white rounded-xl border border-orange-100 shadow-sm overflow-hidden mb-6">
+                                <>
+                                {/* Phone: request cards */}
+                                <div className="md:hidden space-y-2.5">
+                                    {adminRequests.map((req) => {
+                                        const reqDisplayName = formatName({
+                                            full_name: req.member_name,
+                                            name_bangla: req.member_name_bangla,
+                                            name_english: req.member_name_english,
+                                            ...req
+                                        }) || req.member_name || t('সদস্য', 'Member');
+                                        return (
+                                            <div key={req.id} className={`bg-white rounded-2xl border p-3.5 shadow-sm ${req.status === 'pending' ? 'border-amber-200' : 'border-orange-100'}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <button type="button" disabled={!req.member_id} onClick={() => req.member_id && setSelectedProfileMemberId(req.member_id)} className="shrink-0 active:scale-95 transition-transform disabled:cursor-default">
+                                                        <Avatar src={req.profile_image_url} name={reqDisplayName} size="w-11 h-11" />
+                                                    </button>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <p className="font-serif font-bold text-stone-900 leading-tight">{reqDisplayName}</p>
+                                                            <StatusBadge status={req.status} />
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-stone-500 flex items-center gap-1 min-w-0"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{req.email}</span></p>
+                                                        {req.mobile_number && <p className="text-xs text-stone-500 flex items-center gap-1"><Phone className="w-3 h-3" />{req.mobile_number}</p>}
+                                                        <p className="text-[11px] text-stone-400 mt-0.5">{new Date(req.created_at).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                                {req.status === 'pending' && (
+                                                    <div className="grid grid-cols-2 gap-2 mt-3">
+                                                        <button onClick={() => promptAdminRequestAction(req, 'reject')} className="min-h-[42px] rounded-xl border border-red-200 text-red-700 bg-red-50 text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer">
+                                                            <X className="w-4 h-4" />{t('প্রত্যাখ্যান', 'Reject')}
+                                                        </button>
+                                                        <button onClick={() => promptAdminRequestAction(req, 'approve')} className="min-h-[42px] rounded-xl bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer">
+                                                            <Check className="w-4 h-4" />{t('অনুমোদন', 'Approve')}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="hidden md:block bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden mb-6">
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead className="bg-orange-50 border-b border-orange-100 text-xs uppercase tracking-wider text-stone-600">
@@ -496,13 +490,7 @@ const SuperAdminDashboard = () => {
                                                         <td className="px-5 py-3 text-stone-600 font-mono text-xs">{req.mobile_number || '—'}</td>
                                                         <td className="px-5 py-3 text-stone-500 text-xs">{new Date(req.created_at).toLocaleDateString()}</td>
                                                         <td className="px-5 py-3">
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                                                                req.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                                req.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                                'bg-amber-100 text-amber-800'
-                                                            }`}>
-                                                                {req.status === 'approved' ? t('অনুমোদিত', 'Approved') : req.status === 'rejected' ? t('প্রত্যাখ্যাত', 'Rejected') : t('বিবেচনাধীন', 'Pending')}
-                                                            </span>
+                                                            <StatusBadge status={req.status} />
                                                         </td>
                                                         <td className="px-5 py-3 text-center">
                                                             {req.status === 'pending' ? (
@@ -533,25 +521,72 @@ const SuperAdminDashboard = () => {
                                         </table>
                                     </div>
                                 </div>
+                                </>
                             )}
                         </div>
 
                         {/* ─── Existing Admins Section ────────────────────────────── */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <div>
-                                <h2 className="text-lg font-serif font-semibold text-stone-700">{t('এডমিন পরিচালনা', 'Admin Management')}</h2>
-                                <p className="text-xs text-stone-500">{t('বর্তমান সিস্টেম এডমিনদের তালিকা ও নতুন এডমিন সংযোজন', 'List of current system admins and adding new admins')}</p>
-                            </div>
-                            <button onClick={() => setModal({ type: 'create' })} className="flex items-center gap-2 bg-orange-800 hover:bg-orange-900 text-white text-sm px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md active:scale-95 cursor-pointer self-start sm:self-auto">
-                                <Plus className="w-4 h-4" /> {t('নতুন এডমিন যোগ করুন', 'Add Admin')}
-                            </button>
+                        <div className="mt-6 sm:mt-8">
+                        <SectionHeader
+                            icon={Shield}
+                            title={t('এডমিন পরিচালনা', 'Admin Management')}
+                            subtitle={t('বর্তমান সিস্টেম এডমিনদের তালিকা ও নতুন এডমিন সংযোজন', 'List of current system admins and adding new admins')}
+                            action={
+                                <button onClick={() => setModal({ type: 'create' })} className="min-h-[40px] flex items-center gap-1.5 bg-gradient-to-r from-orange-700 to-red-800 text-white text-sm font-bold px-3.5 rounded-xl shadow-sm hover:shadow-md active:scale-95 transition cursor-pointer">
+                                    <Plus className="w-4 h-4" /><span className="hidden sm:inline">{t('নতুন এডমিন যোগ করুন', 'Add Admin')}</span><span className="sm:hidden">{t('যোগ করুন', 'Add')}</span>
+                                </button>
+                            }
+                        />
                         </div>
                         {adminsLoading ? (
                             <div className="bg-white rounded-xl border border-orange-100 p-8 text-center">
                                 <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-800 border-t-transparent mx-auto" />
                             </div>
                         ) : (
-                            <div className="bg-white rounded-xl border border-orange-100 shadow-sm overflow-hidden">
+                            <>
+                            {/* Phone: admin cards */}
+                            <div className="md:hidden space-y-2.5">
+                                {admins.length === 0 && <EmptyState icon={Shield} title={t('কোনো এডমিন পাওয়া যায়নি।', 'No admins found.')} />}
+                                {admins.map((admin) => {
+                                    const isTargetSuperAdmin = admin.role === 'superadmin';
+                                    const isSelf = user && (
+                                        admin.id === user.id ||
+                                        (admin.email && user.email && admin.email.toLowerCase() === user.email.toLowerCase()) ||
+                                        (admin.member_id && user.member_id && admin.member_id === user.member_id)
+                                    );
+                                    const adminName = formatName(admin.name || admin);
+                                    return (
+                                        <div key={admin.id} className="bg-white rounded-2xl border border-orange-100 p-3.5 shadow-sm flex items-center gap-3">
+                                            <button type="button" disabled={!admin.member_id} onClick={() => admin.member_id && setSelectedProfileMemberId(admin.member_id)} className="shrink-0 active:scale-95 transition-transform disabled:cursor-default">
+                                                <Avatar src={admin.profile_image_url} name={adminName} size="w-11 h-11" />
+                                            </button>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-serif font-bold text-stone-900 leading-tight truncate">{adminName}</p>
+                                                <p className="text-xs text-stone-500 truncate">{admin.email}</p>
+                                                <span className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${isTargetSuperAdmin ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' : 'bg-orange-100 text-orange-800'}`}>
+                                                    <Shield className="w-3 h-3" />{isTargetSuperAdmin ? t('সুপারএডমিন', 'SuperAdmin') : t('এডমিন', 'Admin')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button onClick={() => setModal({ type: 'edit', admin })} className="w-10 h-10 rounded-xl text-orange-700 bg-orange-50 hover:bg-orange-100 flex items-center justify-center active:scale-95 transition cursor-pointer" title={t('সম্পাদনা', 'Edit')} aria-label={t('সম্পাদনা', 'Edit')}>
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                {isTargetSuperAdmin ? (
+                                                    <span className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center" title={t('সুরক্ষিত', 'Protected')}><Shield className="w-4 h-4" /></span>
+                                                ) : isSelf ? (
+                                                    <span className="px-2 text-xs text-stone-400 italic">{t('আপনি', 'You')}</span>
+                                                ) : (
+                                                    <button onClick={() => setDeleteConfirm(admin)} className="w-10 h-10 rounded-xl text-red-700 bg-red-50 hover:bg-red-100 flex items-center justify-center active:scale-95 transition cursor-pointer" title={t('এডমিন পদ অপসারণ করুন (মেম্বারে রূপান্তর)', 'Remove Admin Role (Demote to Member)')} aria-label={t('এডমিন পদ অপসারণ', 'Remove Admin Role')}>
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="hidden md:block bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead className="bg-orange-50 border-b border-orange-100">
@@ -642,34 +677,35 @@ const SuperAdminDashboard = () => {
                                                 );
                                             })}
                                             {admins.length === 0 && (
-                                                <tr><td colSpan={5} className="px-5 py-8 text-center text-stone-400">{t('কোনো এডমিন পাওয়া যায়নি।', 'No admins found.')}</td></tr>
+                                                <tr><td colSpan={5} className="px-5 py-8 text-center text-stone-400">{t('কোনো এডমিন পাওয়া যায়নি।', 'No admins found.')}</td></tr>
                                             )}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
+                            </>
                         )}
                     </div>
                 )}
 
                 {/* Brilliant Student Requests Tab */}
                 {activeTab === 'brilliant-requests' && (
-                    <BrilliantStudentRequestsAdmin />
+                    <div className="db-rise"><BrilliantStudentRequestsAdmin /></div>
                 )}
 
                 {/* Profile Tab */}
                 {activeTab === 'profile' && (
-                    <ProfileTab />
+                    <div className="db-rise"><ProfileTab /></div>
                 )}
 
                 {/* Users Tab */}
                 {activeTab === 'users' && (
-                    <UserManagement />
+                    <div className="db-rise"><UserManagement /></div>
                 )}
 
                 {/* API Logs & Monitor Tab */}
                 {activeTab === 'api-logs' && (
-                    <ApiLogsAdmin />
+                    <div className="db-rise"><ApiLogsAdmin /></div>
                 )}
             </div>
 

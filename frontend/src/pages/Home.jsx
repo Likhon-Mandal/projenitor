@@ -73,7 +73,7 @@ const CompactListItem = ({ title, date, tag, type, to, targetId, isBn, adminActi
         isBn ? (
             tag === 'Event' ? 'আয়োজন' :
                 tag === 'Notice' ? 'বিজ্ঞপ্তি' :
-                    tag
+                    ({ Medical: 'চিকিৎসা', Financial: 'আর্থিক', Advice: 'পরামর্শ', Research: 'গবেষণা', Other: 'অন্যান্য' }[tag] || tag)
         ) : tag
     ) : (isBn ? (type === 'alert' ? 'জরুরি' : 'সহায়তা') : (type === 'alert' ? 'Alert' : 'Help'));
 

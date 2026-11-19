@@ -167,11 +167,11 @@ const BrilliantStudentRequestsAdmin = () => {
     };
 
     return (
-        <div className="space-y-6 animate-fade-in font-sans">
+        <div className="space-y-3 sm:space-y-5 animate-fade-in font-sans">
             {/* Header and Controls */}
-            <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-orange-100 shadow-sm flex items-start md:items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-serif font-bold text-stone-800 flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-serif font-bold text-stone-800 flex items-center gap-2 flex-wrap leading-tight">
                         <GraduationCap className="w-5 h-5 text-orange-800" />
                         <span>{t('কৃতি শিক্ষার্থী স্বীকৃতির আবেদনসমূহ', 'Brilliant Student Recognition Requests')}</span>
                         {pendingCount > 0 && (
@@ -190,10 +190,10 @@ const BrilliantStudentRequestsAdmin = () => {
                     <button
                         onClick={fetchRequests}
                         disabled={loading}
-                        className="px-3.5 py-2 rounded-xl bg-orange-50 text-orange-800 hover:bg-orange-100 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        className="min-h-[40px] min-w-[40px] px-3 rounded-xl bg-orange-50 text-orange-800 hover:bg-orange-100 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                        <span>{t('রিফ্রেশ', 'Refresh')}</span>
+                        <span className="hidden sm:inline">{t('রিফ্রেশ', 'Refresh')}</span>
                     </button>
                 </div>
             </div>
@@ -201,7 +201,7 @@ const BrilliantStudentRequestsAdmin = () => {
             {/* Filter Tabs and Search */}
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
                 {/* Status Badges */}
-                <div className="flex items-center gap-1.5 bg-stone-100/80 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto">
+                <div className="no-scrollbar flex items-center gap-1.5 bg-stone-100/80 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto">
                     {[
                         { id: 'all', label: t('সবগুলো', 'All'), count: requests.length },
                         { id: 'pending', label: t('পর্যালোচনাধীন', 'Pending'), count: pendingCount, color: 'text-amber-800 bg-amber-100' },
@@ -211,7 +211,7 @@ const BrilliantStudentRequestsAdmin = () => {
                         <button
                             key={tab.id}
                             onClick={() => setStatusFilter(tab.id)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                            className={`shrink-0 min-h-[36px] px-3.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                                 statusFilter === tab.id
                                     ? 'bg-white text-stone-900 shadow-sm border border-stone-200/80'
                                     : 'text-stone-600 hover:text-stone-900 hover:bg-white/50'
@@ -233,7 +233,7 @@ const BrilliantStudentRequestsAdmin = () => {
                         placeholder={t('শিক্ষার্থী, প্রতিষ্ঠান বা আবেদনকারী...', 'Search student, school, requester...')}
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-2xs"
+                        className="w-full min-h-[44px] bg-white border border-stone-200 rounded-xl pl-9 pr-4 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-2xs"
                     />
                 </div>
             </div>
@@ -287,7 +287,7 @@ const BrilliantStudentRequestsAdmin = () => {
                                                 ? 'bg-emerald-200/90 text-emerald-950 border border-emerald-300'
                                                 : 'bg-red-100 text-red-900 border border-red-200'
                                         }`}>
-                                            {req.status === 'pending' && <Clock size={11} className="animate-spin text-amber-800" />}
+                                            {req.status === 'pending' && <Clock size={11} className="text-amber-800" />}
                                             {req.status === 'approved' && <CheckCircle2 size={11} className="text-emerald-700" />}
                                             {req.status === 'rejected' && <XCircle size={11} className="text-red-700" />}
                                             <span>
@@ -314,10 +314,10 @@ const BrilliantStudentRequestsAdmin = () => {
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => setDeleteConfirm({ isOpen: true, requestId: req.id })}
-                                            className="text-stone-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                                            className="w-9 h-9 -my-1 flex items-center justify-center text-stone-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                                             title={t('আবেদন রেকর্ড মুছে ফেলুন', 'Delete Record')}
                                         >
-                                            <Trash2 size={13} />
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 </div>
@@ -546,10 +546,10 @@ const BrilliantStudentRequestsAdmin = () => {
 
                                         {/* Actions Bar */}
                                         {req.status === 'pending' ? (
-                                            <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center gap-2 justify-end">
+                                            <div className="pt-2.5 border-t border-stone-100 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:justify-end">
                                                 <button
                                                     onClick={() => handleOpenAction(req, 'reject')}
-                                                    className="px-3.5 py-1.5 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                                    className="min-h-[42px] px-3.5 rounded-xl border border-red-200 bg-red-50 sm:bg-transparent text-red-700 hover:bg-red-50 text-sm sm:text-xs font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
                                                 >
                                                     <X size={13} />
                                                     <span>{t('প্রত্যাখ্যান করুন', 'Reject')}</span>
@@ -557,10 +557,11 @@ const BrilliantStudentRequestsAdmin = () => {
 
                                                 <button
                                                     onClick={() => handleOpenAction(req, 'approve')}
-                                                    className="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold shadow-2xs hover:shadow transition-all flex items-center gap-1.5 cursor-pointer"
+                                                    className="min-h-[42px] px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-sm sm:text-xs font-bold shadow-2xs hover:shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                                 >
                                                     <Check size={13} />
-                                                    <span>{t('অনুমোদন ও তালিকায় যুক্ত করুন', 'Approve & Add to Eminent')}</span>
+                                                    <span className="sm:hidden">{t('অনুমোদন', 'Approve')}</span>
+                                                    <span className="hidden sm:inline">{t('অনুমোদন ও তালিকায় যুক্ত করুন', 'Approve & Add to Eminent')}</span>
                                                 </button>
                                             </div>
                                         ) : null}

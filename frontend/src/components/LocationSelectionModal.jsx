@@ -6,6 +6,28 @@ import { useLanguage } from '../context/LanguageContext';
 import { getMemberIdentity, MEMBER_THEMES } from '../utils/memberIdentity';
 import VerifiedBadge from './VerifiedBadge';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive = false }) => {
     const { formatName, t, isBn } = useLanguage();
     const [options, setOptions] = useState([]);
@@ -101,25 +123,26 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
 
     return createPortal(
         <div className="fixed inset-0 app-sheet bg-stone-900/40 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-unfold">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-unfold border border-orange-100">
+                <style>{FM_CSS}</style>
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b border-orange-100 bg-orange-50/50">
-                    <div>
-                        <h2 className="text-xl font-serif font-bold text-orange-900">পরিবারের সদস্য নির্বাচন করুন</h2>
-                        <p className="text-stone-500 text-sm">কাউকে খুঁজে বের করতে ভৌগলিক স্তরে নেভিগেট করুন।</p>
+                <div className="shrink-0 flex justify-between items-center gap-3 px-5 py-4 sm:p-6 border-b border-orange-100 bg-orange-50/60">
+                    <div className="min-w-0">
+                        <h2 className="text-lg sm:text-xl font-serif font-bold text-orange-900">{t('পরিবারের সদস্য নির্বাচন করুন', 'Select a Family Member')}</h2>
+                        <p className="text-stone-500 text-xs sm:text-sm">{t('কাউকে খুঁজে বের করতে ভৌগলিক স্তরে নেভিগেট করুন।', 'Navigate the places to find someone.')}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-orange-100 rounded-full text-stone-500 hover:text-orange-900 transition-colors">
-                        <X size={24} />
+                    <button type="button" onClick={onClose} aria-label={t('বন্ধ করুন', 'Close')} className="shrink-0 w-10 h-10 flex items-center justify-center bg-white hover:bg-orange-100 border border-orange-100 rounded-full text-stone-500 hover:text-orange-900 transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
 
                 {/* Breadcrumbs */}
-                <div className="flex flex-wrap items-center gap-2 text-sm px-6 py-4 bg-white border-b border-stone-100">
+                <div className="shrink-0 flex items-center gap-1.5 text-sm px-5 sm:px-6 py-3 bg-white border-b border-stone-100 overflow-x-auto no-scrollbar whitespace-nowrap">
                     {breadcrumbs.map((item, index) => (
                         <React.Fragment key={index}>
                             <button
                                 onClick={() => resetToLevel(index)}
-                                className={`hover:text-orange-600 font-medium transition-colors duration-200 ${index === breadcrumbs.length - 1 ? 'text-orange-800 font-bold' : 'text-stone-500'}`}
+                                className={`shrink-0 px-2.5 py-1.5 rounded-full hover:text-orange-700 hover:bg-orange-50 font-medium transition-colors duration-200 ${index === breadcrumbs.length - 1 ? 'text-orange-800 font-bold bg-orange-50 border border-orange-200' : 'text-stone-500'}`}
                             >
                                 {item}
                             </button>
@@ -129,20 +152,22 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                 </div>
 
                 {/* Content Body */}
-                <div className="flex-1 overflow-y-auto p-6 min-h-[300px] bg-stone-50/50">
+                <div className="flex-1 min-h-[300px] overflow-y-auto overscroll-contain p-4 sm:p-6 bg-stone-50/60">
                     {loading ? (
-                        <div className="flex justify-center items-center h-full animate-pulse text-stone-400">
-                            তথ্য লোড হচ্ছে...
+                        <div className="flex flex-col justify-center items-center gap-3 h-full min-h-[240px] text-sm font-semibold text-stone-400">
+                            <span className="w-9 h-9 rounded-full border-[3px] border-orange-200 border-t-orange-600 animate-spin" />
+                            {t('তথ্য লোড হচ্ছে...', 'Loading...')}
                         </div>
                     ) : currentLevel !== 'details' ? (
                         /* Geographic Options Grid */
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                             {options.length > 0 ? (
                                 options.map((item, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => handleSelectOption(item)}
-                                        className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 hover:border-orange-300 hover:shadow-md hover:-translate-y-1 transition duration-200 flex flex-col items-center justify-center text-center space-y-2 group"
+                                        className="fm-rise bg-white min-h-[96px] p-4 rounded-2xl shadow-sm border border-stone-200 hover:border-orange-300 hover:shadow-md hover:-translate-y-1 active:scale-[0.97] transition duration-200 flex flex-col items-center justify-center text-center space-y-2 group"
+                                        style={{ animationDelay: `${Math.min(idx, 12) * 35}ms` }}
                                     >
                                         {currentLevel === 'home' ? (
                                             <Home className="h-6 w-6 text-red-800/80 group-hover:scale-110 transition-transform duration-300" />
@@ -154,7 +179,7 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                                 ))
                             ) : (
                                 <div className="col-span-full text-center py-10 text-stone-400 bg-white rounded-lg border border-dashed border-stone-200">
-                                    কোন বিকল্প পাওয়া যায়নি।
+                                    {t('কোন বিকল্প পাওয়া যায়নি।', 'No options found.')}
                                 </div>
                             )}
                         </div>
@@ -163,7 +188,7 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                         <div>
                             <div className="mb-6 flex items-center justify-center gap-3">
                                 <Home className="h-8 w-8 text-orange-600" />
-                                <h3 className="text-2xl font-serif font-bold text-stone-800">{pathSegments[pathSegments.length - 1]} Household</h3>
+                                <h3 className="text-2xl font-serif font-bold text-stone-800">{pathSegments[pathSegments.length - 1]} {t('পরিবার', 'Household')}</h3>
                             </div>
 
                             {members.length > 0 && members[0].home_map_link && (
@@ -281,7 +306,7 @@ const LocationSelectionModal = ({ isOpen, onClose, onSelectMember, disableActive
                                     })
                                 ) : (
                                     <div className="text-center py-10 text-stone-400 bg-white rounded-lg border border-dashed border-stone-200">
-                                        এই বাড়িতে কোন সদস্য পাওয়া যায়নি।
+                                        {t('এই বাড়িতে কোন সদস্য পাওয়া যায়নি।', 'No members found in this home.')}
                                     </div>
                                 )}
                             </div>

@@ -721,140 +721,130 @@ const Explorer = () => {
                 ) : (
                     /* Household Members View - Family Tree Only */
                     <div className="space-y-3 animate-slide-up">
-                        {/* Compact Household Header & Navigation Bar */}
-                        <div className="bg-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-xs border border-orange-200/90 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2.5">
-                            {/* Left: Back Button */}
-                            <div className="flex items-center justify-start shrink-0">
-                                <button
-                                    onClick={() => resetToLevel(pathSegments.length - 1)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 hover:border-orange-300 rounded-xl text-xs font-bold transition-all duration-200 hover:shadow-2xs active:scale-95 group cursor-pointer shrink-0"
-                                    title={t('গ্রামের বাড়ি তালিকায় ফিরে যান', 'Back to Village bari list')}
-                                >
-                                    <ArrowLeft size={14} className="text-orange-700 group-hover:-translate-x-1 transition-transform" />
-                                    <span>{isBn ? `${geoContext.village || 'গ্রামে'} ফিরে যান` : `Back to ${geoContext.village || 'Village'}`}</span>
-                                </button>
-                            </div>
-
-                            {/* Center: Household Name & Location/Members info */}
-                            <div className="flex flex-col items-center justify-center text-center px-2 min-w-0">
-                                <div className="inline-flex items-center justify-center gap-2 max-w-full">
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-orange-100/80 text-orange-800 flex items-center justify-center shrink-0 border border-orange-200/60 shadow-2xs">
-                                        <Home size={15} />
+                        {/* Household header — app-style */}
+                        <div className="relative overflow-hidden rounded-3xl border border-orange-200/80 bg-white shadow-sm">
+                            <div className="absolute -top-16 -right-10 w-48 h-48 rounded-full bg-orange-200/30 blur-3xl pointer-events-none" />
+                            <div className="relative px-3 py-3 sm:px-5 sm:py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                {/* Back + title */}
+                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                    <button
+                                        onClick={() => resetToLevel(pathSegments.length - 1)}
+                                        className="shrink-0 inline-flex items-center justify-center gap-1.5 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 active:scale-95 transition-all group"
+                                        title={t('গ্রামের বাড়ি তালিকায় ফিরে যান', 'Back to Village bari list')}
+                                        aria-label={t('ফিরে যান', 'Back')}
+                                    >
+                                        <ArrowLeft size={16} className="text-orange-700 group-hover:-translate-x-0.5 transition-transform" />
+                                        <span className="hidden sm:inline text-xs font-bold">{isBn ? `${geoContext.village || 'গ্রামে'} ফিরে যান` : `Back to ${geoContext.village || 'Village'}`}</span>
+                                    </button>
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-orange-600 to-red-800 text-yellow-300 flex items-center justify-center shrink-0 shadow-md shadow-orange-900/20">
+                                        <Home size={20} />
                                     </div>
-                                    <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 leading-tight truncate" title={selection}>
-                                        {selection}
-                                    </h2>
+                                    <div className="min-w-0">
+                                        <h2 className="text-lg sm:text-xl font-serif font-bold text-stone-900 leading-tight truncate" title={selection}>
+                                            {selection}
+                                        </h2>
+                                        <p className="text-[11px] sm:text-xs text-stone-500 font-medium truncate">
+                                            {[geoContext.village, geoContext.upazila, geoContext.district].filter(Boolean).join(' • ')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-0.5 truncate max-w-full">
-                                    {[geoContext.village, geoContext.upazila, geoContext.district].filter(Boolean).join(' • ')}
-                                    {members && members.length > 0 && (
-                                        <span className="text-orange-900 font-bold ml-1.5">
-                                            ({members.length} {t('সদস্য', 'members')})
-                                        </span>
-                                    )}
-                                </p>
-                            </div>
 
-                            {/* Right: Map Link & Spouses Directory Button */}
-                            <div className="flex items-center gap-2 flex-wrap shrink-0 justify-center md:justify-end">
-                                {/* Google Map Link Option for this Bari */}
-                                {(homeMapLink || isAdmin) && (
-                                    <>
-                                        {homeMapLink ? (
-                                            <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-xl shadow-2xs">
-                                                <a
-                                                    href={homeMapLink.startsWith('http') ? homeMapLink : `https://${homeMapLink}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-850 hover:text-emerald-950 transition-colors group"
-                                                    title={t('গুগল ম্যাপে বাড়িটির অবস্থান দেখুন', 'View home location on Google Maps')}
-                                                >
-                                                    <MapPin size={13} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-                                                    <span>{t('গুগল ম্যাপ', 'Google Map')}</span>
-                                                    <ExternalLink size={11} className="text-emerald-600/70 group-hover:text-emerald-800" />
-                                                </a>
-                                                {isAdmin && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setMapModalTarget({
-                                                                homeName: selection,
-                                                                villageName: geoContext.village || pathSegments[3] || '',
-                                                                currentLink: homeMapLink
-                                                            });
-                                                            setIsBariMapModalOpen(true);
-                                                        }}
-                                                        className="p-1 text-stone-400 hover:text-orange-800 hover:bg-white rounded-lg transition-colors ml-0.5 border border-transparent hover:border-orange-200 cursor-pointer"
-                                                        title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
-                                                    >
-                                                        <Edit2 size={12} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            isAdmin && (
+                                {/* Stats + actions: one swipeable row on phones */}
+                                <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto md:overflow-visible md:flex-wrap md:justify-end [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                    {members && members.length > 0 && (
+                                        <div className="shrink-0 inline-flex items-center divide-x divide-orange-200 rounded-xl border border-orange-200 bg-orange-50/70 text-[11px] font-bold text-orange-900">
+                                            <span className="px-2.5 py-1.5">{isBn ? `${toBnDigits(members.length)} সদস্য` : `${members.length} members`}</span>
+                                            <span className="px-2.5 py-1.5">{isBn ? `${toBnDigits(new Set(members.map(m => m.level).filter(Boolean)).size)} প্রজন্ম` : `${new Set(members.map(m => m.level).filter(Boolean)).size} gens`}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Google Map link for this Bari */}
+                                    {homeMapLink ? (
+                                        <div className="shrink-0 inline-flex items-center gap-0.5 rounded-xl border border-emerald-200 bg-emerald-50">
+                                            <a
+                                                href={homeMapLink.startsWith('http') ? homeMapLink : `https://${homeMapLink}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 hover:text-emerald-900 group"
+                                                title={t('গুগল ম্যাপে বাড়িটির অবস্থান দেখুন', 'View home location on Google Maps')}
+                                            >
+                                                <MapPin size={13} className="text-emerald-600 group-hover:scale-110 transition-transform" />
+                                                <span>{t('ম্যাপ', 'Map')}</span>
+                                                <ExternalLink size={11} className="text-emerald-600/70" />
+                                            </a>
+                                            {isAdmin && (
                                                 <button
                                                     onClick={() => {
                                                         setMapModalTarget({
                                                             homeName: selection,
                                                             villageName: geoContext.village || pathSegments[3] || '',
-                                                            currentLink: ''
+                                                            currentLink: homeMapLink
                                                         });
                                                         setIsBariMapModalOpen(true);
                                                     }}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-900 border border-dashed border-stone-300 hover:border-orange-300 transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs group"
-                                                    title={t('এই বাড়ির গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map link for this Bari')}
+                                                    className="p-1.5 mr-0.5 rounded-lg text-stone-400 hover:text-orange-800 hover:bg-white transition-colors"
+                                                    title={t('ম্যাপ লিংক পরিবর্তন করুন', 'Edit Google Map Link')}
                                                 >
-                                                    <MapPin size={12} className="text-orange-600 group-hover:scale-110 transition-transform" />
-                                                    <span>+ {t('ম্যাপ লিংক', 'Map Link')}</span>
+                                                    <Edit2 size={12} />
                                                 </button>
-                                            )
-                                        )}
-                                    </>
-                                )}
+                                            )}
+                                        </div>
+                                    ) : (
+                                        isAdmin && (
+                                            <button
+                                                onClick={() => {
+                                                    setMapModalTarget({
+                                                        homeName: selection,
+                                                        villageName: geoContext.village || pathSegments[3] || '',
+                                                        currentLink: ''
+                                                    });
+                                                    setIsBariMapModalOpen(true);
+                                                }}
+                                                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-900 border border-dashed border-stone-300 hover:border-orange-300 active:scale-95 transition-all"
+                                                title={t('এই বাড়ির গুগল ম্যাপ লিংক যুক্ত করুন', 'Add Google Map link for this Bari')}
+                                            >
+                                                <MapPin size={12} className="text-orange-600" />
+                                                <span>+ {t('ম্যাপ লিংক', 'Map Link')}</span>
+                                            </button>
+                                        )
+                                    )}
 
-                                <button
-                                    onClick={() => {
-                                        setSpouseModalHomeFilter(selection);
-                                        setIsSpousesModalOpen(true);
-                                    }}
-                                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white font-serif font-semibold px-3 py-1.5 rounded-xl shadow-xs hover:shadow-md hover:from-orange-700 hover:to-red-800 transition-all duration-200 active:scale-95 group border border-orange-950/20 text-xs cursor-pointer"
-                                >
-                                    <Heart size={13} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform duration-200" />
-                                    <span>{isBn ? `সহধর্মিণী তালিকা` : `Spouses Directory`}</span>
-                                </button>
+                                    <button
+                                        onClick={() => {
+                                            setSpouseModalHomeFilter(selection);
+                                            setIsSpousesModalOpen(true);
+                                        }}
+                                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-800 via-rose-800 to-red-900 text-white text-[11px] font-bold shadow-sm hover:shadow-md active:scale-95 transition-all group"
+                                    >
+                                        <Heart size={13} className="text-yellow-300 fill-yellow-300 group-hover:scale-125 transition-transform" />
+                                        <span>{isBn ? 'সহধর্মিণী তালিকা' : 'Spouses Directory'}</span>
+                                    </button>
 
-                                {/* Sammelan Counter & History Button */}
-                                <button
-                                    onClick={() => setIsSammelanModalOpen(true)}
-                                    className={`inline-flex items-center gap-1.5 font-sans font-semibold px-3 py-1.5 rounded-xl shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 group text-xs cursor-pointer border ${
-                                        homeSammelans.length > 0
-                                            ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-stone-900 border-amber-600/30 hover:from-amber-400 hover:to-orange-400 shadow-amber-500/20'
-                                            : 'bg-stone-50 hover:bg-orange-50 text-stone-700 hover:text-orange-900 border-stone-200/90 hover:border-orange-300'
-                                    }`}
-                                    title={
-                                        homeSammelans.length > 0
-                                            ? (isBn ? `এই বাড়িতে সর্বমোট ${toBnDigits(homeSammelans.length)}টি সম্মেলন অনুষ্ঠিত হয়েছে (ক্লিক করে তালিকা দেখুন)` : `Total ${homeSammelans.length} gathering(s) held in this home (click to view list)`)
-                                            : (isBn ? 'এই বাড়ির সম্মেলনের তথ্য ও তালিকা দেখুন' : 'View gathering history for this home')
-                                    }
-                                >
-                                    <Sparkles
-                                        size={13}
-                                        className={`${
+                                    <button
+                                        onClick={() => setIsSammelanModalOpen(true)}
+                                        className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border shadow-sm hover:shadow-md active:scale-95 transition-all group ${
                                             homeSammelans.length > 0
-                                                ? 'text-stone-950 fill-amber-300 group-hover:rotate-12'
-                                                : 'text-orange-700 group-hover:scale-110'
-                                        } transition-transform duration-200`}
-                                    />
-                                    <span>
-                                        {isBn
-                                            ? `${toBnDigits(homeSammelans.length)}টি সম্মেলন`
-                                            : `${homeSammelans.length} Gathering${homeSammelans.length === 1 ? '' : 's'}`}
-                                    </span>
-                                </button>
+                                                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 text-stone-900 border-amber-500/30'
+                                                : 'bg-stone-50 hover:bg-orange-50 text-stone-700 hover:text-orange-900 border-stone-200 hover:border-orange-300'
+                                        }`}
+                                        title={
+                                            homeSammelans.length > 0
+                                                ? (isBn ? `এই বাড়িতে সর্বমোট ${toBnDigits(homeSammelans.length)}টি সম্মেলন অনুষ্ঠিত হয়েছে (ক্লিক করে তালিকা দেখুন)` : `Total ${homeSammelans.length} gathering(s) held in this home (click to view list)`)
+                                                : (isBn ? 'এই বাড়ির সম্মেলনের তথ্য ও তালিকা দেখুন' : 'View gathering history for this home')
+                                        }
+                                    >
+                                        <Sparkles size={13} className={`${homeSammelans.length > 0 ? 'text-stone-900 fill-amber-200 group-hover:rotate-12' : 'text-orange-700 group-hover:scale-110'} transition-transform`} />
+                                        <span>
+                                            {isBn
+                                                ? `${toBnDigits(homeSammelans.length)}টি সম্মেলন`
+                                                : `${homeSammelans.length} Gathering${homeSammelans.length === 1 ? '' : 's'}`}
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="animate-fade-in overflow-x-auto pb-4">
+                        <div className="animate-fade-in">
                             <FamilyTree
                                 autoExpandId={expandId}
                                 members={members}

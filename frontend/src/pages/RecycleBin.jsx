@@ -250,64 +250,55 @@ const RecycleBin = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 animate-fade-in relative min-h-screen">
-            {/* Background Texture */}
-            <div 
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{ backgroundImage: 'radial-gradient(#9a3412 1px, transparent 1px)', backgroundSize: '16px 16px' }}
-            />
+        <div className="max-w-6xl mx-auto animate-fade-in relative font-sans">
 
             <div className="relative z-10">
-                {/* Header Banner */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-stone-200/80 gap-4">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-800 shadow-sm border border-orange-200">
-                                <Trash2 size={26} />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
-                                    {t('রিসাইকেল বিন', 'Recycle Bin')}
-                                </h1>
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <p className="text-stone-600 text-xs sm:text-sm font-sans">
-                                        {t(
-                                            'মুছে ফেলা মূল শাখা বা এলাকা পর্যবেক্ষণ ও পুনরুদ্ধার করুন।',
-                                            'View and restore deleted root branches or locations.'
-                                        )}
-                                    </p>
-                                    {!isSuperAdmin && (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-full text-[11px] font-medium">
-                                            <span>🔒 {t('চিরতরে মোছার সুবিধা কেবলমাত্র সুপার অ্যাডমিনের জন্য', 'Permanent delete reserved for Super Admin')}</span>
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                {/* Header */}
+                <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-800 via-red-900 to-orange-950 text-white p-4 sm:p-6 mb-4 sm:mb-6 shadow-lg shadow-orange-900/20">
+                    <div className="pointer-events-none absolute -top-16 -right-10 w-48 h-48 rounded-full bg-yellow-400/20 blur-3xl" />
+                    <div className="relative flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                            <Trash2 size={24} className="text-yellow-300" />
                         </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-xl sm:text-3xl font-serif font-black text-white leading-tight">
+                                {t('রিসাইকেল বিন', 'Recycle Bin')}
+                            </h1>
+                            <p className="text-orange-100/80 text-xs sm:text-sm mt-0.5 leading-relaxed">
+                                {t('মুছে ফেলা মূল শাখা বা এলাকা পর্যবেক্ষণ ও পুনরুদ্ধার করুন।', 'View and restore deleted root branches or locations.')}
+                            </p>
+                        </div>
                         <button
                             onClick={fetchRecycleBin}
                             disabled={loading}
-                            className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl hover:bg-orange-50 hover:border-orange-300 hover:text-orange-900 transition-all text-xs sm:text-sm font-medium shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+                            className="shrink-0 w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center active:scale-90 transition disabled:opacity-50 cursor-pointer"
+                            title={t('রিফ্রেশ', 'Refresh')}
+                            aria-label={t('রিফ্রেশ', 'Refresh')}
                         >
-                            <RefreshCw size={15} className={loading ? 'animate-spin text-orange-800' : ''} />
-                            <span>{t('রিফ্রেশ', 'Refresh')}</span>
+                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         </button>
-
+                    </div>
+                    <div className="relative mt-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-[11px] font-bold">
+                            {totalItems} {t('টি আইটেম', 'items')}
+                        </span>
+                        {!isSuperAdmin && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-400/20 border border-yellow-300/40 text-yellow-100 text-[11px] font-medium">
+                                🔒 {t('চিরতরে মোছার সুবিধা কেবলমাত্র সুপার অ্যাডমিনের জন্য', 'Permanent delete reserved for Super Admin')}
+                            </span>
+                        )}
                         {isSuperAdmin && totalItems > 0 && (
                             <button
                                 onClick={triggerEmptyAll}
-                                className="flex items-center gap-2 px-3.5 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl hover:bg-red-100 hover:border-red-300 hover:text-red-900 transition-all text-xs sm:text-sm font-medium shadow-xs active:scale-95 cursor-pointer"
+                                className="ml-auto min-h-[40px] flex items-center gap-1.5 px-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold shadow-sm active:scale-95 transition cursor-pointer"
                                 title={t('রিসাইকেল বিনের সব আইটেম চিরতরে মুছে ফেলুন', 'Permanently delete all items in recycle bin')}
                             >
-                                <Flame size={15} className="text-red-600" />
+                                <Flame size={15} />
                                 <span>{t('বিন খালি করুন', 'Empty Bin')}</span>
                             </button>
                         )}
                     </div>
-                </div>
+                </section>
 
                 {/* Success Alert */}
                 {successAlert && (
@@ -327,7 +318,7 @@ const RecycleBin = () => {
 
                 {/* Empty State */}
                 {totalItems === 0 ? (
-                    <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-stone-200 flex flex-col items-center my-6">
+                    <div className="bg-white rounded-3xl px-6 py-12 text-center shadow-sm border border-dashed border-orange-200 flex flex-col items-center my-2">
                         <div className="w-20 h-20 bg-orange-50 text-orange-800 rounded-full flex items-center justify-center mb-4">
                             <Trash2 size={40} />
                         </div>
@@ -342,7 +333,7 @@ const RecycleBin = () => {
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-8">
+                    <div className="space-y-4 sm:space-y-6">
                         {/* Display Categories */}
                         {Object.entries(deletedData).map(([table, items]) => {
                             if (!items || items.length === 0) return null;
@@ -360,13 +351,13 @@ const RecycleBin = () => {
                             return (
                                 <div key={table} className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden transition-all hover:shadow-md">
                                     {/* Category Header */}
-                                    <div className="bg-stone-50/90 border-b border-stone-200 px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div className="bg-stone-50/90 border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-9 h-9 rounded-xl ${meta.bg} ${meta.color} flex items-center justify-center shrink-0`}>
                                                 <IconComponent size={20} />
                                             </div>
                                             <div>
-                                                <h2 className="font-serif font-bold text-stone-800 text-lg sm:text-xl">
+                                                <h2 className="font-serif font-bold text-stone-800 text-base sm:text-xl leading-tight">
                                                     {meta.title}
                                                 </h2>
                                                 {meta.desc && (
@@ -374,7 +365,7 @@ const RecycleBin = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <span className="self-start sm:self-auto px-3 py-1 bg-stone-200/80 text-stone-700 text-xs font-semibold rounded-full">
+                                        <span className="shrink-0 px-3 py-1 bg-stone-200/80 text-stone-700 text-xs font-semibold rounded-full">
                                             {items.length} {t('টি আইটেম', 'items')}
                                         </span>
                                     </div>
@@ -384,11 +375,11 @@ const RecycleBin = () => {
                                         {items.map(item => (
                                             <li 
                                                 key={item.id} 
-                                                className="p-4 sm:p-5 hover:bg-orange-50/60 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                                                className="p-3.5 sm:p-5 hover:bg-orange-50/60 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 group"
                                             >
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-serif font-bold text-stone-900 text-lg">
+                                                        <span className="font-serif font-bold text-stone-900 text-base sm:text-lg">
                                                             {formatName(item)}
                                                         </span>
                                                         {item.gender && (
@@ -444,24 +435,23 @@ const RecycleBin = () => {
                                                 </div>
 
                                                 {/* Action Buttons: Restore & Permanent Delete */}
-                                                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto sm:self-center shrink-0">
                                                     {/* Permanent Delete Button - ONLY for Super Admin */}
                                                     {isSuperAdmin && (
                                                         <button
                                                             onClick={() => triggerPermanentDelete(item, table)}
-                                                            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-900 active:scale-95 rounded-xl shadow-xs transition-all font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+                                                            className="min-h-[42px] flex items-center justify-center gap-1.5 px-3 bg-white border border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-900 active:scale-95 rounded-xl shadow-xs transition-all font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
                                                             title={t('স্থায়ীভাবে মুছে ফেলুন', 'Delete Permanently')}
                                                         >
                                                             <Trash2 size={15} />
-                                                            <span className="hidden xs:inline">{t('চিরতরে মুছুন', 'Delete')}</span>
-                                                            <span className="xs:hidden">{t('মুছুন', 'Delete')}</span>
+                                                            <span>{t('চিরতরে মুছুন', 'Delete')}</span>
                                                         </button>
                                                     )}
 
                                                     {/* Restore Button */}
                                                     <button
                                                         onClick={() => triggerRestore(item, table)}
-                                                        className="flex items-center gap-1.5 px-3.5 py-2 bg-orange-800 hover:bg-orange-900 active:scale-95 text-white rounded-xl shadow-xs hover:shadow transition-all font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-800/40 cursor-pointer"
+                                                        className={`min-h-[42px] flex items-center justify-center gap-1.5 px-3.5 bg-orange-800 hover:bg-orange-900 active:scale-95 text-white rounded-xl shadow-xs hover:shadow transition-all font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-orange-800/40 cursor-pointer ${isSuperAdmin ? '' : 'col-span-2'}`}
                                                         title={t('পুনরুদ্ধার করুন', 'Restore')}
                                                     >
                                                         <ArchiveRestore size={15} />
