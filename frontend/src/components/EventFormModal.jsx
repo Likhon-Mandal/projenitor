@@ -3,6 +3,28 @@ import { X, CheckCircle2, Calendar, Clock, MapPin, AlignLeft, Sparkles, Link as 
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     const { t } = useLanguage();
     const [title, setTitle] = useState('');
@@ -74,21 +96,22 @@ const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
             <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
 
             <div
-                className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-orange-100 my-auto"
+                className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-orange-100 my-auto flex flex-col max-h-[92vh]"
                 onClick={e => e.stopPropagation()}
             >
+                <style>{FM_CSS}</style>
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-800 to-amber-700 px-6 py-5 flex justify-between items-center text-white">
+                <div className="shrink-0 bg-gradient-to-r from-orange-800 to-amber-700 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center gap-3 text-white">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-white/10 rounded-xl">
                             <Calendar size={20} className="text-yellow-300" />
                         </div>
                         <div>
-                            <h2 className="text-lg sm:text-xl font-serif font-bold">
+                            <h2 className="text-lg sm:text-xl font-serif font-bold text-white">
                                 {initialData ? t('অনুষ্ঠান সম্পাদনা', 'Edit Event') : t('নতুন অনুষ্ঠান তৈরি করুন', 'Create New Event')}
                             </h2>
                             <p className="text-xs text-orange-200">
@@ -98,15 +121,17 @@ const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                     </div>
                     <button 
                         onClick={onClose} 
-                        className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                        type="button"
+                        aria-label={t('বন্ধ করুন', 'Close')}
+                        className="shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* Form Body */}
-                <div className="p-6">
-                    <form id="event-form" onSubmit={handleSubmit} className="space-y-4">
+                {/* Form Body (scrolls; header and actions stay put) */}
+                <div className="fm-skin flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
+                    <form id="event-form" onSubmit={handleSubmit} className="space-y-4 fm-rise">
                         <div>
                             <label className="block text-xs font-bold text-stone-700 mb-1.5 flex items-center gap-1.5">
                                 <Sparkles size={14} className="text-orange-600" />
@@ -196,11 +221,11 @@ const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                 </div>
 
                 {/* Footer Controls */}
-                <div className="border-t border-stone-100 p-4 bg-orange-50/40 flex justify-end gap-3">
+                <div className="shrink-0 border-t border-stone-100 px-4 py-3 sm:p-4 bg-orange-50/60 grid grid-cols-2 sm:flex sm:justify-end gap-2.5 sm:gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2 text-stone-600 font-bold hover:bg-stone-200/80 border border-stone-200 rounded-xl transition-colors text-xs sm:text-sm"
+                        className="min-h-[46px] sm:min-h-0 justify-center flex items-center px-5 py-2 text-stone-600 font-bold bg-white hover:bg-stone-100 border border-stone-200 rounded-xl transition-colors text-sm"
                         disabled={loading}
                     >
                         {t('বাতিল', 'Cancel')}
@@ -209,7 +234,7 @@ const EventFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                         type="submit"
                         form="event-form"
                         disabled={loading}
-                        className="px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
+                        className="min-h-[46px] sm:min-h-0 justify-center px-6 py-2 bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 text-white font-bold rounded-xl shadow-md shadow-orange-900/20 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 text-sm"
                     >
                         {loading ? (
                             <span className="flex items-center gap-2">

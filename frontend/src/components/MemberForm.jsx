@@ -4,6 +4,28 @@ import api from '../api/api';
 import OccupationSelect from './OccupationSelect';
 import { useLanguage } from '../context/LanguageContext';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 /* 
   Reusable Member Form Component
   - Handles Create/Update logic.
@@ -649,24 +671,28 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 animate-fade-in text-left max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-serif text-orange-900 font-bold">
+        <div className="fixed inset-0 app-sheet bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+            <div className="fm-skin bg-background rounded-3xl shadow-2xl w-full max-w-4xl px-4 sm:px-6 pb-4 sm:pb-6 animate-fade-in text-left max-h-[92vh] overflow-y-auto overscroll-contain border border-orange-100">
+                <style>{FM_CSS}</style>
+                <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3.5 sm:py-4 mb-4 sm:mb-5 flex justify-between items-center gap-3 bg-gradient-to-r from-orange-900 via-orange-800 to-red-900 text-white shadow-md">
+                    <h2 className="text-lg sm:text-2xl font-serif text-white font-bold">
                         {initialData.id ? t('সদস্য তথ্য সম্পাদনা', 'Edit Member Profile') : t('নতুন সদস্য যোগ করুন', 'Add New Member')}
                     </h2>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 transition-colors p-1 rounded-full hover:bg-stone-100">
-                        <X size={24} />
+                    <button type="button" onClick={onClose} aria-label={t('বন্ধ করুন', 'Close')} className="shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-10">{t('তথ্য লোড হচ্ছে...', 'Loading form data...')}</div>
+                    <div className="flex flex-col items-center justify-center gap-3 py-14 text-sm font-semibold text-stone-500">
+                        <span className="w-10 h-10 rounded-full border-[3px] border-orange-200 border-t-orange-600 animate-spin" />
+                        {t('তথ্য লোড হচ্ছে...', 'Loading form data...')}
+                    </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                         {/* Section: Basic Info */}
-                        <div>
-                            <h3 className="text-lg font-bold text-orange-800 border-b border-orange-100 pb-2 mb-3">
+                        <div className="fm-rise rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-sm" style={{ animationDelay: '0ms' }}>
+                            <h3 className="flex items-center gap-2 text-base sm:text-lg font-serif font-bold text-orange-900 border-b border-orange-100 pb-2.5 mb-4 before:content-[''] before:w-1.5 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-orange-600 before:to-red-700">
                                 {t('সাধারণ তথ্য', 'Basic Information')}
                             </h3>
 
@@ -796,8 +822,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                         </div>
 
                         {/* Section: Relationships */}
-                        <div>
-                            <h3 className="text-lg font-bold text-orange-800 border-b border-orange-100 pb-2 mb-3">
+                        <div className="fm-rise rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-sm" style={{ animationDelay: '60ms' }}>
+                            <h3 className="flex items-center gap-2 text-base sm:text-lg font-serif font-bold text-orange-900 border-b border-orange-100 pb-2.5 mb-4 before:content-[''] before:w-1.5 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-orange-600 before:to-red-700">
                                 {t('পারিবারিক সম্পর্ক', 'Family Relationships')}
                             </h3>
 
@@ -1014,8 +1040,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                         </div>
 
                         {/* Section: Contact & Location */}
-                        <div>
-                            <h3 className="text-lg font-bold text-orange-800 border-b border-orange-100 pb-2 mb-3">
+                        <div className="fm-rise rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-sm" style={{ animationDelay: '120ms' }}>
+                            <h3 className="flex items-center gap-2 text-base sm:text-lg font-serif font-bold text-orange-900 border-b border-orange-100 pb-2.5 mb-4 before:content-[''] before:w-1.5 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-orange-600 before:to-red-700">
                                 {t('যোগাযোগ ও অবস্থান', 'Contact & Location')}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1108,7 +1134,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                     <label className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('বাড়ির নাম', 'Home Name')}</label>
                                     <input type="text" className="w-full p-2 border rounded" value={formData.home_name} onChange={e => setFormData({ ...formData, home_name: e.target.value })} />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="md:col-span-2">
                                     <label className="block text-xs font-bold text-stone-500 uppercase mb-1">{t('বর্তমান ঠিকানা', 'Present Address')}</label>
                                     <input type="text" className="w-full p-2 border rounded" value={formData.present_address} onChange={e => setFormData({ ...formData, present_address: e.target.value })} />
                                 </div>
@@ -1116,8 +1142,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                         </div>
 
                         {/* Section: Bio & Media */}
-                        <div>
-                            <h3 className="text-lg font-bold text-orange-800 border-b border-orange-100 pb-2 mb-3">
+                        <div className="fm-rise rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 shadow-sm" style={{ animationDelay: '180ms' }}>
+                            <h3 className="flex items-center gap-2 text-base sm:text-lg font-serif font-bold text-orange-900 border-b border-orange-100 pb-2.5 mb-4 before:content-[''] before:w-1.5 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-orange-600 before:to-red-700">
                                 {t('জীবনবৃত্তান্ত ও ছবি', 'Bio & Media')}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1147,7 +1173,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                             </div>
                         </div>
 
-                        <button type="submit" className="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition shadow-lg mt-4 flex justify-center gap-2">
+                        <button type="submit" className="sticky bottom-3 z-20 w-full min-h-[52px] bg-gradient-to-r from-orange-700 to-red-800 text-white font-bold py-3 rounded-2xl hover:brightness-110 active:scale-[0.99] transition shadow-xl shadow-orange-900/25 ring-4 ring-page mt-2 flex items-center justify-center gap-2">
                             <Save size={20} /> {initialData.id ? t('তথ্য আপডেট করুন', 'Update Member') : t('সদস্য সংরক্ষণ করুন', 'Create Member')}
                         </button>
                     </form>
@@ -1156,9 +1182,9 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
 
             {/* Quick Add Spouse Modal Overlay */}
             {isQuickAddOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between border-b border-orange-100 pb-3 mb-4">
+                <div className="fixed inset-0 app-sheet bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="fm-skin bg-white rounded-3xl shadow-2xl p-5 sm:p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto overscroll-contain animate-in zoom-in duration-200">
+                        <div className="flex items-center justify-between gap-3 border-b border-orange-100 pb-3 mb-4">
                             <div>
                                 <h4 className="text-lg font-bold text-orange-950 font-serif">
                                     {quickAddType === 'mother' ? t('মাতার প্রোফাইল যোগ করুন', "Add Mother's Profile") : t('পত্নীর তথ্য যোগ করুন', "Add Spouse Profile")}
@@ -1168,7 +1194,8 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                             <button
                                 type="button"
                                 onClick={() => setIsQuickAddOpen(false)}
-                                className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full transition"
+                                aria-label={t('বন্ধ করুন', 'Close')}
+                                className="shrink-0 w-10 h-10 flex items-center justify-center text-stone-500 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-full transition"
                             >
                                 <X size={18} />
                             </button>
@@ -1327,7 +1354,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                 <button
                                     type="button"
                                     onClick={() => setIsQuickAddOpen(false)}
-                                    className="flex-1 py-2.5 bg-stone-100 text-stone-700 font-semibold rounded-lg hover:bg-stone-200 transition active:scale-[0.99] text-sm"
+                                    className="flex-1 min-h-[46px] py-2.5 bg-stone-100 text-stone-700 font-semibold rounded-xl hover:bg-stone-200 transition active:scale-[0.99] text-sm"
                                 >
                                     {t('বাতিল', 'Cancel')}
                                 </button>
@@ -1335,7 +1362,7 @@ const MemberForm = ({ isOpen, onClose, initialData = {}, onSuccess, onEditMember
                                     type="button"
                                     onClick={handleQuickAddSpouse}
                                     disabled={isSavingQuickSpouse}
-                                    className="flex-1 py-2.5 bg-orange-700 hover:bg-orange-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition active:scale-[0.99] disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                                    className="flex-1 min-h-[46px] py-2.5 bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 text-white font-semibold rounded-xl shadow-md shadow-orange-900/20 transition active:scale-[0.99] disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                                 >
                                     {isSavingQuickSpouse ? (
                                         <>

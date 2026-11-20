@@ -11,10 +11,11 @@ import api from '../api/api';
 import MemberForm from '../components/MemberForm';
 import BrilliantStudentRequestModal from '../components/BrilliantStudentRequestModal';
 import { useImageViewer } from '../context/ImageViewerContext';
+import { DashboardStyles, StatusBadge } from '../components/DashboardUI';
 
 const UserDashboard = () => {
     const { user, logout, isAdmin, isSuperAdmin, login, token, refreshProfile } = useAuth();
-    const { t, formatName, formatAchievement } = useLanguage();
+    const { t, formatName, formatAchievement, formatOccupation } = useLanguage();
     const { openImage } = useImageViewer();
     
     const [profile, setProfile] = useState(null);
@@ -215,94 +216,106 @@ const UserDashboard = () => {
     const activeMemberId = memberData?.id || profile?.member_id || user?.member_id;
 
     return (
-        <div className="min-h-[85vh] bg-orange-50 flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
-            {/* Subtle background decoration */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #ea580c 1px, transparent 0)', backgroundSize: '28px 28px' }}></div>
+        <div className="font-sans relative">
+            <DashboardStyles />
 
-            <div className="max-w-3xl w-full relative z-10 space-y-6">
+            <div className="max-w-3xl mx-auto w-full relative z-10 space-y-4 sm:space-y-6">
                 
-                {/* ─── Top Header Card ────────────────────────────────────── */}
-                <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-orange-200/80 transition-all hover:shadow-2xl">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-                        {/* Profile Image & Basic Info */}
-                        <div className="flex flex-col sm:flex-row items-center gap-5">
-                            <div className="relative">
-                                {displayPhoto ? (
-                                    <img
-                                        onClick={() => openImage(displayPhoto, displayName)}
-                                        src={displayPhoto}
-                                        alt="Profile"
-                                        className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400 shadow-md ring-2 ring-orange-200 cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                                        title={t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo')}
-                                    />
-                                ) : (
-                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-500 to-orange-700 flex items-center justify-center text-orange-950 font-black text-3xl font-serif shadow-md border-4 border-yellow-400">
-                                        {(displayName || 'U').charAt(0).toUpperCase()}
+                {/* ─── Profile hero ───────────────────────────────────────── */}
+                <section className="db-rise relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-800 via-red-900 to-orange-950 text-white shadow-lg shadow-orange-900/20 p-4 sm:p-6">
+                    <div className="pointer-events-none absolute -top-16 -right-10 w-48 h-48 rounded-full bg-yellow-400/20 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-orange-500/20 blur-3xl" />
+
+                    <div className="relative flex items-center gap-4">
+                        <div className="relative shrink-0">
+                            {displayPhoto ? (
+                                <img
+                                    onClick={() => openImage(displayPhoto, displayName)}
+                                    src={displayPhoto}
+                                    alt="Profile"
+                                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover ring-2 ring-yellow-400/80 shadow-md cursor-pointer active:scale-95 transition"
+                                    title={t('সম্পূর্ণ ছবি দেখতে ক্লিক করুন', 'Click to view full photo')}
+                                />
+                            ) : (
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-yellow-400 flex items-center justify-center text-orange-950 font-black text-3xl font-serif shadow-md ring-2 ring-yellow-300">
+                                    {(displayName || 'U').charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-emerald-500 ring-2 ring-orange-900 flex items-center justify-center text-white shadow" title={t('ভেরিফাইড সদস্য', 'Verified Member')}>
+                                <CheckCircle className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+                                <Sparkles className="w-3 h-3 text-yellow-300" />
+                                {t('সদস্য পোর্টাল', 'Member Portal')}
+                            </span>
+                            <h1 className="mt-1.5 text-xl sm:text-3xl font-serif font-black text-white leading-tight break-words">
+                                {displayName}
+                            </h1>
+                            <div className="mt-1.5 flex flex-col gap-1 text-xs text-orange-100/90">
+                                {displayPhone && (
+                                    <div className="flex flex-wrap items-center gap-1.5 font-mono">
+                                        <Phone className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+                                        {String(displayPhone).split(/[,;\/\n\r]+/).map((num, i) => {
+                                            const cleanNum = num.trim();
+                                            if (!cleanNum) return null;
+                                            return (
+                                                <a key={i} href={`tel:${cleanNum}`} className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
+                                                    {cleanNum}
+                                                </a>
+                                            );
+                                        })}
                                     </div>
                                 )}
-                                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white shadow-xs" title={t('ভেরিফাইড সদস্য', 'Verified Member')}>
-                                    <CheckCircle className="w-4 h-4" />
-                                </div>
+                                {registeredEmail && (
+                                    <span className="flex items-center gap-1.5 min-w-0 font-mono">
+                                        <Mail className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+                                        <span className="truncate">{registeredEmail}</span>
+                                    </span>
+                                )}
                             </div>
-
-                            <div className="flex-1 min-w-0">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-900 border border-orange-200 mb-1.5">
-                                    <Sparkles className="w-3.5 h-3.5 text-yellow-600" />
-                                    <span>{t('সদস্য পোর্টাল', 'Member Portal')}</span>
-                                </div>
-                                <h1 className="text-2xl sm:text-3xl font-serif font-black text-stone-900 truncate">
-                                    {displayName}
-                                </h1>
-                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 mt-2 text-xs text-stone-600 font-medium">
-                                    {displayPhone && (
-                                        <div className="flex flex-wrap items-center gap-1.5 font-mono">
-                                            <span className="flex items-center gap-1 text-orange-700 mr-0.5">
-                                                <Phone className="w-3.5 h-3.5" />
-                                            </span>
-                                            {String(displayPhone).split(/[,;\/\n\r]+/).map((num, i) => {
-                                                const cleanNum = num.trim();
-                                                if (!cleanNum) return null;
-                                                return (
-                                                    <a key={i} href={`tel:${cleanNum}`} className="bg-orange-50 hover:bg-orange-100 hover:text-orange-950 px-2 py-0.5 rounded-lg border border-orange-200/70 transition">
-                                                        {cleanNum}
-                                                    </a>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                    {registeredEmail && (
-                                        <span className="flex items-center gap-1.5 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100 font-mono">
-                                            <Mail className="w-3.5 h-3.5 text-orange-700" />
-                                            {registeredEmail}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Header Action Buttons: Edit Profile & Change Password */}
-                        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 shrink-0">
-                            {activeMemberId && (
-                                <button
-                                    onClick={() => setIsMemberFormOpen(true)}
-                                    className="inline-flex items-center gap-2 bg-orange-800 hover:bg-orange-900 text-white px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-                                    title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
-                                >
-                                    <Pencil className="w-4 h-4 text-yellow-400" />
-                                    <span>{t('প্রোফাইল সম্পাদনা', 'Edit Profile')}</span>
-                                </button>
-                            )}
-                            <Link
-                                to="/change-password"
-                                className="inline-flex items-center gap-2 bg-white hover:bg-orange-50 text-stone-700 hover:text-orange-950 border border-stone-200 hover:border-orange-300 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs hover:shadow-md active:scale-95 cursor-pointer"
-                                title={t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}
-                            >
-                                <Key className="w-4 h-4 text-orange-700" />
-                                <span>{t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}</span>
-                            </Link>
                         </div>
                     </div>
-                </div>
+
+                    {/* Quick actions */}
+                    <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {activeMemberId && (
+                            <button
+                                onClick={() => setIsMemberFormOpen(true)}
+                                className="min-h-[56px] flex flex-col items-center justify-center gap-1 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-orange-950 text-[11px] sm:text-xs font-black shadow-sm active:scale-95 transition cursor-pointer"
+                            >
+                                <Pencil className="w-[18px] h-[18px]" />
+                                {t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
+                            </button>
+                        )}
+                        {activeMemberId && (
+                            <Link
+                                to={`/member/${activeMemberId}`}
+                                className="min-h-[56px] flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[11px] sm:text-xs font-bold active:scale-95 transition"
+                            >
+                                <User className="w-[18px] h-[18px] text-yellow-300" />
+                                {t('বংশলতিকা প্রোফাইল', 'Lineage Profile')}
+                            </Link>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setIsStudentModalOpen(true)}
+                            className="min-h-[56px] flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[11px] sm:text-xs font-bold active:scale-95 transition cursor-pointer"
+                        >
+                            <GraduationCap className="w-[18px] h-[18px] text-yellow-300" />
+                            {t('কৃতি শিক্ষার্থী আবেদন', 'Student Application')}
+                        </button>
+                        <Link
+                            to="/change-password"
+                            className="min-h-[56px] flex flex-col items-center justify-center gap-1 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[11px] sm:text-xs font-bold active:scale-95 transition"
+                        >
+                            <Key className="w-[18px] h-[18px] text-yellow-300" />
+                            {t('পাসওয়ার্ড পরিবর্তন', 'Change Password')}
+                        </Link>
+                    </div>
+                </section>
 
                 {/* ─── Feedback Message (Success / Error) ─────────────────── */}
                 {feedbackMessage && (
@@ -321,7 +334,7 @@ const UserDashboard = () => {
                 )}
 
                 {/* ─── Main Database Linked Profile Details Card ───────────── */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-orange-200 shadow-xl space-y-5">
+                <div className="db-rise bg-white rounded-3xl p-4 sm:p-8 border border-orange-200 shadow-sm space-y-4 sm:space-y-5">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-orange-100 pb-4">
                         <div>
                             <div className="flex items-center gap-2">
@@ -355,14 +368,14 @@ const UserDashboard = () => {
                             <span className="text-xs text-stone-500 font-medium">{t('মূল ডেটাবেজ থেকে তথ্য লোড হচ্ছে...', 'Loading member records from database...')}</span>
                         </div>
                     ) : memberData ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                             {[
                                 { label: t('পিতা', 'Father'), value: memberData?.father_name || memberData?.father_name_bangla, icon: User },
                                 { label: t('মাতা', 'Mother'), value: memberData?.mother_name || memberData?.mother_name_bangla, icon: User },
                                 { label: t('গ্রাম', 'Village'), value: memberData?.village, icon: MapPin },
                                 { label: t('বাড়ি', 'Home'), value: memberData?.home_name, icon: Home },
                                 { label: t('রক্তের গ্রুপ', 'Blood Group'), value: memberData?.blood_group, icon: Droplet },
-                                { label: t('পেশা', 'Occupation'), value: memberData?.occupation, icon: Briefcase },
+                                { label: t('পেশা', 'Occupation'), value: formatOccupation(memberData?.occupation), icon: Briefcase },
                                 { label: t('কর্মস্থল', 'Workplace'), value: memberData?.workplace, icon: Briefcase },
                                 { label: t('শিক্ষাগত যোগ্যতা', 'Education'), value: memberData?.education, icon: GraduationCap },
                                 { label: t('বর্তমান ঠিকানা', 'Present Address'), value: memberData?.present_address, icon: MapPin },
@@ -370,12 +383,12 @@ const UserDashboard = () => {
                                 { label: t('বংশধারা পর্যায়', 'Generation Level'), value: memberData?.level ? `${t('ধাপ', 'Level')} ${memberData.level}` : null, icon: Sparkles },
                                 { label: t('জন্ম তারিখ', 'Birth Date'), value: memberData?.birth_date ? new Date(memberData.birth_date).toLocaleDateString() : null, icon: Calendar },
                             ].map((item, idx) => (
-                                <div key={idx} className="bg-stone-50 hover:bg-orange-50/70 p-3.5 rounded-2xl border border-stone-200/60 transition-colors">
+                                <div key={idx} className="bg-stone-50 hover:bg-orange-50/70 p-3 rounded-2xl border border-stone-200/60 transition-colors min-w-0">
                                     <div className="flex items-center gap-1.5 text-stone-400 mb-1">
                                         <item.icon className="w-3.5 h-3.5 text-orange-800 shrink-0" />
                                         <span className="text-[10px] uppercase font-bold tracking-wider">{item.label}</span>
                                     </div>
-                                    <p className="text-xs font-bold text-stone-800 truncate" title={item.value || '—'}>
+                                    <p className="text-xs font-bold text-stone-800 line-clamp-2 break-words" title={item.value || '—'}>
                                         {item.value || '—'}
                                     </p>
                                 </div>
@@ -405,7 +418,7 @@ const UserDashboard = () => {
                 </div>
 
                 {/* ─── Brilliant Student Recognition Section ──────────────────── */}
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-orange-200 shadow-md">
+                <div className="db-rise bg-white p-4 sm:p-8 rounded-3xl border border-orange-200 shadow-sm">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-orange-100">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-orange-100 text-orange-800 rounded-2xl shrink-0">
@@ -431,7 +444,7 @@ const UserDashboard = () => {
                         <button
                             type="button"
                             onClick={() => setIsStudentModalOpen(true)}
-                            className="flex items-center justify-center gap-2 bg-orange-800 hover:bg-orange-900 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                            className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 bg-orange-800 hover:bg-orange-900 text-white font-bold text-sm px-4 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                         >
                             <GraduationCap size={16} className="text-yellow-400" />
                             <span>{t('+ নতুন আবেদন করুন', '+ Submit New Application')}</span>
@@ -460,17 +473,7 @@ const UserDashboard = () => {
                                                 {formatAchievement(req.achievement_type)}
                                             </span>
                                         </div>
-                                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                                            req.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                            req.status === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' :
-                                            'bg-amber-100 text-amber-800 border border-amber-200'
-                                        }`}>
-                                            {req.status === 'approved' && <CheckCircle className="w-3 h-3" />}
-                                            {req.status === 'pending' && <Clock className="w-3 h-3" />}
-                                            {req.status === 'approved' && t('অনুমোদিত (বিশিষ্ট ব্যক্তিত্বে অন্তর্ভুক্ত)', 'Approved (In Eminent Figures)')}
-                                            {req.status === 'pending' && t('পর্যালোচনাধীন', 'Under Review')}
-                                            {req.status === 'rejected' && t('প্রত্যাখ্যাত', 'Rejected')}
-                                        </span>
+                                        <StatusBadge status={req.status} approvedLabel={t('অনুমোদিত (বিশিষ্ট ব্যক্তিত্বে অন্তর্ভুক্ত)', 'Approved (In Eminent Figures)')} />
                                     </div>
 
                                     <div className="text-xs text-stone-600 space-y-1">
@@ -506,7 +509,7 @@ const UserDashboard = () => {
                 </div>
 
                 {/* ─── Admin Role Application Section ────────────────────── */}
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-orange-200 shadow-md">
+                <div className="db-rise bg-white p-4 sm:p-8 rounded-3xl border border-orange-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="p-2.5 bg-orange-100 text-orange-800 rounded-2xl shrink-0">
                             <ShieldAlert className="w-6 h-6 text-orange-700" />
@@ -691,7 +694,7 @@ const UserDashboard = () => {
 
             {/* ─── Admin Request Confirmation Modal ──────────────────────── */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="fixed inset-0 app-sheet bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 text-center border border-orange-100 animate-zoom-in">
                         <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 border border-orange-200">
                             <ShieldAlert className="w-7 h-7 text-orange-800" />

@@ -226,7 +226,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEdit, onDelete, onEventUp
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in" onClick={onClose}>
             {/* Backdrop */}
             <div className="fixed inset-0 bg-stone-900/70 backdrop-blur-sm transition-opacity"></div>
 

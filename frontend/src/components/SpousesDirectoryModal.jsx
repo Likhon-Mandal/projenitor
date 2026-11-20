@@ -45,11 +45,11 @@ const SpousesDirectoryModal = ({
   return (
     <>
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-stone-900/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 app-sheet z-[100] flex items-center justify-center p-3 sm:p-6 bg-stone-900/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       >
         <div 
-          className="relative w-full max-w-5xl max-h-[90vh] bg-[#fffcf7] rounded-3xl shadow-2xl border border-orange-200 flex flex-col overflow-hidden animate-slide-up"
+          className="relative w-full max-w-5xl max-h-[90vh] bg-background rounded-3xl shadow-2xl border border-orange-200 flex flex-col overflow-hidden animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}

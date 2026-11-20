@@ -287,7 +287,7 @@ const SammelanKotha = () => {
     const nextSammelan = sammelans.find(s => s.is_next);
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-24">
+        <div className="min-h-screen bg-background text-stone-800 font-sans pb-8 lg:pb-24">
             <SEO 
                 title="সম্মেলন কথা ও ইতিহাস" 
                 description="বাড়ৈ বংশের ঐতিহাসিক জ্ঞাতি সম্মেলনসমূহের বিস্তারিত ইতিহাস, স্থান, সভাপতি ও স্মারক তথ্য।" 
@@ -295,35 +295,56 @@ const SammelanKotha = () => {
                 keywords="জ্ঞাতি সম্মেলন, বাড়ৈ বংশ সম্মেলন, সম্মেলন কথা, বংশীয় ইতিহাস"
             />
 
-            {/* HERITAGE HERO HEADER - Clean, Colorful & Simple */}
-            <div className="relative bg-gradient-to-r from-orange-700 via-amber-600 to-red-700 text-white py-8 sm:py-10 px-4 text-center shadow-md border-b-4 border-amber-400/60 overflow-hidden">
-                <div className="max-w-4xl mx-auto relative z-10 space-y-2">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-black tracking-tight text-white drop-shadow-md">
-                        {t('সম্মেলনের ইতিহাস', 'সম্মেলনের ইতিহাস')}
-                    </h1>
+            {/* HERITAGE HERO HEADER */}
+            <div className="max-w-5xl mx-auto px-0 sm:px-6 md:px-8">
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-700 via-red-800 to-red-950 text-white p-5 sm:p-8 shadow-lg shadow-red-950/20 animate-fade-in">
+                    <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-yellow-400/20 blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full bg-orange-300/10 blur-3xl pointer-events-none" />
+                    <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                            <span className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shadow-inner">
+                                <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-300" />
+                            </span>
+                            <div className="min-w-0">
+                                <h1 className="text-2xl sm:text-4xl font-serif font-black tracking-tight text-yellow-300 leading-tight">
+                                    {t('সম্মেলনের ইতিহাস', 'History of Sammelan')}
+                                </h1>
+                                <p className="text-orange-100/90 text-sm sm:text-base mt-1">
+                                    {t('৪৫তম থেকে সকল ঐতিহাসিক জ্ঞাতি সম্মেলনের ইতিহাস (১৯৭৭ – ∞)', 'Every annual family gathering from the 45th onward (1977 – ∞)')}
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-3 text-xs font-semibold">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 border border-white/20">
+                                        <BookOpen className="w-3.5 h-3.5" />
+                                        {t('মোট', 'Total')}: {isBn ? toBnDigits(sammelans.length) : sammelans.length}
+                                    </span>
+                                    {nextSammelan && (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-400 text-red-950">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {t('পরবর্তী', 'Next')}: {isBn ? toBnDigits(nextSammelan.edition) : nextSammelan.edition}{t('তম', 'th')}
+                                            {nextSammelan.bengali_date ? ` · ${isBn ? nextSammelan.bengali_date : (nextSammelan.date ? new Date(nextSammelan.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '')}` : ''}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
-                    <p className="text-amber-100/95 text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto">
-                        {t('৪৫তম থকে সকল ঐতিহাসিক জ্ঞাতি সম্মেলনের ইতিহাস (১৯৭৭ – ∞)', 'History of all historical reunions from the 45th onward (1977 – ∞)')}
-                    </p>
-
-                    {/* Admin Add Button */}
-                    {(isAdmin || isSuperAdmin) && (
-                        <div className="pt-2">
+                        {/* Admin Add Button */}
+                        {(isAdmin || isSuperAdmin) && (
                             <button
                                 type="button"
                                 onClick={() => { setEditingSammelan(null); setIsFormModalOpen(true); }}
-                                className="inline-flex items-center gap-1.5 px-5 py-2 bg-white hover:bg-amber-50 text-stone-900 rounded-full font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                                className="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 px-5 py-3 bg-yellow-400 hover:bg-yellow-300 text-red-950 rounded-2xl font-bold text-sm shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 cursor-pointer"
                             >
-                                <Plus className="w-4 h-4 stroke-[2.5] text-orange-700" />
+                                <Plus className="w-4 h-4 stroke-[2.5]" />
                                 <span>{t('নতুন সম্মেলন যোগ করুন', 'Add New Sammelan')}</span>
                             </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* MAIN CONTENT CONTAINER */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 mt-8 space-y-6">
+            <div className="max-w-5xl mx-auto px-0 sm:px-6 md:px-8 mt-4 sm:mt-6 space-y-6">
 
                 {/* SCROLLABLE BOX CONTAINER */}
                 <div className="bg-white rounded-3xl border border-orange-200/80 shadow-xl shadow-orange-950/5 overflow-hidden flex flex-col">
@@ -374,7 +395,7 @@ const SammelanKotha = () => {
                     </div>
 
                     {/* Scrollable Box Listing (Inline Accordion Details, Mobile-Friendly) */}
-                    <div className="max-h-[640px] overflow-y-auto space-y-2 p-2 sm:p-3 scroll-smooth">
+                    <div className="sm:max-h-[640px] sm:overflow-y-auto space-y-2 p-2 sm:p-3 scroll-smooth">
                         {loading ? (
                             <div className="space-y-3 p-2">
                                 {[1, 2, 3, 4, 5].map((sk) => (

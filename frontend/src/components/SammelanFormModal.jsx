@@ -7,6 +7,28 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const SammelanFormModal = ({ isOpen, onClose, sammelan, onSave }) => {
     const { t, formatNumber } = useLanguage();
     const [loading, setLoading] = useState(false);
@@ -368,17 +390,18 @@ const SammelanFormModal = ({ isOpen, onClose, sammelan, onSave }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
             <div className="relative w-full max-w-3xl my-8 bg-white rounded-3xl shadow-2xl border border-orange-100 overflow-hidden flex flex-col max-h-[92vh]">
+                <style>{FM_CSS}</style>
 
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-900 via-orange-800 to-red-900 px-6 py-5 text-white flex items-center justify-between shrink-0 shadow-sm">
+                <div className="bg-gradient-to-r from-orange-900 via-orange-800 to-red-900 px-5 sm:px-6 py-4 sm:py-5 text-white flex items-center justify-between gap-3 shrink-0 shadow-sm">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-yellow-500/20 border border-yellow-400/40 flex items-center justify-center text-yellow-300">
                             <Sparkles className="w-5 h-5 animate-pulse" />
                         </div>
                         <div>
-                            <h2 className="font-serif text-xl sm:text-2xl font-bold">
+                            <h2 className="font-serif text-lg sm:text-2xl font-bold text-white">
                                 {sammelan ? t('সম্মেলন তথ্য সম্পাদনা', 'Edit Sammelan') : t('নতুন সম্মেলন সংযোজন', 'Add New Sammelan')}
                             </h2>
                             <p className="text-xs text-orange-200">
@@ -389,14 +412,15 @@ const SammelanFormModal = ({ isOpen, onClose, sammelan, onSave }) => {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-2 text-orange-200 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                        className="shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+                        aria-label={t('বন্ধ করুন', 'Close')}
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Form Content */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 font-sans">
+                <form onSubmit={handleSubmit} className="fm-skin fm-rise p-5 sm:p-6 pb-0 sm:pb-0 space-y-5 overflow-y-auto overscroll-contain flex-1 min-h-0 font-sans">
                     {error && (
                         <div className="flex items-center gap-2 p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl">
                             <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
@@ -845,18 +869,18 @@ const SammelanFormModal = ({ isOpen, onClose, sammelan, onSave }) => {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="pt-4 border-t border-orange-100 flex items-center justify-end gap-3 shrink-0">
+                    <div className="sticky bottom-0 z-20 -mx-5 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t border-orange-100 bg-white/95 backdrop-blur shrink-0 grid grid-cols-2 sm:flex sm:justify-end gap-2.5 sm:gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-100 rounded-xl transition-colors cursor-pointer"
+                            className="min-h-[46px] sm:min-h-0 justify-center flex items-center px-5 py-2.5 text-sm font-semibold text-stone-600 bg-white hover:bg-stone-100 border border-stone-200 rounded-xl transition-colors cursor-pointer"
                         >
                             {t('বাতিল', 'Cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-2.5 bg-orange-800 hover:bg-orange-900 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="min-h-[46px] sm:min-h-0 justify-center px-6 py-2.5 bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 text-white rounded-xl text-sm font-bold shadow-md shadow-orange-900/20 transition-all active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                             {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                             <span>{sammelan ? t('আপডেট করুন', 'Update Sammelan') : t('সংরক্ষণ করুন', 'Save Sammelan')}</span>

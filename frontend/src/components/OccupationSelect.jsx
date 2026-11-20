@@ -4,6 +4,28 @@ import api from '../api/api';
 import { STANDARD_OCCUPATIONS, getStandardEquivalent } from '../constants/occupations';
 import { useLanguage } from '../context/LanguageContext';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const OccupationSelect = ({
   value = '',
   onChange,
@@ -178,10 +200,15 @@ const OccupationSelect = ({
       {/* Main Select Button / Display */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full p-2.5 bg-white border-2 rounded-lg cursor-pointer flex items-center justify-between transition-all duration-200 ${
+        role="button"
+        tabIndex={0}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsOpen(!isOpen); } }}
+        className={`w-full min-h-[44px] px-3.5 py-2.5 bg-white border rounded-xl cursor-pointer flex items-center justify-between shadow-sm transition-all duration-200 ${
           isOpen
-            ? 'border-orange-500 ring-2 ring-orange-100 shadow-sm'
-            : 'border-stone-200 hover:border-stone-300'
+            ? 'border-orange-500 ring-4 ring-orange-500/15'
+            : 'border-stone-200 hover:border-orange-300'
         }`}
       >
         <div className="flex items-center gap-2 overflow-hidden pr-2">
@@ -233,7 +260,7 @@ const OccupationSelect = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden animate-slide-up max-h-80 flex flex-col">
+        <div className="absolute z-50 mt-1.5 w-full bg-white rounded-2xl shadow-2xl shadow-orange-900/10 border border-stone-200 overflow-hidden animate-slide-up max-h-80 flex flex-col" role="listbox">
           {/* Search Box */}
           <div className="p-2 border-b border-stone-100 bg-stone-50/70">
             <div className="relative">
@@ -267,9 +294,9 @@ const OccupationSelect = ({
                   <div
                     key={item.label}
                     onClick={() => handleSelect(item.label)}
-                    className={`px-3 py-2 text-xs rounded-md cursor-pointer flex items-center justify-between transition-colors ${
+                    className={`px-3 py-2.5 text-sm rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
                       isSelected
-                        ? 'bg-orange-500 text-white font-medium'
+                        ? 'bg-orange-700 text-white font-medium'
                         : 'text-stone-700 hover:bg-orange-50 hover:text-orange-900'
                     }`}
                   >
@@ -309,8 +336,9 @@ const OccupationSelect = ({
 
       {/* Modal / Inline Popover to Add Custom Occupation */}
       {showCustomModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-orange-100 p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="fm-skin bg-white w-full max-w-md rounded-3xl shadow-2xl border border-orange-100 p-5 space-y-4 animate-scale-up">
+            <style>{FM_CSS}</style>
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-orange-700" />
@@ -319,7 +347,8 @@ const OccupationSelect = ({
               <button
                 type="button"
                 onClick={() => setShowCustomModal(false)}
-                className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100 cursor-pointer"
+                aria-label={t('বন্ধ করুন', 'Close')}
+                className="shrink-0 w-10 h-10 flex items-center justify-center text-stone-500 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-full cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -372,11 +401,11 @@ const OccupationSelect = ({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
+            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-end gap-2 pt-3 border-t border-stone-100">
               <button
                 type="button"
                 onClick={() => setShowCustomModal(false)}
-                className="px-4 py-2 text-xs font-medium text-stone-600 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors cursor-pointer"
               >
                 {t('বাতিল', 'Cancel')}
               </button>
@@ -384,7 +413,7 @@ const OccupationSelect = ({
                 type="button"
                 onClick={handleCreateCustom}
                 disabled={!customBangla.trim() && !customEnglish.trim()}
-                className="px-4 py-2 text-xs font-bold text-white bg-orange-800 hover:bg-orange-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors cursor-pointer"
+                className="min-h-[44px] sm:min-h-0 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 {t('পেশা সংরক্ষণ ও নির্বাচন', 'Save & Select')}
               </button>

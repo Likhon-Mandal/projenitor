@@ -4,6 +4,28 @@ import MemberSelector from './MemberSelector';
 import api from '../api/api';
 import { useLanguage } from '../context/LanguageContext';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     const { formatName, t } = useLanguage();
     const [name, setName] = useState('');
@@ -160,17 +182,18 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-4 sm:p-6" onClick={onClose}>
             <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
 
             <div
-                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up"
+                className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-slide-up border border-orange-100"
                 onClick={e => e.stopPropagation()}
             >
+                <style>{FM_CSS}</style>
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-800 to-orange-600 px-6 py-4 flex justify-between items-center text-white shrink-0">
-                    <h2 className="text-xl font-serif font-bold">{initialData ? 'Edit Committee' : 'Create New Committee'}</h2>
-                    <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                <div className="bg-gradient-to-r from-orange-800 to-amber-700 px-5 sm:px-6 py-4 flex justify-between items-center gap-3 text-white shrink-0">
+                    <h2 className="text-lg sm:text-xl font-serif font-bold text-white">{initialData ? t('কমিটি সম্পাদনা', 'Edit Committee') : t('নতুন কমিটি তৈরি করুন', 'Create New Committee')}</h2>
+                    <button type="button" onClick={onClose} aria-label={t('বন্ধ করুন', 'Close')} className="shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer">
                         <X size={20} />
                     </button>
                 </div>
@@ -178,7 +201,7 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                 {/* Form wrapping scrollable body and pinned footer */}
                 <form id="committee-form" onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                     {/* Form Body - Scrollable */}
-                    <div className="p-6 overflow-y-auto custom-scroll flex-1 min-h-0 space-y-6">
+                    <div className="fm-skin fm-rise p-5 sm:p-6 overflow-y-auto overscroll-contain custom-scroll flex-1 min-h-0 space-y-6">
 
                         {/* Basic Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
@@ -305,21 +328,21 @@ const CommitteeFormModal = ({ isOpen, onClose, onSuccess, initialData }) => {
                     </div>
 
                     {/* Footer Controls - Always pinned at bottom */}
-                    <div className="border-t border-stone-200 p-4 bg-stone-50 flex justify-end gap-3 shrink-0 z-10">
+                    <div className="shrink-0 border-t border-stone-100 px-4 py-3 sm:p-4 bg-orange-50/60 grid grid-cols-2 sm:flex sm:justify-end gap-2.5 sm:gap-3 z-10">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2 text-stone-600 font-medium hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+                            className="min-h-[46px] sm:min-h-0 justify-center flex items-center px-5 py-2 text-stone-600 font-bold bg-white hover:bg-stone-100 border border-stone-200 rounded-xl transition-colors text-sm cursor-pointer"
                             disabled={loading}
                         >
-                            Cancel
+                            {t('বাতিল', 'Cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                            className="min-h-[46px] sm:min-h-0 justify-center px-6 py-2 bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 text-white font-bold rounded-xl shadow-md shadow-orange-900/20 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 text-sm cursor-pointer"
                         >
-                            {loading ? 'Saving...' : <><CheckCircle2 size={18} /> {initialData ? 'Update Committee' : 'Save Committee'}</>}
+                            {loading ? t('সংরক্ষণ হচ্ছে...', 'Saving...') : <><CheckCircle2 size={18} /> {initialData ? t('কমিটি হালনাগাদ', 'Update Committee') : t('কমিটি সংরক্ষণ', 'Save Committee')}</>}
                         </button>
                     </div>
                 </form>

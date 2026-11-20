@@ -172,7 +172,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
             {/* Backdrop on mobile screens */}
             {isOpen && (
                 <div
-                    className="sm:hidden fixed inset-0 bg-black/30 z-[140] backdrop-blur-[1px] animate-fade-in"
+                    className="sm:hidden fixed inset-0 bg-stone-950/50 z-[140] backdrop-blur-[2px] animate-fade-in"
                     onClick={() => setIsOpen(false)}
                     aria-hidden="true"
                 />
@@ -182,8 +182,16 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
             {isOpen && (
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className="fixed right-2 sm:right-0 top-14 sm:top-full sm:mt-2.5 w-[290px] sm:w-88 md:w-96 max-w-[calc(100vw-1rem)] bg-white text-stone-800 border border-orange-200/90 rounded-2xl shadow-2xl z-[150] overflow-hidden animate-fade-in origin-top-right flex flex-col max-h-[340px] sm:max-h-[30rem]"
+                    className="fixed inset-x-0 bottom-0 w-full max-h-[80dvh] rounded-t-3xl animate-sheet-up pb-safe
+                        sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2.5 sm:w-[22rem] md:w-96 sm:max-w-[calc(100vw-1rem)] sm:rounded-2xl sm:max-h-[30rem] sm:pb-0 sm:animate-fade-in sm:origin-top-right
+                        bg-white text-stone-800 border border-orange-200/90 shadow-2xl z-[150] overflow-hidden flex flex-col"
+                    role="dialog"
+                    aria-label={t('বিজ্ঞপ্তি', 'Notifications')}
                 >
+                    {/* Grab handle (phones) */}
+                    <div className="sm:hidden flex justify-center pt-2.5 pb-1 shrink-0">
+                        <span className="w-10 h-1.5 rounded-full bg-stone-300" />
+                    </div>
                     {/* Header */}
                     <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-orange-50 via-amber-50/40 to-white border-b border-orange-100 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
@@ -223,7 +231,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                     </div>
 
                     {/* Notification Items List - Only unseen notifications are shown */}
-                    <div className="max-h-52 sm:max-h-72 overflow-y-auto divide-y divide-stone-100 custom-scroll min-h-0 flex-1">
+                    <div className="sm:max-h-72 overflow-y-auto overscroll-contain divide-y divide-stone-100 custom-scroll min-h-0 flex-1">
                         {loading && notifications.length === 0 ? (
                             <div className="p-6 text-center text-xs text-stone-500 animate-pulse">
                                 {t('বিজ্ঞপ্তি লোড হচ্ছে...', 'Loading notifications...')}
@@ -233,7 +241,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                 <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-2">
                                     <CheckCheck className="w-4 h-4 text-emerald-600" />
                                 </div>
-                                <p className="text-xs font-bold text-stone-700" style={{ color: '#374151' }}>
+                                <p className="text-xs font-bold text-stone-700" style={{ color: 'rgb(var(--tx-stone-700))' }}>
                                     {t('কোনো নতুন বিজ্ঞপ্তি নেই', 'No new notifications')}
                                 </p>
                                 <p className="text-[10px] text-stone-400 mt-0.5">
@@ -250,7 +258,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                         type="button"
                                         onClick={() => handleNotificationClick(item)}
                                         className="w-full text-left p-2.5 sm:p-3.5 flex items-start gap-2.5 transition-all duration-200 hover:bg-orange-50/70 group cursor-pointer bg-white"
-                                        style={{ color: '#1c1917' }}
+                                        style={{ color: 'rgb(var(--tx-stone-900))' }}
                                     >
                                         {/* Icon bubble */}
                                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-2xs">
@@ -269,7 +277,7 @@ const NotificationBell = ({ className = '', inNavbar = false }) => {
                                             {/* Clickable Heading */}
                                             <p
                                                 className="text-[11px] sm:text-xs font-bold line-clamp-2 leading-snug group-hover:text-orange-950 transition-colors"
-                                                style={{ color: '#1c1917' }}
+                                                style={{ color: 'rgb(var(--tx-stone-900))' }}
                                             >
                                                 {item.title}
                                             </p>

@@ -19,10 +19,23 @@ const Styles = () => (
             100% { transform: scale(1.5);  opacity: 0;   }
         }
         .fr-animate-in { animation: fr-slideUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+        @keyframes fr-growY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        @keyframes fr-growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        @keyframes fr-flowY { from { background-position: 0 0; } to { background-position: 0 28px; } }
+        @keyframes fr-flowX { from { background-position: 0 0; } to { background-position: 28px 0; } }
+        @keyframes fr-pop { 0% { opacity: 0; transform: scale(.6); } 70% { opacity: 1; transform: scale(1.08); } 100% { transform: scale(1); } }
+        .fr-link { transform-origin: top; animation: fr-growY .7s cubic-bezier(.65,0,.35,1) .25s both; }
+        .fr-flow { background-image: repeating-linear-gradient(180deg, rgb(var(--tx-yellow-300) / .95) 0 6px, transparent 6px 28px); animation: fr-flowY 1s linear infinite; }
+        .fr-pop { animation: fr-pop .5s cubic-bezier(.2,.9,.3,1.2) .6s both; }
+        @media (min-width: 640px) {
+            .fr-link { transform-origin: left; animation-name: fr-growX; }
+            .fr-flow { background-image: repeating-linear-gradient(90deg, rgb(var(--tx-yellow-300) / .95) 0 6px, transparent 6px 28px); animation-name: fr-flowX; }
+        }
+        @media (prefers-reduced-motion: reduce) { .fr-link, .fr-flow, .fr-pop { animation: none !important; } }
         .fr-glass {
-            background: rgba(255,255,255,0.72);
+            background: rgb(var(--surface) / 0.72);
             backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255,255,255,0.6);
+            border: 1px solid rgb(var(--bd-white) / 0.6);
             box-shadow: 0 8px 40px rgba(154,52,18,0.09), 0 1.5px 0 rgba(255,255,255,0.9) inset;
         }
         .fr-swap { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background-color 0.2s; }
@@ -95,7 +108,7 @@ const FindRelation = () => {
                         </div>
                         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900 leading-tight mb-1">
                             {t('\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 ', 'Find ')}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-700 dark:from-amber-300 dark:to-orange-500">
                                 {t('\u09a8\u09bf\u09b0\u09cd\u09a3\u09df', 'Relationship')}
                             </span>
                         </h1>
@@ -167,7 +180,7 @@ const FindRelation = () => {
                 <div className="relative z-0 fr-animate-in">
                     <div className="fr-glass rounded-3xl overflow-hidden">
                         <div className="h-1.5 bg-gradient-to-r from-orange-400 via-yellow-400 to-red-500" />
-                        <div className="bg-gradient-to-br from-stone-900 to-stone-800 px-5 sm:px-8 py-4 sm:py-5 flex items-center gap-3">
+                        <div className="bg-gradient-to-br from-red-900 via-red-950 to-orange-950 px-5 sm:px-8 py-4 sm:py-5 flex items-center gap-3">
                             <span className="text-3xl">{relationResult.emoji}</span>
                             <div>
                                 <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-orange-400 mb-0.5">
@@ -179,8 +192,8 @@ const FindRelation = () => {
                             </div>
                         </div>
 
-                        <div className="p-5 sm:p-8 bg-gradient-to-b from-amber-50/50 to-white">
-                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-5">
+                        <div className="p-5 sm:p-8 bg-gradient-to-b from-amber-50/60 to-white">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-0 sm:gap-2 mb-5">
                                 <div className="flex flex-col items-center gap-1.5 flex-1">
                                     <Avatar member={personA} borderColor="border-orange-300" textColor="text-orange-800" />
                                     <p className="font-bold text-stone-800 text-sm text-center leading-tight">{formatName(personA)}</p>
@@ -189,13 +202,16 @@ const FindRelation = () => {
                                     </span>
                                 </div>
 
-                                <div className="flex items-center justify-center px-2 sm:px-4">
-                                    <div className="flex flex-col items-center bg-white border-2 border-yellow-300 rounded-2xl px-4 py-2 shadow-md shadow-yellow-100 min-w-[60px]">
+                                {/* Animated link between the two people */}
+                                <div className="relative flex items-center justify-center h-28 sm:h-auto sm:self-stretch sm:flex-1 sm:min-w-[120px]">
+                                    <div className="fr-link absolute left-1/2 top-1 bottom-1 w-[3px] -translate-x-1/2 sm:translate-x-0 sm:left-0 sm:right-0 sm:top-1/2 sm:bottom-auto sm:w-auto sm:h-[3px] sm:-translate-y-1/2 rounded-full bg-gradient-to-b sm:bg-gradient-to-r from-orange-400 via-red-500 to-red-700" />
+                                    <div className="fr-flow absolute left-1/2 top-1 bottom-1 w-[3px] -translate-x-1/2 sm:translate-x-0 sm:left-0 sm:right-0 sm:top-1/2 sm:bottom-auto sm:w-auto sm:h-[3px] sm:-translate-y-1/2 rounded-full opacity-90" />
+                                    <div className="fr-pop relative flex flex-col items-center bg-white border-2 border-yellow-300 rounded-2xl px-4 py-2 shadow-lg shadow-orange-900/15 min-w-[64px]">
                                         <span className="text-3xl sm:text-4xl font-serif font-black text-orange-600 leading-none">
                                             {relationResult.depthStr}
                                         </span>
                                         <span className="text-[9px] uppercase tracking-widest font-bold text-stone-400 text-center mt-0.5 leading-tight">
-                                            {t('\u09aa\u09cd\u09b0\u099c\u09a8\u09cd\u09ae', 'Gen')}
+                                            {t('প্রজন্ম', 'Gen')}
                                         </span>
                                     </div>
                                 </div>

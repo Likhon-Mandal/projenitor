@@ -114,10 +114,10 @@ const ProfileTab = () => {
     const displayEmail = memberData?.email || user?.email;
 
     return (
-        <div className="max-w-3xl mx-auto animate-slide-up space-y-6">
+        <div className="max-w-3xl mx-auto animate-slide-up space-y-4 sm:space-y-6">
             {/* Success Toast */}
             {success && (
-                <div className="fixed top-24 right-8 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-2 animate-bounce">
+                <div className="fixed top-[calc(4.5rem_+_env(safe-area-inset-top))] left-3 right-3 sm:left-auto sm:right-8 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-2 animate-slide-up">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-bold text-sm">{success}</span>
                 </div>
@@ -126,7 +126,8 @@ const ProfileTab = () => {
             {/* Profile Overview Card */}
             <div className="bg-white rounded-3xl border border-orange-100 shadow-xl overflow-hidden relative">
                 {/* Visual Header Decoration */}
-                <div className="h-28 bg-gradient-to-r from-orange-800 via-orange-900 to-red-950 relative">
+                <div className="h-24 sm:h-28 bg-gradient-to-br from-orange-800 via-red-900 to-orange-950 relative overflow-hidden">
+                    <div className="pointer-events-none absolute -top-10 -right-6 w-40 h-40 rounded-full bg-yellow-400/20 blur-3xl" />
                     <div className="absolute top-3 right-4 flex items-center gap-2">
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-black/30 text-yellow-300 backdrop-blur-sm border border-yellow-400/30">
                             <Sparkles className="w-3 h-3 text-yellow-400" />
@@ -135,7 +136,7 @@ const ProfileTab = () => {
                     </div>
                 </div>
 
-                <div className="px-6 sm:px-8 pb-8">
+                <div className="px-4 sm:px-8 pb-5 sm:pb-8">
                     {/* Avatar & User Info Row */}
                     <div className="relative mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
                         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
@@ -152,7 +153,7 @@ const ProfileTab = () => {
 
                             {/* Name & Contact Info - Clean, crisp, completely on the white card */}
                             <div className="pt-2 sm:pt-4">
-                                <h2 className="text-2xl sm:text-3xl font-serif font-black text-stone-900 tracking-tight">
+                                <h2 className="text-xl sm:text-3xl font-serif font-black text-stone-900 tracking-tight break-words">
                                     {displayName}
                                 </h2>
                                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 mt-2 text-xs text-stone-600 font-medium">
@@ -171,7 +172,7 @@ const ProfileTab = () => {
                                         </div>
                                     )}
                                     {displayEmail && (
-                                        <span className="flex items-center gap-1.5 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100 font-mono">
+                                        <span className="flex items-center gap-1.5 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100 font-mono max-w-full min-w-0 break-all">
                                             <Mail className="w-3.5 h-3.5 text-orange-700" />
                                             {displayEmail}
                                         </span>
@@ -184,7 +185,7 @@ const ProfileTab = () => {
                         <div className="pt-2 sm:pt-4">
                             <button
                                 onClick={() => setIsMemberFormOpen(true)}
-                                className="inline-flex items-center gap-2 bg-orange-800 hover:bg-orange-900 text-white px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0"
+                                className="inline-flex items-center gap-2 min-h-[44px] bg-orange-800 hover:bg-orange-900 text-white px-5 rounded-2xl text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0"
                                 title={t('প্রোফাইল সম্পাদনা', 'Edit Profile')}
                             >
                                 <Pencil className="w-4 h-4 text-yellow-400" />
@@ -215,7 +216,7 @@ const ProfileTab = () => {
                                 <span className="text-xs text-stone-500">{t('তথ্য লোড হচ্ছে...', 'Loading details...')}</span>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                                 {[
                                     { label: t('পিতা', 'Father'), value: memberData?.father_name || memberData?.father_name_bangla, icon: User },
                                     { label: t('মাতা', 'Mother'), value: memberData?.mother_name || memberData?.mother_name_bangla, icon: User },
@@ -227,12 +228,12 @@ const ProfileTab = () => {
                                     { label: t('শিক্ষাগত যোগ্যতা', 'Education'), value: memberData?.education, icon: GraduationCap },
                                     { label: t('বর্তমান ঠিকানা', 'Present Address'), value: memberData?.present_address, icon: MapPin },
                                 ].map((item, idx) => (
-                                    <div key={idx} className="bg-stone-50 hover:bg-orange-50/60 p-3 rounded-2xl border border-stone-100 transition-colors">
+                                    <div key={idx} className="bg-stone-50 hover:bg-orange-50/60 p-3 rounded-2xl border border-stone-100 transition-colors min-w-0">
                                         <div className="flex items-center gap-2 text-stone-400 mb-1">
                                             <item.icon className="w-3.5 h-3.5 text-orange-800" />
                                             <span className="text-[10px] uppercase font-bold tracking-wider">{item.label}</span>
                                         </div>
-                                        <p className="text-xs font-bold text-stone-800 truncate" title={item.value || '—'}>
+                                        <p className="text-xs font-bold text-stone-800 line-clamp-2 break-words" title={item.value || '—'}>
                                             {item.value || '—'}
                                         </p>
                                     </div>
@@ -305,7 +306,7 @@ const ProfileTab = () => {
 
             {/* Modal Overlay for Password */}
             {view === 'password' && (
-                <div className="fixed inset-0 bg-orange-950/40 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 app-sheet bg-orange-950/40 backdrop-blur-md z-[60] flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-zoom-in">
                         <div className="bg-orange-800 px-6 py-4 flex items-center justify-between">
                             <h3 className="text-white font-serif font-bold text-lg">

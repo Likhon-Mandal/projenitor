@@ -8,6 +8,28 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../api/api';
 import MemberSelector from './MemberSelector';
 
+const FM_CSS = `
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not(.bg-transparent), select:not(.bg-transparent), textarea:not(.bg-transparent)) {
+    border-radius: .75rem;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--tx-stone-800));
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.fm-skin :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]), select) { min-height: 44px; }
+.fm-skin :is(input, select, textarea):focus { outline: none; border-color: rgb(var(--bd-orange-500)); box-shadow: 0 0 0 4px rgb(var(--bd-orange-500) / .16); }
+.fm-skin :is(input, textarea)::placeholder { color: rgb(var(--tx-stone-400)); }
+.fm-skin select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.25rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+}
+.fm-skin :is(input, select, textarea):disabled { opacity: .6; cursor: not-allowed; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fm-skin *, .fm-rise { transition: none !important; animation: none !important; } }
+`;
+
 const ACHIEVEMENT_OPTIONS = [
     { id: 'এসএসসি (GPA-5.00)', bn: 'এসএসসি (GPA 5.00)', en: 'Got GPA-5 in SSC' },
     { id: 'এইচএসসি (GPA-5.00)', bn: 'এইচএসসি (GPA 5.00)', en: 'Got GPA-5 in HSC' },
@@ -307,7 +329,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" onClick={onClose}>
+        <div className="fixed inset-0 app-sheet z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" onClick={onClose}>
             {/* Backdrop */}
             <div className="fixed inset-0 bg-stone-950/70 backdrop-blur-xs transition-opacity animate-fade-in" />
 
@@ -316,33 +338,36 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                 className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-auto border border-orange-100 animate-zoom-in max-h-[92vh] flex flex-col font-sans"
                 onClick={e => e.stopPropagation()}
             >
+                <style>{FM_CSS}</style>
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-orange-900 via-orange-800 to-amber-700 px-6 py-5 text-white flex items-center justify-between shrink-0 relative overflow-hidden">
+                <div className="bg-gradient-to-r from-orange-900 via-orange-800 to-amber-700 px-5 sm:px-6 py-4 sm:py-5 text-white flex items-center justify-between gap-3 shrink-0 relative overflow-hidden">
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }} />
                     <div className="relative z-10 flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
+                        <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
                             <GraduationCap className="w-6 h-6 text-yellow-300" />
                         </div>
                         <div>
                             <h2 className="text-lg sm:text-xl font-serif font-bold tracking-tight text-white drop-shadow-xs">
                                 {t('কৃতি শিক্ষার্থী স্বীকৃতির আবেদন', 'Brilliant Student Recognition Request')}
                             </h2>
-                            <p className="text-xs text-orange-200/90 font-light mt-0.5">
+                            <p className="hidden sm:block text-xs text-orange-200/90 font-light mt-0.5">
                                 {t('বংশের কৃতি সন্তানকে বিশিষ্ট ব্যক্তিত্ব তালিকায় অন্তর্ভুক্ত করতে আবেদন করুন', 'Nominate exceptional academic achievers for eminent recognition')}
                             </p>
                         </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="relative z-10 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                        className="relative z-10 shrink-0 w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
                         title={t('বন্ধ করুন', 'Close')}
+                        aria-label={t('বন্ধ করুন', 'Close')}
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Modal Body */}
-                <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6">
+                <div className="fm-skin fm-rise p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6">
                     {/* Feedback Messages */}
                     {error && (
                         <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm p-4 rounded-2xl animate-shake">
@@ -709,12 +734,12 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                 </div>
 
                 {/* Modal Footer */}
-                <div className="px-6 py-4 bg-stone-50 border-t border-stone-200/80 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-orange-50/60 border-t border-stone-200/80 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 sm:gap-3 shrink-0">
                     <button
                         type="button"
                         onClick={onClose}
                         disabled={loading}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-100 text-sm font-bold transition-colors cursor-pointer"
+                        className="w-full sm:w-auto min-h-[46px] sm:min-h-0 px-5 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-100 text-sm font-bold transition-colors cursor-pointer"
                     >
                         {t('বাতিল', 'Cancel')}
                     </button>
@@ -723,7 +748,7 @@ const BrilliantStudentRequestModal = ({ isOpen, onClose, onSuccess, initialMembe
                         type="button"
                         onClick={handleSubmit}
                         disabled={loading || documents.some(d => d.uploading) || !selectedCandidate || documents.filter(d => d.url && !d.error).length === 0}
-                        className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-orange-800 hover:bg-orange-900 active:scale-95 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full sm:w-auto min-h-[46px] sm:min-h-0 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-700 to-red-800 hover:brightness-110 active:scale-95 text-white text-sm font-bold shadow-md shadow-orange-900/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {loading ? (
                             <>

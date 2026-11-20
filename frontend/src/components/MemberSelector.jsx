@@ -80,13 +80,13 @@ const MemberSelector = ({ label, onSelect, selectedMember, disableActive = false
 
     return (
         <div className={`w-full relative ${isDropdownOpen ? 'z-50' : 'z-10'}`} ref={dropdownRef}>
-            {label ? <label className="block text-sm font-bold text-stone-700 mb-2 uppercase tracking-wider">{label}</label> : null}
+            {label ? <label className="block text-xs sm:text-sm font-bold text-stone-700 mb-2 uppercase tracking-wider">{label}</label> : null}
 
             {selectedMember ? (
                 // Selected State
-                <div className="flex items-center justify-between p-4 bg-orange-50 border-2 border-orange-200 rounded-xl shadow-inner animate-fade-in">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-white border-2 border-orange-300 shadow-sm shrink-0 flex items-center justify-center">
+                <div className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl shadow-inner animate-fade-in">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-white border-2 border-orange-300 shadow-sm shrink-0 flex items-center justify-center">
                             {selectedMember.profile_image_url ? (
                                 <img src={selectedMember.profile_image_url} alt={selectedMember.full_name} className="w-full h-full object-cover" />
                             ) : (
@@ -94,7 +94,7 @@ const MemberSelector = ({ label, onSelect, selectedMember, disableActive = false
                             )}
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg text-stone-900">
+                            <h3 className="font-bold text-base sm:text-lg text-stone-900 truncate">
                                 {formatName(selectedMember)}
                             </h3>
                             <p className="text-sm text-stone-500 flex items-center gap-1">
@@ -106,8 +106,9 @@ const MemberSelector = ({ label, onSelect, selectedMember, disableActive = false
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="p-2 bg-white rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm"
+                        className="shrink-0 w-10 h-10 flex items-center justify-center bg-white rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm"
                         title={t ? t('নির্বাচন মুছুন', 'Clear Selection') : 'Clear Selection'}
+                        aria-label={t ? t('নির্বাচন মুছুন', 'Clear Selection') : 'Clear Selection'}
                     >
                         <X size={20} />
                     </button>

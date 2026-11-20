@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
     Bell, HelpCircle, Star, ArrowRight, User, Calendar, MapPin,
     Activity, ChevronRight, AlertCircle, Edit2, Trash2, Users, Home as HomeIcon,
-    ChevronLeft, Briefcase, Award, ShieldCheck, UserCheck, Sparkles, Pause, Play, Crown, LogIn
+    ChevronLeft, Briefcase, Award, ShieldCheck, UserCheck, Sparkles, Pause, Play, Crown, LogIn,
+    Map, Search, BookOpen, UsersRound
 } from 'lucide-react';
 import ImageSlider from '../components/ImageSlider';
 import HelpRequestModal from '../components/HelpRequestModal';
@@ -27,19 +28,19 @@ const AnimationStyles = () => (
         .delay-300 { animation-delay: 0.3s; }
         
         .glass-panel {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgb(var(--surface) / 0.65);
             backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgb(var(--bd-white) / 0.5);
             box-shadow: 0 8px 32px 0 rgba(154, 52, 18, 0.1);
         }
         
         .glass-item {
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgb(var(--surface) / 0.4);
+            border: 1px solid rgb(var(--bd-white) / 0.3);
             transition: all 0.3s ease;
         }
         .glass-item:hover {
-            background: white;
+            background: rgb(var(--surface));
             transform: translateX(4px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border-color: rgba(234, 88, 12, 0.2);
@@ -72,7 +73,7 @@ const CompactListItem = ({ title, date, tag, type, to, targetId, isBn, adminActi
         isBn ? (
             tag === 'Event' ? 'আয়োজন' :
                 tag === 'Notice' ? 'বিজ্ঞপ্তি' :
-                    tag
+                    ({ Medical: 'চিকিৎসা', Financial: 'আর্থিক', Advice: 'পরামর্শ', Research: 'গবেষণা', Other: 'অন্যান্য' }[tag] || tag)
         ) : tag
     ) : (isBn ? (type === 'alert' ? 'জরুরি' : 'সহায়তা') : (type === 'alert' ? 'Alert' : 'Help'));
 
@@ -142,7 +143,7 @@ const PillarCard = ({ person, onOpenProfile, isBn, t, formatName, formatOccupati
     const isVicePresident = person.rolePriority === 2 || (person.badge && (person.badge.includes('সহ-সভাপতি') || person.badge.toLowerCase().includes('vice president')));
 
     return (
-        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-6 text-center group flex flex-col justify-between h-full transition-all duration-300 bg-gradient-to-b from-[#fffefc] via-[#fffbf4] to-[#faf1e1] border-2 border-amber-200/80 hover:border-amber-400 shadow-[0_6px_25px_rgba(154,52,18,0.06)] hover:shadow-[0_20px_45px_rgba(154,52,18,0.15)] hover:-translate-y-1.5 before:absolute before:inset-1.5 before:rounded-[1.7rem] before:border before:border-amber-300/30 before:pointer-events-none">
+        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-6 text-center group flex flex-col justify-between h-full transition-all duration-300 bg-gradient-to-b from-background via-background to-background border-2 border-amber-200/80 hover:border-amber-400 shadow-[0_6px_25px_rgba(154,52,18,0.06)] hover:shadow-[0_20px_45px_rgba(154,52,18,0.15)] hover:-translate-y-1.5 before:absolute before:inset-1.5 before:rounded-[1.7rem] before:border before:border-amber-300/30 before:pointer-events-none">
             {/* Ambient Heritage Blur Glows */}
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-gradient-to-tr from-red-400/15 to-amber-300/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -152,7 +153,7 @@ const PillarCard = ({ person, onOpenProfile, isBn, t, formatName, formatOccupati
                     {/* Avatar with Radiant Halo Ring */}
                     <div className="relative mb-2 inline-block">
                         <div className="p-[4px] rounded-full bg-gradient-to-tr from-amber-500 via-orange-400 to-red-600 shadow-md group-hover:shadow-[0_0_24px_rgba(234,179,8,0.45)] group-hover:scale-105 transition-all duration-300">
-                            <div className="p-[2.5px] bg-[#fffcf7] rounded-full">
+                            <div className="p-[2.5px] bg-background rounded-full">
                                 <div
                                     onClick={() => isClickable && onOpenProfile(person.member_id)}
                                     title={isClickable ? t('প্রোফাইল দেখতে ক্লিক করুন', 'Click to view profile') : ''}
@@ -562,7 +563,7 @@ const Home = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fffcf5] text-stone-800 font-sans pb-20">
+        <div className="min-h-screen bg-background text-stone-800 font-sans pb-6 md:pb-20">
             <SEO 
                 title={t('মূলপাতা', 'Home')}
                 description={t('৮+ প্রজন্মের পারিবারিক ঐতিহ্য, রক্তের বন্ধন, বংশলতিকা এবং সম্মেলনের ইতিহাস সংরক্ষণ প্ল্যাটফর্ম।', 'Connecting 8+ generations. Preserving our shared history, stories, and bloodline for the future.')}
@@ -571,32 +572,47 @@ const Home = () => {
             <AnimationStyles />
 
             {/* HERO SECTION - 50vh Centered Design (Light Theme) */}
-            <div className="relative w-full h-[50vh] min-h-[500px] mb-8 group bg-[#fffcf5]">
+            <div className="relative w-full md:h-[50vh] md:min-h-[500px] mb-4 md:mb-8 group bg-background">
 
                 {/* 1. Background Slider - Light Theme */}
                 <div className="absolute inset-0 z-0 overflow-hidden opacity-30">
                     <ImageSlider className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-[20s]" showOverlay={false} />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[#fffcf5]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-background"></div>
                 </div>
 
                 {/* 2. Content Container - Centered */}
-                <div className="relative z-10 w-full h-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col justify-center items-center text-center">
+                <div className="relative z-10 w-full h-full max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-6 md:py-0 flex flex-col justify-center items-center text-center">
 
-                    <div className="space-y-4 max-w-4xl mx-auto animate-fade-up relative z-10">
+                    <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto animate-fade-up relative z-10">
 
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
+                        <h1 className="text-[2.6rem] md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
                             বাড়ৈ বংশের
                         </h1>
 
-                        <h1 className="text-5xl p-2 md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-red-700"> ইতিবৃত্ত</span>
+                        <h1 className="text-[2.6rem] p-1 md:p-2 md:text-7xl lg:text-8xl font-serif font-bold leading-none tracking-tight text-stone-900 drop-shadow-sm">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-red-700 dark:from-amber-300 dark:to-orange-500"> ইতিবৃত্ত</span>
                         </h1>
 
-                        <p className="text-xl text-stone-500 font-light leading-relaxed max-w-2xl mx-auto">
+                        <p className="text-base md:text-xl text-stone-500 font-light leading-relaxed max-w-2xl mx-auto px-2">
                             {t('ভবিষ্যৎ প্রজন্মের জন্য আমাদের ঐতিহ্য, গল্প ও রক্তের বন্ধন সংরক্ষণ।', 'Connecting 8+ generations. Preserving our shared history, stories, and bloodline for the future.')}
                         </p>
 
-                        <div className="flex flex-wrap items-center justify-center gap-5 pt-2">
+                        {/* Phone: one primary action + two compact secondary actions */}
+                        <div className="md:hidden pt-2 space-y-2.5 w-full max-w-sm mx-auto">
+                            <Link to="/explorer" className="w-full py-3.5 bg-gradient-to-r from-orange-700 to-red-800 text-white rounded-2xl font-bold shadow-lg shadow-orange-900/20 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 text-sm">
+                                {t('জ্ঞাতিবর্গদের খুঁজুন', 'Find Relatives')} <ArrowRight size={18} />
+                            </Link>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <Link to="/relation" className="py-3 bg-white/90 text-orange-800 border border-orange-200 rounded-2xl font-bold text-[13px] shadow-sm active:scale-[0.97] transition-transform flex items-center justify-center gap-1.5">
+                                    <Activity size={15} />{t('সম্পর্ক নির্ণয়', 'Relationship')}
+                                </Link>
+                                <Link to="/history" className="py-3 bg-white/90 text-stone-800 border border-stone-200 rounded-2xl font-bold text-[13px] shadow-sm active:scale-[0.97] transition-transform flex items-center justify-center gap-1.5">
+                                    <BookOpen size={15} />{t('ইতিহাস জানুন', 'History')}
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:flex flex-wrap items-center justify-center gap-5 pt-2">
                             <Link to="/explorer" className="px-10 py-4 bg-orange-700 hover:bg-orange-800 text-white rounded-full font-bold shadow-lg shadow-orange-900/10 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 text-sm uppercase tracking-wider">
                                 {t('জ্ঞাতিবর্গদের খুঁজুন', 'Find Relatives')} <ArrowRight size={18} />
                             </Link>
@@ -612,35 +628,58 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* QUICK ACCESS — app-style shortcut grid (phones only) */}
+            <div className="md:hidden px-4 mb-6">
+                <div className="bg-white rounded-3xl border border-orange-100 shadow-sm p-3 grid grid-cols-4 gap-1">
+                    {[
+                        { to: '/explorer', label: t('বংশতালিকা', 'Lineage'), icon: Map, tint: 'bg-orange-100 text-orange-800' },
+                        { to: '/directory', label: t('সদস্য', 'Members'), icon: Search, tint: 'bg-amber-100 text-amber-800' },
+                        { to: '/sammelan', label: t('সম্মেলন', 'Sammelan'), icon: Sparkles, tint: 'bg-yellow-100 text-yellow-800' },
+                        { to: '/board', label: t('বিজ্ঞপ্তি', 'Notices'), icon: Calendar, tint: 'bg-red-100 text-red-800' },
+                        { to: '/committee', label: t('কমিটি', 'Committee'), icon: UsersRound, tint: 'bg-stone-100 text-stone-700' },
+                        { to: '/eminent', label: t('বিশিষ্টজন', 'Eminent'), icon: Star, tint: 'bg-amber-100 text-amber-800' },
+                        { to: '/spouses', label: t('সহধর্মিণী', 'Spouses'), icon: Users, tint: 'bg-rose-100 text-rose-800' },
+                        { to: '/help', label: t('সহায়তা', 'Help'), icon: HelpCircle, tint: 'bg-red-100 text-red-800' },
+                    ].map(({ to, label, icon: Icon, tint }) => (
+                        <Link key={to} to={to} className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl active:bg-orange-50 active:scale-95 transition-transform">
+                            <span className={`w-11 h-11 rounded-2xl flex items-center justify-center ${tint}`}>
+                                <Icon size={20} />
+                            </span>
+                            <span className="text-[11px] font-semibold text-stone-700 text-center leading-tight">{label}</span>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+
             {/* NEXT SAMMELAN SPOTLIGHT BANNER */}
             <NextSammelanSpotlight />
 
             {/* SYSTEM OVERVIEW / STATS BAR */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6 mb-16 relative z-20">
-                <div className="glass-panel rounded-[1.5rem] p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 text-center shadow-xl shadow-orange-900/5">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-4 md:mt-6 mb-10 md:mb-16 relative z-20">
+                <div className="glass-panel rounded-3xl md:rounded-[1.5rem] px-2 py-4 md:p-8 grid grid-cols-3 gap-1 md:gap-12 text-center shadow-xl shadow-orange-900/5 divide-x divide-orange-100 md:divide-x-0">
                     <div className="relative space-y-1 group">
-                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 text-orange-700/70 mb-1 md:mb-0.5">
                             <Users size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{isAdmin ? t('যাচাইকৃত সদস্য', 'Verified Members') : t('মোট সদস্য', 'Total Members')}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide md:tracking-[0.2em] leading-tight">{isAdmin ? t('যাচাইকৃত সদস্য', 'Verified Members') : t('মোট সদস্য', 'Total Members')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalMembers)}</p>
-                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                        <p className="text-3xl md:text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalMembers)}</p>
+                        <div className="hidden md:block w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                     <div className="relative space-y-1 group">
-                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 text-orange-700/70 mb-1 md:mb-0.5">
                             <HomeIcon size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('গ্রামের বাড়ি', 'Village Homes')}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide md:tracking-[0.2em] leading-tight">{t('গ্রামের বাড়ি', 'Village Homes')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalHomes)}</p>
-                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                        <p className="text-3xl md:text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalHomes)}</p>
+                        <div className="hidden md:block w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                     <div className="relative space-y-1 group">
-                        <div className="flex items-center justify-center gap-2 text-orange-700/70 mb-0.5">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 text-orange-700/70 mb-1 md:mb-0.5">
                             <MapPin size={18} className="group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('গ্রামসমূহ', 'Villages')}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide md:tracking-[0.2em] leading-tight">{t('গ্রামসমূহ', 'Villages')}</span>
                         </div>
-                        <p className="text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalVillages)}</p>
-                        <div className="w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
+                        <p className="text-3xl md:text-5xl font-serif font-black text-stone-900 leading-none">{formatNumber(publicStats.totalVillages)}</p>
+                        <div className="hidden md:block w-12 h-1 bg-orange-200 mx-auto rounded-full group-hover:w-20 transition-all duration-500"></div>
                     </div>
                 </div>
             </div>
@@ -649,12 +688,12 @@ const Home = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
                 {/* Pillars Section - 2 Boxes displayed one after another */}
-                <section className="mb-20 sm:mb-24">
-                    <div className="text-center mb-12">
+                <section className="mb-12 sm:mb-24">
+                    <div className="text-center mb-6 md:mb-12">
                         <div className="inline-block px-4 py-1.5 rounded-full bg-stone-100 text-stone-600 text-[11px] font-bold uppercase tracking-[0.2em] mb-4 border border-stone-200">
                             {t('স্মরণীয় ব্যক্তিত্ব ও নেতৃত্ব', 'Hall of Fame & Leadership')}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-800 mb-4">{t('বংশের আলোকবর্তিকা', 'Community Pillars')}</h2>
+                        <h2 className="text-3xl md:text-5xl font-serif font-bold text-stone-800 mb-3 md:mb-4">{t('বংশের আলোকবর্তিকা', 'Community Pillars')}</h2>
                         <p className="text-stone-500 max-w-2xl mx-auto text-base sm:text-lg">
                             {t('বর্তমান কার্যনির্বাহী পরিষদ এবং বিশিষ্ট ব্যক্তিত্ব যাঁদের অবদান আমাদের সমাজের গর্ব ও অনুপ্রেরণা।', 'Honoring our current executive committee leadership and distinguished community figures.')}
                         </p>
@@ -676,7 +715,7 @@ const Home = () => {
                             {t('কোনো তথ্য পাওয়া যায়নি।', 'No figures found.')}
                         </div>
                     ) : (
-                        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
+                        <div className="relative max-w-5xl mx-auto px-0 sm:px-6">
                             {/* The 3 Boxes Grid (Desktop: 3, Mobile: 1) - Changing All 3 Together */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-7 lg:gap-8 justify-center">
                                 {currentItems.map((person, idx) => (
@@ -721,7 +760,7 @@ const Home = () => {
                 </section>
 
                 {/* COMMUNITY BULLETIN & MUTUAL SUPPORT (COMPACT, SIMPLE & RESPONSIVE) */}
-                <section className="mb-16 sm:mb-20 animate-fade-up">
+                <section className="mb-10 sm:mb-20 animate-fade-up">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-2 pb-3 border-b border-orange-200/50">
                         <div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100/80 text-orange-900 text-[11px] font-bold uppercase tracking-wider mb-2 border border-orange-200/60">
@@ -914,8 +953,8 @@ const Home = () => {
                 </section>
 
                 {/* Simple Footer/Quote */}
-                <div className="text-center max-w-3xl mx-auto pb-12 border-t border-stone-200/50 pt-16">
-                    <p className="font-serif text-3xl text-stone-400 leading-tight italic">
+                <div className="text-center max-w-3xl mx-auto pb-6 md:pb-12 border-t border-stone-200/50 pt-8 md:pt-16">
+                    <p className="font-serif text-xl md:text-3xl text-stone-400 leading-tight italic">
                         "{t('রক্তের বাঁধনে এক, হৃদয়ের স্পন্দনে যুক্ত।', 'United by blood, connected by heart.')}"
                     </p>
                 </div>

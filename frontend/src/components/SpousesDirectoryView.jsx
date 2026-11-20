@@ -392,39 +392,51 @@ const SpousesDirectoryView = ({
       </div>
 
       {/* Search and Secondary Filter Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="space-y-2.5">
         {/* Search Input */}
-        <div className="relative sm:col-span-2">
+        <div className="relative">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
-            placeholder="সহধর্মিণী বা স্বামীর নাম, পেশা, গ্রাম দিয়ে খুঁজুন..."
+            placeholder={t('সহধর্মিণী বা স্বামীর নাম, পেশা, গ্রাম দিয়ে খুঁজুন...', 'Search by name, husband, occupation or village...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder-stone-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+            className="w-full pl-10 pr-9 py-3 rounded-2xl border border-stone-200 bg-white text-stone-800 placeholder-stone-400 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-400 transition"
           />
           {searchTerm && (
             <button
+              type="button"
               onClick={() => setSearchTerm('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100 transition cursor-pointer"
+              aria-label={t('মুছুন', 'Clear')}
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Blood Group Filter */}
-        <div>
-          <select
-            value={selectedBlood}
-            onChange={(e) => setSelectedBlood(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition cursor-pointer"
-          >
-            <option value="all">সব রক্তের গ্রুপ (All Blood)</option>
-            {availableBloodGroups.map(bg => (
-              <option key={bg} value={bg}>{bg}</option>
-            ))}
-          </select>
+        {/* Blood Group Filter — tappable chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5" role="radiogroup" aria-label={t('রক্তের গ্রুপ', 'Blood group')}>
+          <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-stone-400 mr-0.5">
+            <span className="w-2 h-2 rounded-full bg-red-500" />{t('রক্ত', 'Blood')}
+          </span>
+          {['all', ...availableBloodGroups].map(bg => {
+            const active = selectedBlood === bg;
+            return (
+              <button
+                key={bg}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSelectedBlood(bg)}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 cursor-pointer ${active
+                  ? 'bg-red-700 border-red-700 text-white shadow-sm'
+                  : 'bg-white border-stone-200 text-stone-600 hover:border-red-300 hover:text-red-700'}`}
+              >
+                {bg === 'all' ? t('সব', 'All') : bg}
+              </button>
+            );
+          })}
         </div>
       </div>
 

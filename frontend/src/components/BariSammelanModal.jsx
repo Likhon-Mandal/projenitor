@@ -91,11 +91,11 @@ const BariSammelanModal = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[200] flex items-center justify-center p-2.5 sm:p-5 bg-stone-950/70 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 app-sheet z-[200] flex items-center justify-center p-2.5 sm:p-5 bg-stone-950/70 backdrop-blur-sm animate-fade-in"
             onClick={onClose}
         >
             <div
-                className="relative w-full max-w-2xl max-h-[88dvh] sm:max-h-[90vh] bg-[#fffcf7] rounded-2xl sm:rounded-3xl shadow-2xl border border-orange-200/90 flex flex-col overflow-hidden animate-slide-up"
+                className="relative w-full max-w-2xl max-h-[88dvh] sm:max-h-[90vh] bg-background rounded-2xl sm:rounded-3xl shadow-2xl border border-orange-200/90 flex flex-col overflow-hidden animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
